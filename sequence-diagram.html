@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settlla — System Sequence Diagrams (MVP Build)</title>
+  <!-- Mermaid.js for interactive client-side rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        darkMode: true,
+        background: '#161b22',
+        primaryColor: '#1f6feb',
+        primaryTextColor: '#f0f6fc',
+        primaryBorderColor: '#388bfd',
+        lineColor: '#58a6ff',
+        secondaryColor: '#238636',
+        tertiaryColor: '#21262d',
+        noteBkgColor: '#21262d',
+        noteTextColor: '#c9d1d9',
+        noteBorderColor: '#30363d',
+        actorBkg: '#21262d',
+        actorBorder: '#58a6ff',
+        actorTextColor: '#f0f6fc',
+        actorLineColor: '#58a6ff',
+        signalColor: '#c9d1d9',
+        signalTextColor: '#c9d1d9',
+        labelBoxBkgColor: '#21262d',
+        labelBoxBorderColor: '#30363d',
+        labelTextColor: '#f0f6fc',
+        loopTextColor: '#f0f6fc',
+        activationBorderColor: '#388bfd',
+        activationBkgColor: '#1f6feb33',
+        sequenceNumberColor: '#0d1117'
+      }
+    });
+  </script>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface-elevated: #21262d;
+      --border: #30363d;
+      --text-main: #c9d1d9;
+      --text-bright: #f0f6fc;
+      --text-muted: #8b949e;
+      --primary: #58a6ff;
+      --accent: #2ea043;
+      --warning: #d29922;
+      --danger: #f85149;
+      --purple: #bc8cff;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font);
+      line-height: 1.6;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 24px;
+      margin-bottom: 36px;
+    }
+
+    h1 {
+      color: var(--text-bright);
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 1.15rem;
+      color: var(--primary);
+      font-weight: 500;
+      margin-bottom: 16px;
+    }
+
+    .metadata {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .metadata-item {
+      background: var(--surface-elevated);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .metadata-item strong {
+      color: var(--text-bright);
+    }
+
+    section {
+      margin-bottom: 48px;
+    }
+
+    h2 {
+      color: var(--text-bright);
+      font-size: 1.5rem;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge-flow {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: rgba(46, 160, 67, 0.15);
+      color: #3fb950;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(46, 160, 67, 0.3);
+    }
+
+    .badge-exception {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: rgba(248, 81, 73, 0.15);
+      color: #f85149;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(248, 81, 73, 0.3);
+    }
+
+    .diagram-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 24px;
+      overflow-x: auto;
+    }
+
+    .mermaid {
+      display: flex;
+      justify-content: center;
+      min-width: 700px;
+    }
+
+    .card-info {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 16px;
+      font-size: 0.95rem;
+    }
+
+    .card-info h3 {
+      color: var(--text-bright);
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+    }
+
+    .card-info ul {
+      padding-left: 20px;
+    }
+
+    .card-info li {
+      margin-bottom: 6px;
+    }
+
+    .card-info strong {
+      color: var(--text-bright);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 16px;
+    }
+
+    @media (max-width: 768px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+      margin-top: 40px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Settlla — System Sequence Diagrams</h1>
+      <div class="subtitle">Architectural Data Flow: Client, Backend Engine, Database & External Payment APIs</div>
+      <div class="metadata">
+        <div class="metadata-item"><strong>Target Flow:</strong> Main Tenancy Closing + Exception Dispute</div>
+        <div class="metadata-item"><strong>Payment Gateway:</strong> Paystack / Monnify (Split Engine)</div>
+        <div class="metadata-item"><strong>Jurisdiction:</strong> Kaduna State (Barnawa/Malali)</div>
+        <div class="metadata-item"><strong>Reference:</strong> requirements.md & user-flow.md</div>
+      </div>
+    </header>
+
+    <!-- SECTION 1: MAIN FLOW -->
+    <section>
+      <h2>
+        <span>1. Main Flow: End-to-End Tenancy Closing & Escrow Settlement</span>
+        <span class="badge-flow">Happy Path</span>
+      </h2>
+      <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 16px;">
+        Chronological interaction sequence across the 4 key phases: Free Inspection Booking, Dynamic Lease Generation, Automated 4-Way Split Checkout, and Key-in-Door Escrow Release.
+      </p>
+
+      <div class="diagram-card">
+        <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Tenant as Tenant (Hajara)
+    participant App as Settlla Web Client
+    participant Server as Settlla Backend API
+    participant DB as Postgres Database
+    participant Gateway as Payment Gateway (Paystack/Monnify)
+    actor Manager as Property Manager (HB&A)
+    actor Landlord as Landlord (Offsite)
+
+    %% PHASE 1: INSPECTION BOOKING
+    rect rgb(22, 27, 34)
+    note right of Tenant: Phase 1: Listing Discovery & Free Inspection Booking
+    Tenant->>App: Browse listings in Barnawa
+    App->>Server: GET /api/listings?neighborhood=Barnawa
+    Server->>DB: Query verified listings (mandate_verified = true)
+    DB-->>Server: Return listings + visiting windows
+    Server-->>App: 200 OK (Listings with rent, caution, fees)
+    App-->>Tenant: Render listing cards & all-in pricing
+
+    Tenant->>App: Select 30-min slot (e.g. Sat 11:30 AM)
+    Tenant->>App: Input Name, Phone, Email & Submit
+    App->>Server: POST /api/inspections/book {listingId, slotTime, tenantInfo}
+    Server->>DB: Check slot availability & insert inspection record
+    DB-->>Server: Slot locked (inspection_id)
+    Server-->>App: 201 Created (Booking confirmed, fee = 0)
+    Server-)Tenant: SMS: Inspection confirmed with directions & manager contact
+    Server-)Manager: SMS: New inspection booked for Barnawa Flat 2B
+    App-->>Tenant: Display Confirmation & Calendar Pass
+    end
+
+    %% PHYSICAL WALKTHROUGH
+    rect rgb(26, 32, 44)
+    note over Tenant, Manager: Physical Inspection Walkthrough (Zero Fee Charged)
+    Tenant->>Manager: Meet at Barnawa property for physical tour
+    Manager-->>Tenant: Conduct walkthrough of fixtures, water & electricity
+    end
+
+    %% PHASE 2: LEASE GENERATION & E-SIGNATURE
+    rect rgb(22, 27, 34)
+    note right of Tenant: Phase 2: Identity Verification & Dynamic Lease Execution
+    Tenant->>App: Click "Proceed to Rent" & Upload NIN + Posting Letter
+    App->>Server: POST /api/tenancy/apply {listingId, idDocs, employmentProof}
+    Server->>DB: Save tenant credentials & generate agreement draft
+    Server->>Server: Auto-populate Kaduna statutory covenants & Mandate signatory clause
+    Server-->>App: Return auto-generated Tenancy Agreement payload
+    App-->>Tenant: Render lease document on screen
+
+    Tenant->>App: Draw digital signature & tap "Sign Agreement"
+    App->>Server: POST /api/tenancy/sign-tenant {tenancyId, signatureHash}
+    Server->>DB: Update tenancy (tenant_signed = true, timestamp)
+    Server-)Manager: SMS/Email alert: "Tenant signed lease. Counter-signature required"
+    Server-->>App: 200 OK (Awaiting manager signature)
+
+    Manager->>App: Log in, review verified tenant NIN & counter-sign
+    App->>Server: POST /api/tenancy/sign-manager {tenancyId, managerSignature}
+    Server->>DB: Update tenancy (manager_signed = true, status = "Awaiting Payment")
+    Server->>Server: Compile final executed PDF contract
+    Server-->>App: 200 OK (Contract finalized)
+    Server-)Tenant: SMS: Lease executed. Ready for checkout
+    end
+
+    %% PHASE 3: CHECKOUT & 4-WAY SPLIT PAYMENT
+    rect rgb(22, 27, 34)
+    note right of Tenant: Phase 3: Checkout & Automated 4-Way Payment Split
+    Tenant->>App: Review checkout summary & tap "Pay Securely via Escrow"
+    App->>Server: POST /api/payments/initialize {tenancyId}
+    Server->>Server: Calculate split: Legal (5%), Agency (10%), Caution (10%), Rent (75%)
+    Server->>Gateway: POST /transaction/initialize {amount, email, subaccount_splits}
+    Gateway-->>Server: Return payment reference & checkout URL
+    Server-->>App: Return authorization URL / modal config
+    App-->>Tenant: Render Paystack/Monnify payment gateway
+
+    Tenant->>Gateway: Authorize full payment (₦650,000 via Card/Transfer)
+    Gateway-->>Tenant: Payment Successful confirmation
+    Gateway->>Server: Webhook: charge.success {reference, splits, status}
+    Server->>Server: Verify cryptographic webhook signature
+    Server->>DB: Update tenancy status to "Paid / In Escrow"
+    Server->>Gateway: Disburse Legal Fee (5%) -> Legal Drafter Account
+    Server->>Gateway: Disburse Agency Commission (10%) -> HB&A Partners Account
+    Server->>Server: Route Caution Deposit (10%) -> Ringfenced Vault / PayRep
+    Server->>Server: Hold Rent (75%) -> Key-in-Door Move-In Escrow
+    Server-)Tenant: SMS: Payment receipt & Move-In Pass issued
+    Server-)Landlord: SMS: "₦487,500 rent secured in escrow. Clears upon key handover"
+    Server-)Manager: SMS: Payment confirmed. Proceed with key handover
+    end
+
+    %% PHASE 4: MOVE-IN & ESCROW CLEARANCE
+    rect rgb(22, 27, 34)
+    note right of Tenant: Phase 4: Key Handover & Escrow Payout Clearance
+    Tenant->>Manager: Arrive at apartment on move-in day & receive keys
+    Manager-->>Tenant: Hand over door keys
+    Tenant->>Tenant: Test keys, verify running water & access
+    Tenant->>App: Click "Confirm Key Handover" button
+    App->>Server: POST /api/escrow/release {tenancyId}
+    Server->>DB: Validate status == "In Escrow" & no disputes active
+    Server->>Gateway: POST /transfer/disburse-rent {landlordAccountId, amount: ₦487,500}
+    Gateway-->>Server: Transfer 200 OK (Disbursed)
+    Server->>DB: Update tenancy status to "Active" (escrow_released = true)
+    Server-)Landlord: Bank Credit Alert: "₦487,500 received from Settlla Escrow"
+    Server-)Tenant: SMS: Tenancy active. Caution deposit remains ringfenced
+    Server-->>App: 200 OK (Move-In Complete)
+    App-->>Tenant: Display "Welcome to Your New Home" dashboard
+    end
+        </div>
+      </div>
+
+      <div class="card-info">
+        <h3>Architecture Invariants Highlighted in Main Flow</h3>
+        <ul>
+          <li><strong>Zero-Fee Inspection Locking:</strong> Prevents double-booking of property managers and eliminates the predatory ₦3k–₦5k inspection fee.</li>
+          <li><strong>Mandate Representation:</strong> The property manager signs digitally as the legal attorney-in-fact, sparing offsite landlords from account creation or software friction.</li>
+          <li><strong>Non-Custodial 4-Way Split:</strong> Sub-account splitting executes through licensed fintech payment gateways (Paystack/Monnify), separating agency/legal fees, parking caution in a ringfenced merchant reserve/PayRep, and holding rent in escrow.</li>
+          <li><strong>Dual Release Trigger:</strong> Escrow is unlocked either synchronously via the tenant's "Confirm Key Handover" button, or through an automated 24-hour timeout cron job if unconfirmed and undisputed.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- SECTION 2: EXCEPTION FLOW -->
+    <section>
+      <h2>
+        <span>2. Exception Path: Move-In Key Failure / Fraud Dispute ("Report a Problem")</span>
+        <span class="badge-exception">Dispute & Indemnity</span>
+      </h2>
+      <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 16px;">
+        Emergency mitigation sequence activated when a tenant encounters access denial, non-functional keys, or fraudulent property misrepresentation on move-in day.
+      </p>
+
+      <div class="diagram-card">
+        <div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor Tenant as Tenant (Hajara)
+    participant App as Settlla Web Client
+    participant Server as Settlla Backend API
+    participant DB as Postgres Database
+    participant Gateway as Payment Gateway
+    participant Ops as Settlla Concierge Team
+    actor Manager as Property Manager (HB&A)
+
+    note over Tenant, Manager: Move-In Day: Keys fail to unlock door / Apartment occupied by stranger
+    Tenant->>Tenant: Tests keys; door remains locked / Landlord locked gate
+    Tenant->>App: Opens Settlla Dashboard (before 24-hr timer expires)
+    Tenant->>App: Clicks "Report a Problem"
+    App-->>Tenant: Prompt: Select issue type & upload photo/video proof
+    Tenant->>App: Select "Key Failure / Access Denied" + attach evidence
+    Tenant->>App: Taps "Submit Emergency Dispute"
+
+    App->>Server: POST /api/escrow/dispute {tenancyId, reason, evidenceUrls}
+    
+    %% EMERGENCY ESCROW FREEZE
+    critical Immediate Escrow Freeze
+        Server->>DB: Update tenancy status = "Disputed / Escrow Frozen"
+        Server->>DB: Cancel 24-hour auto-release timer
+        Server->>Gateway: POST /escrow/hold-freeze {transactionRef}
+        Gateway-->>Server: Freeze Confirmed (Payout locked)
+    end
+
+    Server->>Ops: High-Priority Alert: "Dispute logged for Barnawa Flat 2B"
+    Server-)Tenant: SMS: "Dispute received. Escrow frozen. 100% money protected."
+    Server-)Manager: SMS: "Urgent: Tenant reported access failure. Funds held."
+    Server-->>App: 200 OK (Dispute Active Screen)
+    App-->>Tenant: Display "Escrow Frozen: Our Kaduna team is intervening"
+
+    %% RAPID OPS INVESTIGATION
+    rect rgb(22, 27, 34)
+    note over Ops, Manager: 2-Hour Escalation Window
+    Ops->>Manager: Call HB&A Partners to verify situation
+    Manager-->>Ops: Confirms landlord changed locks without notice / Breach of Mandate
+    Ops->>Server: POST /api/admin/resolve-dispute {tenancyId, verdict: "FAULT_LANDLORD", action: "FULL_REFUND"}
+    end
+
+    %% INDEMNITY REFUND
+    rect rgb(22, 27, 34)
+    note over Server, Gateway: 100% Scam Indemnity Guarantee Execution
+    Server->>Gateway: POST /refunds/initiate {transactionRef, amount: 100%, destination: TenantBank}
+    Gateway-->>Server: Refund 200 OK (Reversed)
+    Server->>DB: Update tenancy status = "Terminated - Refunded"
+    Server->>DB: Blacklist/Suspend listing mandate
+    Server-)Tenant: SMS & Bank Alert: "₦650,000 100% refunded to your account"
+    Server-)Manager: SMS: "Tenancy cancelled due to landlord breach"
+    App-->>Tenant: Display "Refund Issued: 100% of your funds have been returned"
+    end
+        </div>
+      </div>
+
+      <div class="card-info">
+        <h3>Exception Safety Guarantees</h3>
+        <ul>
+          <li><strong>Instant Freeze Invariant:</strong> Submitting a dispute synchronously halts the escrow release and voids the 24-hour auto-release countdown timer.</li>
+          <li><strong>Zero Agent Bypass:</strong> Roadside agents cannot pressure the tenant for side-payments because Settlla holds the entire move-in pool in institutional escrow.</li>
+          <li><strong>100% Money-Back Indemnity:</strong> If landlord breach or access denial is verified, the system executes an automated reversal of all annual rent and caution funds directly back to the tenant's bank account.</li>
+        </ul>
+      </div>
+    </section>
+
+    <footer>
+      Settlla Startup Artifacts &bull; System Sequence Diagrams &bull; Created 2026-09-15
+    </footer>
+  </div>
+</body>
+</html>

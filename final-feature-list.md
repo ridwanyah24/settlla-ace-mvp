@@ -1,0 +1,51 @@
+# Settlla — Final MoSCoW Feature List
+## 5-Day MVP Build Scope & Prioritization
+
+- **Product Name**: Settlla
+- **Build Objective**: 5-Day Team Build for the Kaduna Rental Closing Engine
+- **Target Wedge**: Barnawa & Malali, Kaduna, Nigeria
+- **Source Documents**: [requirements.md](file:///c:/Users/User/OneDrive/Desktop/SETTLLA-STARTUP/requirements.md) & [screen-specification.md](file:///c:/Users/User/OneDrive/Desktop/SETTLLA-STARTUP/screen-specification.md)
+- **Date**: 2026-09-15
+
+---
+
+## 5-Day Must-Have Scope Constraint Analysis
+
+The project specification in `requirements.md` originally identified 7 core functional requirements as Must-haves (FR-01 through FR-07). To guarantee delivery within a **5-day team build**, the Must-have list is strictly capped at **6 features maximum**.
+
+### What Qualifies & What Was Cut to Meet the 5–6 Feature Cap:
+- **Originally Qualified (7 features)**: (1) Verified Listing Showcase, (2) Direct Inspection Slot Scheduling, (3) Dynamic Tenancy Agreement Generator, (4) Electronic Signature Workflow, (5) Automated 4-Way Split Payment Engine, (6) Ringfenced Caution Deposit Vault, (7) Key-in-Door Move-In Escrow Protection.
+- **The Feature Cut First**: **Ringfenced Caution Deposit Vault (FR-06)** has been moved from *Must Have* to *Should Have*.
+- **Why Cut First**: For a 5-day sprint, integrating a specialized external custody platform (like PayRep) or creating dedicated per-tenancy virtual sub-accounts adds high third-party API risk. The core closing engine functions safely because the 4-way payment split (FR-05) already intercepts the 10% caution fee and keeps it in Settlla's central merchant reserve balance away from the landlord. Moving full virtual ledger isolation and automated move-out return workflows to "Should Have" preserves team bandwidth without breaking the move-in closing loop.
+
+---
+
+## MoSCoW Feature Table
+
+| Feature | Description | MoSCoW Category | Reason |
+| :--- | :--- | :--- | :--- |
+| **Verified Listing Showcase with All-In Pricing** | Web feed and detail view of vetted Kaduna apartments displaying photos, amenities, and full upfront price breakdown (Annual Rent, 10% Caution, 5% Legal, 10% Agency, Total Move-In Cost). *(FR-01, Screen 1 & 2)* | **Must have** | The product is pointless without listings; full upfront price transparency is the core hook that eliminates hidden agent charges. |
+| **Direct Inspection Slot Scheduling (₦0 Fee)** | Booking drawer allowing tenants to select an open 30-minute walkthrough slot strictly constrained to property manager visiting windows, locking the slot at zero cost. *(FR-02, Screen 2 & 3)* | **Must have** | The product is broken without this; eliminating the predatory ₦3,000–₦5,000 roadside inspection fee is the primary wedge that drives tenant adoption. |
+| **Dynamic Tenancy Agreement Generator** | Automatic generation of a legally binding residential lease populated with tenant info, property title, fee schedule, statutory Kaduna covenants, and manager mandate clause. *(FR-03, Screen 5)* | **Must have** | Essential closing engine component; replaces chaotic physical paper drafting and 7-day landlord delays with an instant legal contract. |
+| **Two-Party Electronic Signature Workflow** | Digital signing pad for the tenant and manager counter-signature interface on behalf of the landlord under written mandate, with cryptographic audit timestamps. *(FR-04, Screen 5 & 6)* | **Must have** | A lease cannot be legally executed or enforced without valid signatures from both parties before money changes hands. |
+| **Automated 4-Way Split Payment Engine** | Paystack/Monnify payment integration accepting the all-in move-in sum and automatically splitting legal fees (5%), agency commission (10%), caution deposit (10%), and rent in escrow (75%). *(FR-05, Screen 7)* | **Must have** | Core transactional mechanism; guarantees property managers and lawyers get paid instantly, preventing agent remittance delays. |
+| **Key-in-Door Move-In Escrow Protection** | Holds the net annual rent in escrow until the tenant taps "Confirm Key Handover" or the 24-hour safety timer expires; includes immediate dispute freeze ("Report a Problem"). *(FR-07, Screen 8)* | **Must have** | The central value proposition of Settlla; tenants will not pay upfront without an ironclad scam guarantee that rent only clears upon key handover. |
+| **Ringfenced Caution Deposit Vault** | Dedicated per-tenancy virtual sub-account or PayRep custody holding balance isolating the 10% damage deposit for 12 months. *(FR-06)* | **Should have** | Important for long-term tenant trust, but the product functions on move-in day if caution is held in a central merchant reserve balance via the split engine. |
+| **Basic Identity & Employment Verification** | In-app form collecting and storing tenant National Identity Number (NIN) and photo upload of employment letter / NYSC posting letter. *(FR-11, Screen 4)* | **Should have** | High-value for landlord risk mitigation, but can be verified manually via WhatsApp/concierge by the team during a tight 5-day build. |
+| **Automated Landlord & Manager SMS Notifications** | Automated SMS alerts via Termii notifying landlords of secured escrow rent and alerting managers of booked tours. *(FR-10, Screens 3 & 7)* | **Should have** | Crucial for keeping non-app landlords informed, but fallback manual phone calls can cover the first 5 transactions if API setup lags. |
+| **Digital Move-In Pass Issuance** | Verifiable digital pass and transaction receipt generated post-payment for the tenant to present to the manager on move-in day. *(Screen 7 & 8)* | **Should have** | Provides professional reassurance at key handover, but the signed lease and payment confirmation screen already serve as legal proof. |
+| **Manager Self-Serve Portal with Mandate Upload** | Dedicated manager portal to submit listing metadata, photos, and mandatory scanned landlord management mandate letters. *(FR-01 Founder Decision)* | **Should have** | Critical for scale, but for the initial 5-day pilot, the 5 exclusive partner listings can be vetted offline and seeded directly via database/admin panel. |
+| **Tenant Search Status & Preference Broadcast** | Profile form where tenants post active housing criteria (budget, neighborhood, move-in deadline) for automated matching. *(FR-08)* | **Could have** | Helpful secondary acquisition channel, but tenants can browse published listings directly without requiring a broadcasting engine. |
+| **Property Manager Lead Matching Dashboard** | Manager view displaying pre-qualified inbound tenant profiles with contact invitation controls. *(FR-09)* | **Could have** | Valuable for subscription monetization later, but unnecessary when tenants book direct inspection slots on active listings. |
+| **In-App Inspection Rescheduling** | Self-serve interface allowing tenants or managers to reschedule booked tours up to 4 hours prior with SMS updates. *(FR-14)* | **Could have** | Convenient edge-case feature; during MVP, appointment adjustments can be handled via direct phone/WhatsApp contact. |
+| **Virtual Video Tour Walkthrough Attachments** | Pre-recorded compressed video tours embedded on listing detail pages to reduce physical inspections. *(FR-13)* | **Could have** | Nice visual perk, but high-res verified photos are sufficient for Hajara to decide whether to book an in-person walkthrough. |
+| **Post-Move-Out Caution Reconciliation Flow** | Digital protocol at 12-month lease expiration allowing managers to log damages with photos or return caution deposits. *(FR-12)* | **Could have** | Completely irrelevant to the Day-1 to Day-14 move-in closing sprint; only needed 12 months after the tenant takes possession. |
+| **Unlicensed Custodial Escrow Banking** | Operating an unlicensed bank account where Settlla holds user deposits directly. *(FR-15)* | **Won't have** | Explicitly out of scope to maintain legal compliance; all splits and escrow must execute via licensed payment processors (Paystack/Monnify). |
+| **Rent Now Pay Later (RNPL) / Micro-lending** | Financing tenant rents or issuing monthly installment credit. *(FR-16)* | **Won't have** | Explicitly out of scope; introduces balance-sheet credit risk and underwriting overhead into a pure closing engine. |
+| **Open Unregulated Street Agent Marketplace** | Public listing submission portal for unvetted roadside freelance agents. *(FR-17)* | **Won't have** | Explicitly out of scope; directly contradicts the core anti-scam value proposition of strictly vetted legal management mandates. |
+| **Full Maintenance & Repair Work-Order Ticketing** | In-app post-move-in facility management, plumbing, generator maintenance, and repair tickets. *(FR-18)* | **Won't have** | Explicitly out of scope; Settlla is a transaction closing engine, not an ongoing property facilities management SaaS. |
+| **Multi-City Expansion Outside Kaduna** | Deploying search and operations in Abuja, Lagos, or other Nigerian states during V1. *(FR-19)* | **Won't have** | Explicitly out of scope; hyper-local operational focus is restricted strictly to the Barnawa and Malali wedge in Kaduna. |
+| **Direct Landlord In-App Accounts or Portal Onboarding** | Requiring landlords to register accounts, download an app, or log into a portal to sign leases. *(Founder Decision)* | **Won't have** | Explicitly out of scope; landlords are tech-averse and offsite; managers sign on their behalf under written mandate. |
+| **Live Two-Way External Calendar Sync** | Integrating third-party calendar engines (e.g. Google Calendar, Outlook) for inspection scheduling. *(Founder Decision)* | **Won't have** | Explicitly out of scope; availability is strictly controlled via pre-set, recurring visiting windows configured by managers. |
+| **Unmandated Property Listings** | Allowing property listings to go live without an uploaded, verified landlord management mandate. *(Founder Decision)* | **Won't have** | Explicitly out of scope; every listing strictly requires verified proof of landlord management authority. |
+| **In-App Judicial Dispute Arbitration Court** | Settlla acting as a formal judicial court or issuing binding legal arbitration rulings. *(Out-of-Scope List)* | **Won't have** | Explicitly out of scope; agreements rely on standard Kaduna State tenancy statutes and Nigerian judicial courts. |

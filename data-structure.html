@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settlla — Data Structure (MVP Build)</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface-elevated: #21262d;
+      --border: #30363d;
+      --text-main: #c9d1d9;
+      --text-bright: #f0f6fc;
+      --text-muted: #8b949e;
+      --primary: #58a6ff;
+      --accent: #2ea043;
+      --warning: #d29922;
+      --danger: #f85149;
+      --purple: #bc8cff;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font);
+      line-height: 1.6;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 24px;
+      margin-bottom: 36px;
+    }
+
+    h1 {
+      color: var(--text-bright);
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 1.15rem;
+      color: var(--primary);
+      font-weight: 500;
+      margin-bottom: 16px;
+    }
+
+    .metadata {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .metadata-item {
+      background: var(--surface-elevated);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .metadata-item strong {
+      color: var(--text-bright);
+    }
+
+    /* Overview Grid */
+    .entity-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin-bottom: 40px;
+    }
+
+    .entity-chip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+
+    .entity-chip:hover {
+      border-color: var(--primary);
+    }
+
+    .entity-chip .chip-num {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+    }
+
+    .entity-chip .chip-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-bright);
+    }
+
+    .entity-chip .chip-desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.3;
+    }
+
+    /* Entity Section Card */
+    .entity-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 36px;
+    }
+
+    .entity-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .entity-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .entity-number {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--surface-elevated);
+      color: var(--primary);
+      border: 1px solid var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+    }
+
+    .entity-name {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--text-bright);
+    }
+
+    .entity-badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 12px;
+      text-transform: uppercase;
+    }
+
+    .badge-core {
+      background: rgba(88, 166, 255, 0.15);
+      color: #58a6ff;
+      border: 1px solid rgba(88, 166, 255, 0.3);
+    }
+
+    .badge-financial {
+      background: rgba(46, 160, 67, 0.15);
+      color: #3fb950;
+      border: 1px solid rgba(46, 160, 67, 0.3);
+    }
+
+    .badge-legal {
+      background: rgba(188, 140, 255, 0.15);
+      color: #d2a8ff;
+      border: 1px solid rgba(188, 140, 255, 0.3);
+    }
+
+    .badge-safety {
+      background: rgba(248, 81, 73, 0.15);
+      color: #f85149;
+      border: 1px solid rgba(248, 81, 73, 0.3);
+    }
+
+    .entity-intro {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 0.88rem;
+      background: var(--surface-elevated);
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    th, td {
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    th {
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-bright);
+      font-weight: 600;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 0.85rem;
+      color: #79c0ff;
+      background: rgba(110, 118, 129, 0.2);
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+
+    .format-tag {
+      color: var(--text-muted);
+      font-size: 0.82rem;
+    }
+
+    .summary-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--primary);
+      padding: 20px;
+      border-radius: 0 8px 8px 0;
+      margin-top: 30px;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+      margin-top: 40px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Settlla — Data Structure</h1>
+      <div class="subtitle">Plain-English Information Model: The 10 "Things" Settlla Must Remember (MVP Build)</div>
+      <div class="metadata">
+        <div class="metadata-item"><strong>Scope:</strong> Core V1 Closing Engine</div>
+        <div class="metadata-item"><strong>Target Market:</strong> Kaduna, Nigeria</div>
+        <div class="metadata-item"><strong>Entities Count:</strong> 10 Core Data Models</div>
+        <div class="metadata-item"><strong>Reference:</strong> requirements.md (v1.1)</div>
+      </div>
+    </header>
+
+    <!-- Overview Grid -->
+    <div class="entity-grid">
+      <div class="entity-chip">
+        <span class="chip-num">Thing 1</span>
+        <span class="chip-title">User Account</span>
+        <span class="chip-desc">Tenant or manager identity & NIN credentials</span>
+      </div>
+      <div class="entity-chip">
+        <span class="chip-num">Thing 2</span>
+        <span class="chip-title">Manager Profile</span>
+        <span class="chip-desc">Accredited firm (HB&A) & bank split subaccount</span>
+      </div>
+      <div class="entity-chip">
+        <span class="chip-num">Thing 3</span>
+        <span class="chip-title">Property Listing</span>
+        <span class="chip-desc">Vetted apartment with verified landlord mandate</span>
+      </div>
+      <div class="entity-chip">
+        <span class="chip-num">Thing 4</span>
+        <span class="chip-title">Visiting Window</span>
+        <span class="chip-desc">Pre-set weekly hours for free walkthroughs</span>
+      </div>
+      <div class="entity-chip">
+        <span class="chip-num">Thing 5</span>
+        <span class="chip-title">Inspection Booking</span>
+        <span class="chip-desc">Reserved 30-min zero-fee appointment slot</span>
+      </div>
+      <div class="entity-chip">
+        <span class="chip-num">Thing 6</span>
+        <span class="chip-title">Tenancy Agreement</span>
+        <span class="chip-desc">Auto-generated lease dual-signed under mandate</span>
+      </div>
+      <div class="entity-chip">
+        <span class="chip-num">Thing 7</span>
+        <span class="chip-title">Payment Transaction</span>
+        <span class="chip-desc">Single checkout split 4 ways automatically</span>
+      </div>
+      <div class="entity-chip">
+        <span class="chip-num">Thing 8</span>
+        <span class="chip-title">Escrow Hold</span>
+        <span class="chip-desc">Rent secured until key handover or 24h timer</span>
+      </div>
+      <div class="entity-chip">
+        <span class="chip-num">Thing 9</span>
+        <span class="chip-title">Move-In Dispute</span>
+        <span class="chip-desc">Emergency lock failure report with instant freeze</span>
+      </div>
+      <div class="entity-chip">
+        <span class="chip-num">Thing 10</span>
+        <span class="chip-title">Caution Ledger</span>
+        <span class="chip-desc">10% damage fee ringfenced for 12 months</span>
+      </div>
+    </div>
+
+    <!-- 1. USER ACCOUNT -->
+    <div class="entity-card">
+      <div class="entity-header">
+        <div class="entity-title-wrap">
+          <div class="entity-number">1</div>
+          <div class="entity-name">User Account</div>
+        </div>
+        <span class="entity-badge badge-core">Core Identity</span>
+      </div>
+      <p class="entity-intro">
+        <strong>What it represents in plain English:</strong> A person registered on Settlla (the tenant looking for a home, the property manager listing apartments, or a Settlla administrator). Note: Landlords do not create accounts; their details are stored directly on the property listing.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 20%;">Fact / Field</th>
+            <th style="width: 35%;">What It Stores</th>
+            <th style="width: 20%;">Format / Example</th>
+            <th style="width: 25%;">Why It Matters</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>user_id</code></td>
+            <td>Unique person identification number</td>
+            <td><code>usr_101</code></td>
+            <td>Uniquely links this user to bookings, signatures, and payments.</td>
+          </tr>
+          <tr>
+            <td><code>full_name</code></td>
+            <td>Legal first and last name</td>
+            <td><code>"Hajara Bello"</code></td>
+            <td>Written into legal agreements and payment receipts.</td>
+          </tr>
+          <tr>
+            <td><code>phone_number</code></td>
+            <td>Nigerian mobile phone number</td>
+            <td><code>"08031234567"</code></td>
+            <td>For SMS inspection alerts, move-in reminders, and payment receipts.</td>
+          </tr>
+          <tr>
+            <td><code>email_address</code></td>
+            <td>Contact email address</td>
+            <td><code>"hajara@example.com"</code></td>
+            <td>Delivers official PDF lease contracts and transaction records.</td>
+          </tr>
+          <tr>
+            <td><code>user_role</code></td>
+            <td>User permissions type</td>
+            <td><code>tenant</code>, <code>manager</code>, <code>admin</code></td>
+            <td>Determines what screens and actions the user is authorized to perform.</td>
+          </tr>
+          <tr>
+            <td><code>nin_number</code></td>
+            <td>11-digit National Identity Number</td>
+            <td><code>"12345678901"</code></td>
+            <td>Verifies tenant identity to protect landlords from bad actors.</td>
+          </tr>
+          <tr>
+            <td><code>nin_verified</code></td>
+            <td>Whether NIN lookup was successful</td>
+            <td><code>true</code> / <code>false</code></td>
+            <td>Blocks lease agreement generation until identity is proven.</td>
+          </tr>
+          <tr>
+            <td><code>employer_name</code></td>
+            <td>Employer or NYSC corporate posting</td>
+            <td><code>"GTBank Barnawa"</code></td>
+            <td>Proves relocation legitimacy and income backing.</td>
+          </tr>
+          <tr>
+            <td><code>employment_proof_url</code></td>
+            <td>Photo of posting letter or job ID</td>
+            <td><code>https://.../letter.jpg</code></td>
+            <td>Auditable document proving the tenant is a corporate professional.</td>
+          </tr>
+          <tr>
+            <td><code>date_created</code></td>
+            <td>Exact registration date and time</td>
+            <td><code>2026-09-15 08:30</code></td>
+            <td>Tracks registration history and user age.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 2. PROPERTY MANAGER PROFILE -->
+    <div class="entity-card">
+      <div class="entity-header">
+        <div class="entity-title-wrap">
+          <div class="entity-number">2</div>
+          <div class="entity-name">Property Manager Profile</div>
+        </div>
+        <span class="entity-badge badge-core">Accreditation & Payouts</span>
+      </div>
+      <p class="entity-intro">
+        <strong>What it represents in plain English:</strong> The verified real estate management firm or legal practitioner (such as HB&A Partners) authorized to manage properties and sign leases under written landlord mandates.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 20%;">Fact / Field</th>
+            <th style="width: 35%;">What It Stores</th>
+            <th style="width: 20%;">Format / Example</th>
+            <th style="width: 25%;">Why It Matters</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>manager_id</code></td>
+            <td>Unique manager profile ID</td>
+            <td><code>mgr_201</code></td>
+            <td>Distinguishes this professional firm from others.</td>
+          </tr>
+          <tr>
+            <td><code>user_id</code></td>
+            <td>Linked User Account</td>
+            <td><code>usr_102</code></td>
+            <td>Connects the management profile to their login account.</td>
+          </tr>
+          <tr>
+            <td><code>firm_name</code></td>
+            <td>Registered law firm or agency name</td>
+            <td><code>"HB&A Partners & Co."</code></td>
+            <td>Appears on the tenancy agreement as the legal attorney-in-fact.</td>
+          </tr>
+          <tr>
+            <td><code>accreditation_type</code></td>
+            <td>Professional accreditation license</td>
+            <td><code>"NBA Kaduna Branch"</code></td>
+            <td>Proves the firm is legally accredited, keeping roadside touts out.</td>
+          </tr>
+          <tr>
+            <td><code>office_address</code></td>
+            <td>Physical office address in Kaduna</td>
+            <td><code>"Plot 14, Barnawa Road"</code></td>
+            <td>Notice address on leases; establishes physical accountability.</td>
+          </tr>
+          <tr>
+            <td><code>bank_name</code></td>
+            <td>Bank name for commission payouts</td>
+            <td><code>"Stanbic IBTC"</code></td>
+            <td>Destination bank for instant 10% agency fee disbursements.</td>
+          </tr>
+          <tr>
+            <td><code>bank_account_number</code></td>
+            <td>10-digit NUBAN account number</td>
+            <td><code>"0123456789"</code></td>
+            <td>Account where commission is transferred by the split engine.</td>
+          </tr>
+          <tr>
+            <td><code>subaccount_code</code></td>
+            <td>Payment gateway routing code</td>
+            <td><code>"ACCT_mp72kd90"</code></td>
+            <td>The exact Paystack/Monnify sub-account code used for automated splits.</td>
+          </tr>
+          <tr>
+            <td><code>verification_status</code></td>
+            <td>Settlla vetting status</td>
+            <td><code>verified</code>, <code>pending</code></td>
+            <td>Only verified managers can publish listings or sign leases.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 3. PROPERTY LISTING -->
+    <div class="entity-card">
+      <div class="entity-header">
+        <div class="entity-title-wrap">
+          <div class="entity-number">3</div>
+          <div class="entity-name">Property Listing</div>
+        </div>
+        <span class="entity-badge badge-core">Vetted Inventory</span>
+      </div>
+      <p class="entity-intro">
+        <strong>What it represents in plain English:</strong> A residential rental apartment in Kaduna (e.g. Barnawa or Malali) that has been vetted with a signed landlord mandate.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 20%;">Fact / Field</th>
+            <th style="width: 35%;">What It Stores</th>
+            <th style="width: 20%;">Format / Example</th>
+            <th style="width: 25%;">Why It Matters</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>listing_id</code></td>
+            <td>Unique property listing ID</td>
+            <td><code>prop_301</code></td>
+            <td>Identifies this specific apartment unit.</td>
+          </tr>
+          <tr>
+            <td><code>manager_id</code></td>
+            <td>Manager handling the unit</td>
+            <td><code>mgr_201</code></td>
+            <td>Identifies who hosts viewings and counter-signs the contract.</td>
+          </tr>
+          <tr>
+            <td><code>title</code></td>
+            <td>Public headline</td>
+            <td><code>"Spacious 1-Bedroom Flat"</code></td>
+            <td>Shown on search cards and headers.</td>
+          </tr>
+          <tr>
+            <td><code>neighborhood</code></td>
+            <td>Target district in Kaduna</td>
+            <td><code>"Barnawa"</code>, <code>"Malali"</code></td>
+            <td>Allows tenants to search by proximity to work.</td>
+          </tr>
+          <tr>
+            <td><code>full_address</code></td>
+            <td>Physical street location</td>
+            <td><code>"12 Coronation Crescent"</code></td>
+            <td>Sent to confirmed tenants; written into legal lease.</td>
+          </tr>
+          <tr>
+            <td><code>landlord_name</code></td>
+            <td>Full legal name of property owner</td>
+            <td><code>"Alhaji Sani Bello"</code></td>
+            <td>Named as the Landlord / Property Owner in the legal lease.</td>
+          </tr>
+          <tr>
+            <td><code>landlord_phone</code></td>
+            <td>Landlord's phone number</td>
+            <td><code>"08023456789"</code></td>
+            <td>For sending instant SMS alerts when rent is secured in escrow.</td>
+          </tr>
+          <tr>
+            <td><code>landlord_account_num</code></td>
+            <td>Landlord's bank account number</td>
+            <td><code>"2019876543"</code> (FirstBank)</td>
+            <td>Where net annual rent is transferred upon move-in day key handover.</td>
+          </tr>
+          <tr>
+            <td><code>mandate_doc_url</code></td>
+            <td>Scanned landlord mandate letter</td>
+            <td><code>https://.../mandate.pdf</code></td>
+            <td>Uploaded document proving the manager has legal authority to list.</td>
+          </tr>
+          <tr>
+            <td><code>mandate_verified</code></td>
+            <td>Whether mandate has been audited</td>
+            <td><code>true</code> / <code>false</code></td>
+            <td><strong>GATEWAY INVARIANT:</strong> Property cannot be listed if false.</td>
+          </tr>
+          <tr>
+            <td><code>annual_rent_amount</code></td>
+            <td>Base annual rent</td>
+            <td><code>₦500,000</code></td>
+            <td>Rent held in escrow until key handover.</td>
+          </tr>
+          <tr>
+            <td><code>caution_fee_amount</code></td>
+            <td>Damage deposit (10%)</td>
+            <td><code>₦50,000</code></td>
+            <td>Parked safely in the caution vault for 12 months.</td>
+          </tr>
+          <tr>
+            <td><code>legal_fee_amount</code></td>
+            <td>Agreement drafting fee (5%)</td>
+            <td><code>₦25,000</code></td>
+            <td>Disbursed directly to the legal drafter at checkout.</td>
+          </tr>
+          <tr>
+            <td><code>agency_fee_amount</code></td>
+            <td>Management commission (10%)</td>
+            <td><code>₦50,000</code></td>
+            <td>Disbursed directly to HB&A Partners at checkout.</td>
+          </tr>
+          <tr>
+            <td><code>total_move_in_cost</code></td>
+            <td>Sum of all 4 charges</td>
+            <td><code>₦625,000</code></td>
+            <td><strong>Complete Price Transparency:</strong> Eliminates unexpected fees.</td>
+          </tr>
+          <tr>
+            <td><code>listing_status</code></td>
+            <td>Current state of listing</td>
+            <td><code>published</code>, <code>reserved</code></td>
+            <td>Ensures taken apartments cannot be double-booked.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 4. VISITING WINDOW -->
+    <div class="entity-card">
+      <div class="entity-header">
+        <div class="entity-title-wrap">
+          <div class="entity-number">4</div>
+          <div class="entity-name">Visiting Window</div>
+        </div>
+        <span class="entity-badge badge-core">Inspection Schedule</span>
+      </div>
+      <p class="entity-intro">
+        <strong>What it represents in plain English:</strong> The recurring days and hours when a property manager is physically available to show apartments (e.g. Saturdays 10 AM – 3 PM).
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 20%;">Fact / Field</th>
+            <th style="width: 35%;">What It Stores</th>
+            <th style="width: 20%;">Format / Example</th>
+            <th style="width: 25%;">Why It Matters</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>window_id</code></td>
+            <td>Unique visiting window ID</td>
+            <td><code>win_401</code></td>
+            <td>Identifies this recurring schedule block.</td>
+          </tr>
+          <tr>
+            <td><code>manager_id</code></td>
+            <td>Manager owning this schedule</td>
+            <td><code>mgr_201</code></td>
+            <td>Connects availability to the specific manager on-site.</td>
+          </tr>
+          <tr>
+            <td><code>day_of_week</code></td>
+            <td>Day viewings are held</td>
+            <td><code>"Saturday"</code>, <code>"Tuesday"</code></td>
+            <td>Constrains bookings strictly to days the manager is at the property.</td>
+          </tr>
+          <tr>
+            <td><code>start_time</code> / <code>end_time</code></td>
+            <td>Viewing hours range</td>
+            <td><code>10:00:00</code> – <code>15:00:00</code></td>
+            <td>Defines the active walkthrough window.</td>
+          </tr>
+          <tr>
+            <td><code>slot_minutes</code></td>
+            <td>Duration per appointment</td>
+            <td><code>30</code></td>
+            <td>Divides the window into non-overlapping 30-minute slots.</td>
+          </tr>
+          <tr>
+            <td><code>is_active</code></td>
+            <td>Whether schedule is currently open</td>
+            <td><code>true</code> / <code>false</code></td>
+            <td>Allows pausing bookings during holidays or maintenance.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 5. INSPECTION BOOKING -->
+    <div class="entity-card">
+      <div class="entity-header">
+        <div class="entity-title-wrap">
+          <div class="entity-number">5</div>
+          <div class="entity-name">Inspection Booking</div>
+        </div>
+        <span class="entity-badge badge-core">Zero-Fee Appointment</span>
+      </div>
+      <p class="entity-intro">
+        <strong>What it represents in plain English:</strong> A confirmed 30-minute appointment made by a tenant to tour an apartment in person at zero cost.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 20%;">Fact / Field</th>
+            <th style="width: 35%;">What It Stores</th>
+            <th style="width: 20%;">Format / Example</th>
+            <th style="width: 25%;">Why It Matters</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>booking_id</code></td>
+            <td>Unique booking appointment ID</td>
+            <td><code>bk_501</code></td>
+            <td>Tracks this inspection slot.</td>
+          </tr>
+          <tr>
+            <td><code>listing_id</code></td>
+            <td>Apartment being inspected</td>
+            <td><code>prop_301</code></td>
+            <td>Identifies the property and address.</td>
+          </tr>
+          <tr>
+            <td><code>tenant_name</code></td>
+            <td>Name of prospective tenant</td>
+            <td><code>"Hajara Bello"</code></td>
+            <td>Gives the manager the visitor's name for estate security gates.</td>
+          </tr>
+          <tr>
+            <td><code>tenant_phone</code></td>
+            <td>Tenant's mobile number</td>
+            <td><code>"08031234567"</code></td>
+            <td>For sending SMS meeting directions and arrival confirmations.</td>
+          </tr>
+          <tr>
+            <td><code>slot_timestamp</code></td>
+            <td>Scheduled date and time</td>
+            <td><code>2026-09-19 11:30</code></td>
+            <td>Locks this 30-minute slot to prevent double-booking.</td>
+          </tr>
+          <tr>
+            <td><code>inspection_fee</code></td>
+            <td>Fee charged for walkthrough</td>
+            <td><code>₦0</code></td>
+            <td>Explicit proof that Settlla walkthroughs are 100% free.</td>
+          </tr>
+          <tr>
+            <td><code>booking_status</code></td>
+            <td>State of appointment</td>
+            <td><code>confirmed</code>, <code>completed</code></td>
+            <td>Monitors attendance and tenant engagement.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 6. TENANCY AGREEMENT -->
+    <div class="entity-card">
+      <div class="entity-header">
+        <div class="entity-title-wrap">
+          <div class="entity-number">6</div>
+          <div class="entity-name">Tenancy Agreement</div>
+        </div>
+        <span class="entity-badge badge-legal">Dynamic Legal Contract</span>
+      </div>
+      <p class="entity-intro">
+        <strong>What it represents in plain English:</strong> The legally binding lease agreement generated automatically by Settlla, signed digitally by the tenant and counter-signed by the manager under mandate.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 20%;">Fact / Field</th>
+            <th style="width: 35%;">What It Stores</th>
+            <th style="width: 20%;">Format / Example</th>
+            <th style="width: 25%;">Why It Matters</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>agreement_id</code></td>
+            <td>Unique legal contract ID</td>
+            <td><code>agr_601</code></td>
+            <td>Identifies this formal legal agreement.</td>
+          </tr>
+          <tr>
+            <td><code>listing_id</code></td>
+            <td>Rented property ID</td>
+            <td><code>prop_301</code></td>
+            <td>Binds the lease to the exact physical property title.</td>
+          </tr>
+          <tr>
+            <td><code>tenant_id</code></td>
+            <td>Verified tenant ID</td>
+            <td><code>usr_101</code></td>
+            <td>Binds the lease to the tenant's verified legal identity.</td>
+          </tr>
+          <tr>
+            <td><code>manager_id</code></td>
+            <td>Authorized signatory firm</td>
+            <td><code>mgr_201</code></td>
+            <td>Designates the manager signing as attorney-in-fact under mandate.</td>
+          </tr>
+          <tr>
+            <td><code>lease_start_date</code></td>
+            <td>Possession commencement date</td>
+            <td><code>2026-10-01</code></td>
+            <td>Start of the 12-month lease tenure.</td>
+          </tr>
+          <tr>
+            <td><code>lease_end_date</code></td>
+            <td>Lease expiration date</td>
+            <td><code>2027-09-30</code></td>
+            <td>End of the 12-month lease tenure.</td>
+          </tr>
+          <tr>
+            <td><code>contract_text</code></td>
+            <td>Complete agreement text</td>
+            <td>Markdown / Legal Text</td>
+            <td>Full binding text incorporating Kaduna State statutory tenancy laws.</td>
+          </tr>
+          <tr>
+            <td><code>tenant_signature</code></td>
+            <td>Tenant's digital signature</td>
+            <td>Drawn Vector / Base64</td>
+            <td>Legal evidence of tenant's informed consent.</td>
+          </tr>
+          <tr>
+            <td><code>tenant_signed_at</code></td>
+            <td>Tenant signature timestamp</td>
+            <td><code>2026-09-20 14:15</code></td>
+            <td>Audit timestamp for electronic evidence compliance.</td>
+          </tr>
+          <tr>
+            <td><code>manager_signature</code></td>
+            <td>Manager's counter-signature</td>
+            <td>Drawn Vector / Base64</td>
+            <td>Legal counter-execution on behalf of the property owner.</td>
+          </tr>
+          <tr>
+            <td><code>signed_pdf_url</code></td>
+            <td>Final executed PDF document</td>
+            <td><code>https://.../lease.pdf</code></td>
+            <td>Permanent legal contract copy stored in both dashboards.</td>
+          </tr>
+          <tr>
+            <td><code>agreement_status</code></td>
+            <td>Contract lifecycle state</td>
+            <td><code>fully_executed</code></td>
+            <td>Gatekeeper: Checkout cannot occur until status is fully executed.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 7. PAYMENT TRANSACTION -->
+    <div class="entity-card">
+      <div class="entity-header">
+        <div class="entity-title-wrap">
+          <div class="entity-number">7</div>
+          <div class="entity-name">Payment Transaction</div>
+        </div>
+        <span class="entity-badge badge-financial">4-Way Split Engine</span>
+      </div>
+      <p class="entity-intro">
+        <strong>What it represents in plain English:</strong> The record of the single move-in checkout payment made by the tenant through Paystack or Monnify, and how it was divided.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 20%;">Fact / Field</th>
+            <th style="width: 35%;">What It Stores</th>
+            <th style="width: 20%;">Format / Example</th>
+            <th style="width: 25%;">Why It Matters</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>transaction_id</code></td>
+            <td>Unique transaction ID</td>
+            <td><code>tx_701</code></td>
+            <td>Identifies this checkout payment event.</td>
+          </tr>
+          <tr>
+            <td><code>agreement_id</code></td>
+            <td>Associated lease contract</td>
+            <td><code>agr_601</code></td>
+            <td>Links money paid to the specific signed legal lease.</td>
+          </tr>
+          <tr>
+            <td><code>total_amount_paid</code></td>
+            <td>Total money collected</td>
+            <td><code>₦625,000</code></td>
+            <td>The single, all-in move-in sum debited from the tenant.</td>
+          </tr>
+          <tr>
+            <td><code>gateway_ref</code></td>
+            <td>Processor transaction reference</td>
+            <td><code>"T89234812398"</code></td>
+            <td>External reference code used to verify funds on Paystack/Monnify.</td>
+          </tr>
+          <tr>
+            <td><code>legal_fee_cut</code></td>
+            <td>Legal fee share (5%)</td>
+            <td><code>₦25,000</code></td>
+            <td>Instantly routed to the legal drafter's bank account.</td>
+          </tr>
+          <tr>
+            <td><code>agency_fee_cut</code></td>
+            <td>Agency commission share (10%)</td>
+            <td><code>₦50,000</code></td>
+            <td>Instantly routed to HB&A Partners' bank account.</td>
+          </tr>
+          <tr>
+            <td><code>caution_fee_cut</code></td>
+            <td>Caution deposit share (10%)</td>
+            <td><code>₦50,000</code></td>
+            <td>Isolated into merchant reserve / PayRep custody balance.</td>
+          </tr>
+          <tr>
+            <td><code>rent_escrow_cut</code></td>
+            <td>Annual rent share (75%)</td>
+            <td><code>₦500,000</code></td>
+            <td>Held in Key-in-Door Move-In Escrow until keys are received.</td>
+          </tr>
+          <tr>
+            <td><code>payment_status</code></td>
+            <td>Settlement state</td>
+            <td><code>successful</code>, <code>pending</code></td>
+            <td>Keys cannot be handed over until status is confirmed successful.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 8. ESCROW HOLD -->
+    <div class="entity-card">
+      <div class="entity-header">
+        <div class="entity-title-wrap">
+          <div class="entity-number">8</div>
+          <div class="entity-name">Escrow Hold</div>
+        </div>
+        <span class="entity-badge badge-safety">Key-in-Door Escrow</span>
+      </div>
+      <p class="entity-intro">
+        <strong>What it represents in plain English:</strong> The temporary safe-deposit container that holds the annual rent payment until move-in day, backed by the 100% scam indemnity guarantee.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 20%;">Fact / Field</th>
+            <th style="width: 35%;">What It Stores</th>
+            <th style="width: 20%;">Format / Example</th>
+            <th style="width: 25%;">Why It Matters</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>escrow_id</code></td>
+            <td>Unique escrow record ID</td>
+            <td><code>esc_801</code></td>
+            <td>Tracks this specific held rent fund.</td>
+          </tr>
+          <tr>
+            <td><code>amount_held</code></td>
+            <td>Net rent held in escrow</td>
+            <td><code>₦500,000</code></td>
+            <td>The funds protected until key handover.</td>
+          </tr>
+          <tr>
+            <td><code>landlord_account_num</code></td>
+            <td>Landlord's bank account</td>
+            <td><code>"2019876543"</code> (FirstBank)</td>
+            <td>Destination account where rent will disburse upon release.</td>
+          </tr>
+          <tr>
+            <td><code>scheduled_move_in</code></td>
+            <td>Agreed move-in time</td>
+            <td><code>2026-10-01 10:00</code></td>
+            <td>The date and hour keys are scheduled to be handed over.</td>
+          </tr>
+          <tr>
+            <td><code>auto_release_at</code></td>
+            <td>24-hour safety timer deadline</td>
+            <td><code>2026-10-02 10:00</code></td>
+            <td><strong>Move-in + 24 hrs:</strong> Auto-disburses rent if tenant forgets to confirm.</td>
+          </tr>
+          <tr>
+            <td><code>confirmed_by_tenant</code></td>
+            <td>Handover confirmation flag</td>
+            <td><code>true</code> / <code>false</code></td>
+            <td>Records whether the tenant clicked "Confirm Key Handover".</td>
+          </tr>
+          <tr>
+            <td><code>escrow_status</code></td>
+            <td>Escrow hold state</td>
+            <td><code>holding</code>, <code>released</code>, <code>disputed_frozen</code></td>
+            <td>Blocks landlord payout if a dispute is filed.</td>
+          </tr>
+          <tr>
+            <td><code>release_reason</code></td>
+            <td>Disbursement trigger</td>
+            <td><code>tenant_button</code>, <code>auto_timer_24h</code></td>
+            <td>Records why the funds were cleared to the landlord.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 9. MOVE-IN DISPUTE -->
+    <div class="entity-card">
+      <div class="entity-header">
+        <div class="entity-title-wrap">
+          <div class="entity-number">9</div>
+          <div class="entity-name">Move-In Dispute</div>
+        </div>
+        <span class="entity-badge badge-safety">Emergency Freeze & Indemnity</span>
+      </div>
+      <p class="entity-intro">
+        <strong>What it represents in plain English:</strong> An emergency incident report filed by the tenant before the 24-hour timer expires if keys fail, access is denied, or the apartment is occupied by someone else.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 20%;">Fact / Field</th>
+            <th style="width: 35%;">What It Stores</th>
+            <th style="width: 20%;">Format / Example</th>
+            <th style="width: 25%;">Why It Matters</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>dispute_id</code></td>
+            <td>Unique dispute case ID</td>
+            <td><code>dsp_901</code></td>
+            <td>Tracks this emergency investigation.</td>
+          </tr>
+          <tr>
+            <td><code>escrow_id</code></td>
+            <td>Linked escrow hold</td>
+            <td><code>esc_801</code></td>
+            <td>Identifies which rent payment must be frozen immediately.</td>
+          </tr>
+          <tr>
+            <td><code>issue_category</code></td>
+            <td>Reason for failure</td>
+            <td><code>"key_failure"</code>, <code>"access_denied"</code></td>
+            <td>Categorizes the issue for rapid 2-hour concierge triage.</td>
+          </tr>
+          <tr>
+            <td><code>description</code></td>
+            <td>Tenant's written explanation</td>
+            <td><code>"Deadbolt lock broken..."</code></td>
+            <td>Details what occurred on move-in day.</td>
+          </tr>
+          <tr>
+            <td><code>date_logged</code></td>
+            <td>Exact submission timestamp</td>
+            <td><code>2026-10-01 12:45</code></td>
+            <td><strong>CRITICAL:</strong> Instantly stops the 24-hour auto-release timer.</td>
+          </tr>
+          <tr>
+            <td><code>dispute_status</code></td>
+            <td>Investigation state</td>
+            <td><code>open_frozen</code>, <code>resolved_refunded</code></td>
+            <td>Tracks dispute progression.</td>
+          </tr>
+          <tr>
+            <td><code>refund_reference</code></td>
+            <td>Bank refund transaction code</td>
+            <td><code>"REF_91823719"</code></td>
+            <td>Proof of 100% money-back refund under Scam Indemnity Guarantee.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 10. CAUTION DEPOSIT LEDGER -->
+    <div class="entity-card">
+      <div class="entity-header">
+        <div class="entity-title-wrap">
+          <div class="entity-number">10</div>
+          <div class="entity-name">Caution Deposit Ledger</div>
+        </div>
+        <span class="entity-badge badge-financial">12-Month Vault Record</span>
+      </div>
+      <p class="entity-intro">
+        <strong>What it represents in plain English:</strong> The long-term record that tracks the tenant's damage deposit parked safely in the merchant reserve or PayRep holding vault for the full 12-month lease.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 20%;">Fact / Field</th>
+            <th style="width: 35%;">What It Stores</th>
+            <th style="width: 20%;">Format / Example</th>
+            <th style="width: 25%;">Why It Matters</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>caution_id</code></td>
+            <td>Unique caution record ID</td>
+            <td><code>ctn_1001</code></td>
+            <td>Tracks this specific tenancy's damage deposit.</td>
+          </tr>
+          <tr>
+            <td><code>agreement_id</code></td>
+            <td>Linked lease contract</td>
+            <td><code>agr_601</code></td>
+            <td>Connects the deposit to the signed lease terms.</td>
+          </tr>
+          <tr>
+            <td><code>tenant_id</code></td>
+            <td>Tenant who owns the deposit</td>
+            <td><code>usr_101</code></td>
+            <td>Designates the rightful owner entitled to refund upon move-out.</td>
+          </tr>
+          <tr>
+            <td><code>amount_held</code></td>
+            <td>Caution sum in vault</td>
+            <td><code>₦50,000</code></td>
+            <td>The exact amount ringfenced away from the landlord.</td>
+          </tr>
+          <tr>
+            <td><code>vault_platform</code></td>
+            <td>Custody holding infrastructure</td>
+            <td><code>merchant_reserve</code>, <code>payrep</code></td>
+            <td>Licensed third-party platform legally holding the funds.</td>
+          </tr>
+          <tr>
+            <td><code>lease_end_date</code></td>
+            <td>Tenancy conclusion date</td>
+            <td><code>2027-09-30</code></td>
+            <td>Marks when the deposit becomes eligible for move-out reconciliation.</td>
+          </tr>
+          <tr>
+            <td><code>ledger_status</code></td>
+            <td>Deposit state</td>
+            <td><code>ringfenced_active</code></td>
+            <td>Guarantees the landlord cannot spend the money during the tenancy.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Summary box -->
+    <div class="summary-box">
+      <strong>Core Architectural Takeaway:</strong> Settlla's data model is intentionally non-custodial and mandate-centric. By storing the property manager's written authority on the <code>Property Listing</code>, Settlla allows the manager to legally execute contracts on behalf of absentee landlords without requiring landlords to adopt software. By pairing <code>Payment Transaction</code> splits with isolated <code>Escrow Hold</code> and <code>Caution Deposit Ledger</code> entries, the platform provides institutional trust without operating an unlicensed bank.
+    </div>
+
+    <footer>
+      Settlla Startup Artifacts &bull; System Data Structure &bull; Created 2026-09-15
+    </footer>
+  </div>
+</body>
+</html>

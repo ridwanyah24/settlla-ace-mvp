@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settlla — Product Requirements Document (PRD)</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface-elevated: #21262d;
+      --border: #30363d;
+      --text-main: #c9d1d9;
+      --text-bright: #f0f6fc;
+      --text-muted: #8b949e;
+      --primary: #58a6ff;
+      --accent: #2ea043;
+      --warning: #d29922;
+      --danger: #f85149;
+      --purple: #bc8cff;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font);
+      line-height: 1.6;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 24px;
+      margin-bottom: 36px;
+    }
+
+    h1 {
+      color: var(--text-bright);
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 1.2rem;
+      color: var(--primary);
+      font-weight: 500;
+      margin-bottom: 16px;
+    }
+
+    .metadata {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .metadata-item {
+      background: var(--surface-elevated);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .metadata-item strong {
+      color: var(--text-bright);
+    }
+
+    section {
+      margin-bottom: 40px;
+    }
+
+    h2 {
+      color: var(--text-bright);
+      font-size: 1.5rem;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3 {
+      color: var(--text-bright);
+      font-size: 1.15rem;
+      margin: 20px 0 10px 0;
+    }
+
+    p {
+      margin-bottom: 16px;
+    }
+
+    .problem-box {
+      background: rgba(210, 153, 34, 0.1);
+      border-left: 4px solid var(--warning);
+      padding: 16px 20px;
+      border-radius: 0 8px 8px 0;
+      font-size: 1.05rem;
+      line-height: 1.7;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 16px;
+    }
+
+    @media (max-width: 768px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-bright);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge-icp {
+      background: rgba(88, 166, 255, 0.15);
+      color: var(--primary);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .card ul {
+      list-style-position: inside;
+      padding-left: 4px;
+    }
+
+    .card li {
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+    }
+
+    .card strong {
+      color: var(--text-bright);
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      font-size: 0.9rem;
+      background: var(--surface);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    th {
+      background: var(--surface-elevated);
+      color: var(--text-bright);
+      font-weight: 600;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .badge-must {
+      background: rgba(46, 160, 67, 0.15);
+      color: #3fb950;
+      border: 1px solid rgba(46, 160, 67, 0.3);
+    }
+
+    .badge-should {
+      background: rgba(88, 166, 255, 0.15);
+      color: #58a6ff;
+      border: 1px solid rgba(88, 166, 255, 0.3);
+    }
+
+    .badge-could {
+      background: rgba(210, 153, 34, 0.15);
+      color: #d29922;
+      border: 1px solid rgba(210, 153, 34, 0.3);
+    }
+
+    .badge-wont {
+      background: rgba(248, 81, 73, 0.15);
+      color: #f85149;
+      border: 1px solid rgba(248, 81, 73, 0.3);
+    }
+
+    .badge-decision {
+      background: rgba(188, 140, 255, 0.15);
+      color: #d2a8ff;
+      border: 1px solid rgba(188, 140, 255, 0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-left: 4px;
+      white-space: nowrap;
+    }
+
+    .decision-date {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-style: italic;
+      margin-top: 4px;
+    }
+
+    /* Stories */
+    .story-group {
+      margin-bottom: 24px;
+    }
+
+    .story-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--primary);
+      padding: 12px 16px;
+      border-radius: 0 6px 6px 0;
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+    }
+
+    .story-card strong {
+      color: var(--text-bright);
+    }
+
+    /* Out of scope */
+    .out-scope-list {
+      list-style-type: none;
+    }
+
+    .out-scope-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--danger);
+      padding: 12px 16px;
+      border-radius: 0 6px 6px 0;
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+    }
+
+    .out-scope-item strong {
+      color: var(--text-bright);
+    }
+
+    /* Unclear / Deferred */
+    .deferred-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--warning);
+      padding: 12px 16px;
+      border-radius: 0 6px 6px 0;
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+    }
+
+    .deferred-item strong {
+      color: var(--text-bright);
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+      margin-top: 40px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Settlla — Product Requirements Document (PRD)</h1>
+      <div class="subtitle">The Digital Rental Closing Engine (MVP Build)</div>
+      <div class="metadata">
+        <div class="metadata-item"><strong>Date:</strong> 2026-09-15</div>
+        <div class="metadata-item"><strong>Version:</strong> 1.1 (Updated with Founder Decisions)</div>
+        <div class="metadata-item"><strong>Location:</strong> Kaduna, Nigeria (Barnawa & Malali)</div>
+        <div class="metadata-item"><strong>Source:</strong> raw-notes.md (YC Office Hours)</div>
+      </div>
+    </header>
+
+    <section>
+      <h2>1. Problem Statement</h2>
+      <div class="problem-box">
+        In Kaduna, incoming professional relocatees (such as NYSC corps members, remote tech workers, and corporate bank transferees) face urgent 14-day housing deadlines. They are forced to navigate fragmented, unregulated street agents, routinely lose money to arbitrary inspection fees (₦2,000–₦5,000 per visit), endure discriminatory bias, and risk losing 100% of their annual savings to ghost agents and unrecovered caution deposits. Concurrently, reputable property managers and landlords struggle with delayed rent remittances from agents holding the cash float, chaotic paper agreements, and an inability to efficiently pre-qualify solvent, trustworthy tenants.
+      </div>
+    </section>
+
+    <section>
+      <h2>2. Target User (Specific Dual ICPs)</h2>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">
+            <span>Primary Demand: The Relocating Professional</span>
+            <span class="badge-icp">Tenant</span>
+          </div>
+          <ul>
+            <li><strong>Persona:</strong> "Hajara", 22–29 year-old female corporate transferee, NYSC corps member posted to GTBank Barnawa, or remote engineer.</li>
+            <li><strong>Financials:</strong> ₦400k–₦800k annual budget; ready to pay upfront.</li>
+            <li><strong>Pain:</strong> No local Kaduna network, tight 14-day move-in deadline, risk of street-agent extortion and ghost listing scams.</li>
+            <li><strong>Core Need:</strong> Verified listings, free direct inspection booking, escrow protection until key handover, and legal lease security.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-title">
+            <span>Primary Supply: The Property Lawyer / Manager</span>
+            <span class="badge-icp">Manager</span>
+          </div>
+          <ul>
+            <li><strong>Persona:</strong> "HB&A Partners", licensed legal practitioner or accredited firm managing 10–30 residential properties.</li>
+            <li><strong>Pain:</strong> Wastes days filtering unserious WhatsApp leads; risks landlord trust over payment delays; manual drafting and printing paper leases.</li>
+            <li><strong>Core Need:</strong> Pre-screened corporate tenants, instant automated split-payout directly to landlords, and automated legal lease generation.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>3. Functional Requirements (FR) Table</h2>
+      <p style="color: var(--text-muted); font-size: 0.9rem;">
+        Priority Scheme: <span class="badge badge-must">Must</span> Core MVP | 
+        <span class="badge badge-should">Should</span> Fast Follow-up | 
+        <span class="badge badge-could">Could</span> Enhancement | 
+        <span class="badge badge-wont">Won't</span> Deferred Out-of-Scope
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 10%;">ID</th>
+            <th style="width: 25%;">Feature</th>
+            <th style="width: 53%;">Description</th>
+            <th style="width: 12%;">Priority</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>FR-01</strong></td>
+            <td><strong>Verified Listing Showcase</strong></td>
+            <td>Web interface displaying vetted properties submitted via property manager self-serve portal with structured metadata (rent, caution fee, legal fee, location, amenities, verified photos), strictly requiring an uploaded copy of the signed landlord management mandate before publication. <span class="badge-decision">[Founder decision]</span></td>
+            <td><span class="badge badge-must">Must</span></td>
+          </tr>
+          <tr>
+            <td><strong>FR-02</strong></td>
+            <td><strong>Direct Inspection Slot Scheduling</strong></td>
+            <td>Allows tenants to book zero-fee 30-minute inspection slots strictly constrained to recurring visiting windows pre-set by the property manager (e.g., Tuesdays/Thursdays 2:00 PM – 5:00 PM, Saturdays 10:00 AM – 3:00 PM), eliminating inspection fees. <span class="badge-decision">[Founder decision]</span></td>
+            <td><span class="badge badge-must">Must</span></td>
+          </tr>
+          <tr>
+            <td><strong>FR-03</strong></td>
+            <td><strong>Dynamic Tenancy Agreement Generator</strong></td>
+            <td>Automatically generates a standardized, legally binding Nigerian residential lease agreement populated with tenant, landlord, property, and fee details, designating the property manager as authorized signatory under written mandate. <span class="badge-decision">[Founder decision]</span></td>
+            <td><span class="badge badge-must">Must</span></td>
+          </tr>
+          <tr>
+            <td><strong>FR-04</strong></td>
+            <td><strong>Electronic Signature Workflow</strong></td>
+            <td>Enables digital two-party lease execution between the tenant and the legal property manager (e.g., HB&A Partners), who signs digitally on behalf of the landlord under their existing written property management mandate, accompanied by audit timestamps. <span class="badge-decision">[Founder decision]</span></td>
+            <td><span class="badge badge-must">Must</span></td>
+          </tr>
+          <tr>
+            <td><strong>FR-05</strong></td>
+            <td><strong>Automated 4-Way Split Payment Engine</strong></td>
+            <td>Integrates payment gateway (Paystack/Monnify) to accept total move-in cost in one payment and automatically split: (1) Rent → Landlord bank account; (2) Management/Agency Fee → Manager; (3) Legal Fee → Drafter; (4) Caution Fee → Ringfenced merchant reserve balance or third-party holding platform (PayRep). <span class="badge-decision">[Founder decision]</span></td>
+            <td><span class="badge badge-must">Must</span></td>
+          </tr>
+          <tr>
+            <td><strong>FR-06</strong></td>
+            <td><strong>Ringfenced Caution Deposit Vault</strong></td>
+            <td>Directs caution deposits into dedicated virtual sub-accounts / merchant reserve balances via Paystack/Monnify or a third-party holding platform (PayRep) tagged per tenancy, preventing personal landlord misappropriation while remaining non-custodial. <span class="badge-decision">[Founder decision]</span></td>
+            <td><span class="badge badge-must">Must</span></td>
+          </tr>
+          <tr>
+            <td><strong>FR-07</strong></td>
+            <td><strong>Key-in-Door Move-In Escrow Protection</strong></td>
+            <td>Holds the payout clearance until the tenant taps "Confirm Key Handover" in their web dashboard; if unconfirmed after 24 hours post-scheduled move-in and no dispute is filed via "Report a Problem", funds automatically release to the landlord, backed by a 100% scam indemnity guarantee. <span class="badge-decision">[Founder decision]</span></td>
+            <td><span class="badge badge-must">Must</span></td>
+          </tr>
+          <tr>
+            <td><strong>FR-08</strong></td>
+            <td><strong>Tenant Search Status & Preference Broadcast</strong></td>
+            <td>Tenants submit an active search profile (budget, target area, move-in date) that matches against manager portfolios.</td>
+            <td><span class="badge badge-should">Should</span></td>
+          </tr>
+          <tr>
+            <td><strong>FR-09</strong></td>
+            <td><strong>Property Manager Lead Matching Dashboard</strong></td>
+            <td>Portal for managers (like HB&A) to view pre-qualified tenant requests and directly invite them to inspect matching listings.</td>
+            <td><span class="badge badge-should">Should</span></td>
+          </tr>
+          <tr>
+            <td><strong>FR-10</strong></td>
+            <td><strong>Automated Landlord Remittance Receipts</strong></td>
+            <td>Triggers instant SMS/email payment notifications and formal transaction receipts directly to the landlord's registered contact upon payment clearance.</td>
+            <td><span class="badge badge-should">Should</span></td>
+          </tr>
+          <tr>
+            <td><strong>FR-11</strong></td>
+            <td><strong>Basic Identity & Employment Verification</strong></td>
+            <td>Collects and validates tenant government ID (NIN) and proof of employment/NYSC deployment letter prior to lease generation.</td>
+            <td><span class="badge badge-should">Should</span></td>
+          </tr>
+          <tr>
+            <td><strong>FR-12</strong></td>
+            <td><strong>Post-Move-Out Caution Reconciliation Flow</strong></td>
+            <td>Digital protocol at tenancy conclusion allowing manager to log verified damages with photos or initiate full caution return to tenant.</td>
+            <td><span class="badge badge-could">Could</span></td>
+          </tr>
+          <tr>
+            <td><strong>FR-13</strong></td>
+            <td><strong>Virtual Video Tour Attachments</strong></td>
+            <td>Supports compressed, pre-recorded video walkthroughs on listing pages to reduce redundant physical inspections.</td>
+            <td><span class="badge badge-could">Could</span></td>
+          </tr>
+          <tr>
+            <td><strong>FR-14</strong></td>
+            <td><strong>In-App Inspection Rescheduling</strong></td>
+            <td>Allows tenants or managers to reschedule inspection appointments with automated SMS alerts up to 4 hours prior.</td>
+            <td><span class="badge badge-could">Could</span></td>
+          </tr>
+          <tr>
+            <td><strong>FR-15</strong></td>
+            <td><strong>Unlicensed Custodial Banking</strong></td>
+            <td>Settlla directly holding user deposits in its own checking account without licensed fintech sub-account infrastructure.</td>
+            <td><span class="badge badge-wont">Won't</span></td>
+          </tr>
+          <tr>
+            <td><strong>FR-16</strong></td>
+            <td><strong>Rent Now Pay Later (RNPL) / Credit Underwriting</strong></td>
+            <td>Financing tenant rents or issuing monthly installment loans.</td>
+            <td><span class="badge badge-wont">Won't</span></td>
+          </tr>
+          <tr>
+            <td><strong>FR-17</strong></td>
+            <td><strong>Open Unregulated Street Agent Marketplace</strong></td>
+            <td>Public, unvetted listing submissions from roadside freelance agents.</td>
+            <td><span class="badge badge-wont">Won't</span></td>
+          </tr>
+          <tr>
+            <td><strong>FR-18</strong></td>
+            <td><strong>Full Maintenance & Repair Work-Order Ticketing</strong></td>
+            <td>In-app post-move-in plumbing, electrical, and maintenance coordination.</td>
+            <td><span class="badge badge-wont">Won't</span></td>
+          </tr>
+          <tr>
+            <td><strong>FR-19</strong></td>
+            <td><strong>Multi-City Geographies</strong></td>
+            <td>Expansion into Abuja, Lagos, or other Nigerian states during V1.</td>
+            <td><span class="badge badge-wont">Won't</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>4. User Stories</h2>
+      <div class="story-group">
+        <h3>Tenant (Relocating Professional — "Hajara")</h3>
+        <div class="story-card"><strong>1. Zero-Fee Inspection:</strong> As an incoming relocatee, I want to view verified apartment details and book an inspection slot online, so that I don't waste ₦3,000–₦5,000 on arbitrary inspection fees or get ghosted by roadside agents.</div>
+        <div class="story-card"><strong>2. Move-In Protection Guarantee:</strong> As a tenant paying annual rent upfront, I want my funds protected under an escrow guarantee until I physically receive the working keys, so that I never lose my money to ghost listings or fake agents.</div>
+        <div class="story-card"><strong>3. Instant Legal Lease:</strong> As a tenant, I want to review and electronically sign a formal tenancy agreement, so that I have enforceable legal protection against arbitrary eviction or rent inflation.</div>
+        <div class="story-card"><strong>4. Caution Fee Ringfencing:</strong> As a tenant, I want my caution deposit kept in a dedicated, ringfenced vault rather than the landlord's personal pocket, so that I can reliably recover my money when I move out.</div>
+      </div>
+
+      <div class="story-group">
+        <h3>Property Manager / Lawyer ("HB&A Partners")</h3>
+        <div class="story-card"><strong>5. Qualified Inbound Tenant Demand:</strong> As a property manager, I want to access pre-vetted tenant profiles with confirmed budgets and move-in dates, so that I don't waste time on window-shoppers and WhatsApp tire-kickers.</div>
+        <div class="story-card"><strong>6. Automated Paperwork:</strong> As a property lawyer, I want standardized tenancy agreements auto-populated and signed digitally, so that I eliminate the friction of drafting, printing, and chasing paper signatures.</div>
+        <div class="story-card"><strong>7. Direct Landlord Remittance:</strong> As a property manager, I want rental payments to split automatically with the landlord's share going directly to their bank account, so that property owners never accuse me of delaying their money.</div>
+        <div class="story-card"><strong>8. Agency & Legal Fee Certainty:</strong> As a property manager, I want my agency and legal drafting fees deducted and remitted directly to my account at checkout, so that I don't have to chase landlords or tenants for commissions.</div>
+      </div>
+
+      <div class="story-group">
+        <h3>Property Owner / Landlord</h3>
+        <div class="story-card"><strong>9. Immediate Payout Notification:</strong> As an offsite landlord, I want to receive instant SMS/bank alerts when rent is paid by a corporate tenant, so that I have total visibility into my rental income.</div>
+        <div class="story-card"><strong>10. Pre-Screened Tenant Quality:</strong> As a landlord, I want tenants pre-verified for identity and employment, so that I protect my residential property from destructive or defaulting occupants.</div>
+      </div>
+    </section>
+
+    <section>
+      <h2>5. Explicit Out-of-Scope List (Non-Goals for V1)</h2>
+      <ul class="out-scope-list">
+        <li class="out-scope-item"><strong>1. No Custodial Escrow Banking:</strong> Settlla will not operate an unlicensed escrow bank. All fund holding and splits must execute via licensed payment processor sub-accounts (Paystack/Monnify/Providus virtual accounts) or designated third-party holding platforms (PayRep).</li>
+        <li class="out-scope-item"><strong>2. No Rent Now Pay Later (RNPL) or Lending:</strong> Settlla will not underwrite credit, issue monthly micro-loans, or pay landlords upfront on behalf of tenants. All leases require 100% upfront annual rent from the tenant.</li>
+        <li class="out-scope-item"><strong>3. No Open Marketplace for Street Agents:</strong> Settlla will not allow open, unverified listing postings. Only vetted legal practitioners and accredited property managers with proven landlord mandates may list properties.</li>
+        <li class="out-scope-item"><strong>4. No Post-Move-In Property Management & Maintenance:</strong> Settlla will not handle ongoing maintenance ticketing, generator fueling logs, facility repairs, or waste disposal management in this build.</li>
+        <li class="out-scope-item"><strong>5. No Multi-City Deployment:</strong> Settlla will not deploy in Abuja, Lagos, Port Harcourt, or other states during V1. All operational, physical concierge, and marketing focus is restricted strictly to Kaduna (Barnawa/Malali wedge).</li>
+        <li class="out-scope-item"><strong>6. No In-App Legal Dispute Arbitration Court:</strong> Settlla will not act as a judicial body or provide binding dispute arbitration. Agreements will rely on standard Kaduna State tenancy laws and Nigerian judicial enforceability.</li>
+        <li class="out-scope-item"><strong>7. No Direct Landlord In-App Accounts or Onboarding:</strong> Landlords will not be required to register, download an app, or log into a portal to sign leases; property managers sign digitally as authorized legal representatives under existing written mandates. <span class="badge-decision">[Founder decision]</span></li>
+        <li class="out-scope-item"><strong>8. No Live Two-Way External Calendar Sync:</strong> Settlla will not integrate third-party calendar engines (e.g., Google Calendar, Outlook) for inspection scheduling; inspection availability is strictly governed by pre-set, recurring visiting windows defined by property managers. <span class="badge-decision">[Founder decision]</span></li>
+        <li class="out-scope-item"><strong>9. No Listings Without Proof of Mandate:</strong> Settlla will not publish unmandated properties; every listing submission requires an uploaded, verifiable signed landlord management mandate. <span class="badge-decision">[Founder decision]</span></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>6. Founder Decisions Log</h2>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 5%;">#</th>
+            <th style="width: 30%;">Question</th>
+            <th style="width: 50%;">Decision</th>
+            <th style="width: 15%;">Applies to</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>1</strong></td>
+            <td>What exact signal triggers the release of held rent payout to the landlord on move-in day?</td>
+            <td>
+              The tenant taps a "Confirm Key Handover" button in their web dashboard. If they do not tap it within 24 hours after their scheduled move-in time and have not clicked "Report a Problem", the system automatically releases the funds to the landlord.
+              <div class="decision-date">Decided: 2026-09-15</div>
+            </td>
+            <td><span class="badge badge-must">FR-07</span></td>
+          </tr>
+          <tr>
+            <td><strong>2</strong></td>
+            <td>Where is the caution fee held during the 12-month tenancy, and how is the 4-way split executed legally?</td>
+            <td>
+              Use an established Nigerian payment processor (such as Paystack or Monnify). When the tenant pays, the system automatically routes the rent, agency, and legal fees directly to their respective bank accounts, while parking the caution deposit in a dedicated merchant reserve balance until move-out. We also plan to use a third-party platform like PayRep to hold the caution fee.
+              <div class="decision-date">Decided: 2026-09-15</div>
+            </td>
+            <td><span class="badge badge-must">FR-05, FR-06</span></td>
+          </tr>
+          <tr>
+            <td><strong>3</strong></td>
+            <td>Who executes the digital lease agreement if offsite or older landlords do not use software?</td>
+            <td>
+              The legal property manager (e.g., HB&A Partners) signs the contract digitally on behalf of the landlord under their existing written property management mandate.
+              <div class="decision-date">Decided: 2026-09-15</div>
+            </td>
+            <td><span class="badge badge-must">FR-03, FR-04</span></td>
+          </tr>
+          <tr>
+            <td><strong>4</strong></td>
+            <td>How are inspection slots scheduled with property managers without calendar synchronization errors?</td>
+            <td>
+              The manager chooses standard visiting windows once (e.g., "Tuesdays & Thursdays 2:00 PM – 5:00 PM, Saturdays 10:00 AM – 3:00 PM"), and tenants can only book 30-minute intervals within those times.
+              <div class="decision-date">Decided: 2026-09-15</div>
+            </td>
+            <td><span class="badge badge-must">FR-02</span></td>
+          </tr>
+          <tr>
+            <td><strong>5</strong></td>
+            <td>What is the listing onboarding and verification workflow to prevent fake or expired properties?</td>
+            <td>
+              Property managers log into their own web portal, fill out property details, and must upload a copy of their signed landlord mandate before the listing can be published.
+              <div class="decision-date">Decided: 2026-09-15</div>
+            </td>
+            <td><span class="badge badge-must">FR-01</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>7. Unclear or Missing Information (Deferred Non-Functional & Future Scope)</h2>
+      <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 16px;">
+        All 5 critical blocking items for Must-have functional requirements have been resolved and logged in Section 6. The remaining open questions are non-blocking and deferred to subsequent build iterations:
+      </p>
+      <div class="deferred-item">
+        <strong>1. Move-Out Damage Dispute Protocol (FR-12 — Could):</strong> If a manager claims damages against the caution deposit at move-out and the tenant disputes the claim, what is the exact timeline and evidence threshold before PayRep/Settlla arbitrates or releases funds?
+      </div>
+      <div class="deferred-item">
+        <strong>2. Tenant ID Verification API Provider (FR-11 — Should):</strong> Which identity verification vendor (e.g., Prembly/Identitypass, Dojah, or Smile ID) provides the most cost-effective NIN and phone lookup for incoming NYSC/corporate tenants in northern Nigeria?
+      </div>
+      <div class="deferred-item">
+        <strong>3. SMS Gateway Provider (FR-02, FR-07, FR-10 — Must/Should):</strong> Which SMS delivery service (Termii vs. Twilio) has the highest delivery rate across Kaduna telecom networks (MTN, Airtel, Glo) for time-sensitive move-in alerts and 24-hour countdown reminders?
+      </div>
+    </section>
+
+    <footer>
+      Settlla Startup Artifacts &bull; Product Requirements Document &bull; Updated 2026-09-15
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settlla — End-to-End User Flow (MVP Build)</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface-elevated: #21262d;
+      --border: #30363d;
+      --text-main: #c9d1d9;
+      --text-bright: #f0f6fc;
+      --text-muted: #8b949e;
+      --primary: #58a6ff;
+      --accent: #2ea043;
+      --warning: #d29922;
+      --danger: #f85149;
+      --purple: #bc8cff;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font);
+      line-height: 1.6;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 24px;
+      margin-bottom: 36px;
+    }
+
+    h1 {
+      color: var(--text-bright);
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 1.15rem;
+      color: var(--primary);
+      font-weight: 500;
+      margin-bottom: 16px;
+    }
+
+    .metadata {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .metadata-item {
+      background: var(--surface-elevated);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .metadata-item strong {
+      color: var(--text-bright);
+    }
+
+    section {
+      margin-bottom: 44px;
+    }
+
+    h2 {
+      color: var(--text-bright);
+      font-size: 1.45rem;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .phase-badge {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: rgba(88, 166, 255, 0.15);
+      color: var(--primary);
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(88, 166, 255, 0.3);
+    }
+
+    /* Visual Overview Timeline */
+    .timeline-overview {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+      margin-bottom: 30px;
+    }
+
+    .timeline-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      position: relative;
+    }
+
+    .timeline-card.active {
+      border-color: var(--primary);
+    }
+
+    .timeline-card .phase-num {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .timeline-card .phase-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-bright);
+      margin-bottom: 4px;
+    }
+
+    .timeline-card .phase-steps {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* Step Card */
+    .step-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 18px;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+
+    .step-card:hover {
+      border-color: #58a6ff66;
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .step-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .step-number {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--surface-elevated);
+      color: var(--primary);
+      border: 1px solid var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    .step-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-bright);
+    }
+
+    .actor-badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 12px;
+      text-transform: uppercase;
+    }
+
+    .actor-tenant {
+      background: rgba(46, 160, 67, 0.15);
+      color: #3fb950;
+      border: 1px solid rgba(46, 160, 67, 0.3);
+    }
+
+    .actor-system {
+      background: rgba(88, 166, 255, 0.15);
+      color: #58a6ff;
+      border: 1px solid rgba(88, 166, 255, 0.3);
+    }
+
+    .actor-manager {
+      background: rgba(188, 140, 255, 0.15);
+      color: #d2a8ff;
+      border: 1px solid rgba(188, 140, 255, 0.3);
+    }
+
+    .step-body {
+      padding-left: 44px;
+      font-size: 0.95rem;
+    }
+
+    .step-body ul {
+      margin-top: 8px;
+      margin-bottom: 8px;
+      padding-left: 20px;
+    }
+
+    .step-body li {
+      margin-bottom: 4px;
+    }
+
+    .step-body strong {
+      color: var(--text-bright);
+    }
+
+    .split-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+      margin: 12px 0;
+    }
+
+    .split-box {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 0.85rem;
+    }
+
+    .split-box strong {
+      color: var(--text-bright);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      font-size: 0.9rem;
+      background: var(--surface);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    th {
+      background: var(--surface-elevated);
+      color: var(--text-bright);
+      font-weight: 600;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Alert / Exception */
+    .alert-box {
+      background: rgba(248, 81, 73, 0.1);
+      border: 1px solid rgba(248, 81, 73, 0.3);
+      border-left: 4px solid var(--danger);
+      padding: 18px 20px;
+      border-radius: 0 8px 8px 0;
+      margin-top: 20px;
+    }
+
+    .alert-title {
+      color: var(--text-bright);
+      font-weight: 600;
+      font-size: 1.05rem;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+      margin-top: 40px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Settlla — End-to-End User Flow</h1>
+      <div class="subtitle">The Exact Step-by-Step Closing Engine Sequence (MVP Build)</div>
+      <div class="metadata">
+        <div class="metadata-item"><strong>Target User:</strong> Hajara (Relocating Professional)</div>
+        <div class="metadata-item"><strong>Secondary Actor:</strong> HB&A Partners (Property Manager)</div>
+        <div class="metadata-item"><strong>Market:</strong> Barnawa & Malali, Kaduna</div>
+        <div class="metadata-item"><strong>Reference:</strong> requirements.md (v1.1)</div>
+      </div>
+    </header>
+
+    <div class="timeline-overview">
+      <div class="timeline-card active">
+        <div class="phase-num">Phase 1</div>
+        <div class="phase-title">Search & Tour</div>
+        <div class="phase-steps">Steps 1 – 4 • Free Booking</div>
+      </div>
+      <div class="timeline-card active">
+        <div class="phase-num">Phase 2</div>
+        <div class="phase-title">Digital Lease</div>
+        <div class="phase-steps">Steps 5 – 8 • E-Signature</div>
+      </div>
+      <div class="timeline-card active">
+        <div class="phase-num">Phase 3</div>
+        <div class="phase-title">4-Way Split Pay</div>
+        <div class="phase-steps">Step 9 • Instant Escrow</div>
+      </div>
+      <div class="timeline-card active">
+        <div class="phase-num">Phase 4</div>
+        <div class="phase-title">Key & Move-In</div>
+        <div class="phase-steps">Steps 10 – 12 • Release</div>
+      </div>
+    </div>
+
+    <!-- Phase 1 -->
+    <section>
+      <h2>
+        <span>Phase 1: Search & Free Inspection Scheduling</span>
+        <span class="phase-badge">Steps 1–4</span>
+      </h2>
+
+      <div class="step-card">
+        <div class="step-header">
+          <div class="step-title-wrap">
+            <div class="step-number">1</div>
+            <div class="step-title">Browse Verified Listings</div>
+          </div>
+          <span class="actor-badge actor-tenant">Tenant</span>
+        </div>
+        <div class="step-body">
+          <p>Hajara opens the Settlla web application on her smartphone or laptop.</p>
+          <ul>
+            <li><strong>Feed Display:</strong> Vetted residential properties in Barnawa & Malali with transparent fee metadata.</li>
+            <li><strong>Full Price Transparency:</strong> Displays annual rent, caution deposit (10%), legal drafting fee, agency fee, and total all-in move-in price.</li>
+            <li><strong>Decision:</strong> Hajara selects a 1-bedroom flat in Barnawa matching her ₦600k budget.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-header">
+          <div class="step-title-wrap">
+            <div class="step-number">2</div>
+            <div class="step-title">Select Inspection Window</div>
+          </div>
+          <span class="actor-badge actor-tenant">Tenant</span>
+        </div>
+        <div class="step-body">
+          <p>Hajara taps <strong>"Book Free Inspection"</strong> on the listing page.</p>
+          <ul>
+            <li><strong>Pre-Set Windows:</strong> The calendar presents only visiting windows pre-set by the manager (e.g., Tuesdays/Thursdays 2–5 PM, Saturdays 10 AM–3 PM).</li>
+            <li><strong>Slot Selection:</strong> Hajara picks an available 30-minute slot (e.g., Saturday at 11:30 AM).</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-header">
+          <div class="step-title-wrap">
+            <div class="step-number">3</div>
+            <div class="step-title">Register & Confirm Booking</div>
+          </div>
+          <div>
+            <span class="actor-badge actor-tenant">Tenant</span>
+            <span class="actor-badge actor-system" style="margin-left: 4px;">System</span>
+          </div>
+        </div>
+        <div class="step-body">
+          <p>Hajara enters her name, mobile number, and email address, then clicks <strong>"Confirm Inspection"</strong>.</p>
+          <ul>
+            <li><strong>System Action:</strong> Locks the 30-minute slot, sends instant SMS/WhatsApp confirmation to Hajara with exact apartment directions and manager contact info.</li>
+            <li><strong>Manager Alert:</strong> Sends an automated SMS alert to HB&A Partners.</li>
+            <li><strong>Cost:</strong> <strong>₦0</strong> (Arbitrary inspection fee extortion is eliminated).</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-header">
+          <div class="step-title-wrap">
+            <div class="step-number">4</div>
+            <div class="step-title">Attend Physical Walkthrough</div>
+          </div>
+          <div>
+            <span class="actor-badge actor-tenant">Tenant</span>
+            <span class="actor-badge actor-manager" style="margin-left: 4px;">Manager</span>
+          </div>
+        </div>
+        <div class="step-body">
+          <p>On Saturday at 11:30 AM, Hajara arrives at the Barnawa property.</p>
+          <ul>
+            <li><strong>Physical Tour:</strong> HB&A Partners conducts the in-person apartment tour, showing water flow, electricity meter, and fixtures.</li>
+            <li><strong>Outcome:</strong> Hajara verifies the physical space matches the photos and decides to rent.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Phase 2 -->
+    <section>
+      <h2>
+        <span>Phase 2: Identity Verification & Lease Generation</span>
+        <span class="phase-badge">Steps 5–8</span>
+      </h2>
+
+      <div class="step-card">
+        <div class="step-header">
+          <div class="step-title-wrap">
+            <div class="step-number">5</div>
+            <div class="step-title">Initiate Application & Upload Credentials</div>
+          </div>
+          <span class="actor-badge actor-tenant">Tenant</span>
+        </div>
+        <div class="step-body">
+          <p>In her web dashboard, Hajara clicks <strong>"Proceed to Rent This Property"</strong>.</p>
+          <ul>
+            <li><strong>Credentials:</strong> Uploads NIN / government ID photo and NYSC/employment posting letter to GTBank.</li>
+            <li><strong>Context:</strong> Confirms move-in date within her 14-day window.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-header">
+          <div class="step-title-wrap">
+            <div class="step-number">6</div>
+            <div class="step-title">Dynamic Tenancy Agreement Auto-Generation</div>
+          </div>
+          <span class="actor-badge actor-system">System</span>
+        </div>
+        <div class="step-body">
+          <p>Settlla automatically generates a standardized, legally binding Nigerian residential tenancy agreement governed by Kaduna State tenancy laws.</p>
+          <ul>
+            <li><strong>Auto-Populated Fields:</strong> Tenant name/NIN, landlord name, 12-month tenure, fee breakdown, and covenants.</li>
+            <li><strong>Legal Signatory Clause:</strong> Formally designates HB&A Partners as the authorized attorney-in-fact signing under their written landlord mandate.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-header">
+          <div class="step-title-wrap">
+            <div class="step-number">7</div>
+            <div class="step-title">Tenant Digital Signature</div>
+          </div>
+          <span class="actor-badge actor-tenant">Tenant</span>
+        </div>
+        <div class="step-body">
+          <p>Hajara reviews the lease on screen, types her name, and draws her signature on the digital pad.</p>
+          <ul>
+            <li><strong>Audit Trail:</strong> Signature is cryptographically hashed with timestamp and IP.</li>
+            <li><strong>Dispatch:</strong> Routes the agreement immediately to the property manager.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-header">
+          <div class="step-title-wrap">
+            <div class="step-number">8</div>
+            <div class="step-title">Manager Counter-Signature Under Mandate</div>
+          </div>
+          <span class="actor-badge actor-manager">Manager</span>
+        </div>
+        <div class="step-body">
+          <p>HB&A Partners receives an SMS alert, reviews Hajara's verified ID, and counter-signs digitally on behalf of the landlord under their existing written mandate.</p>
+          <ul>
+            <li><strong>Execution:</strong> Dual-signed legal contract is generated as a secure PDF.</li>
+            <li><strong>Status:</strong> Property transitions to <em>"Reserved — Awaiting Checkout"</em>.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Phase 3 -->
+    <section>
+      <h2>
+        <span>Phase 3: Checkout & Automated 4-Way Payment Split</span>
+        <span class="phase-badge">Step 9</span>
+      </h2>
+
+      <div class="step-card">
+        <div class="step-header">
+          <div class="step-title-wrap">
+            <div class="step-number">9</div>
+            <div class="step-title">Make All-in-One Payment via Secure Split Gateway</div>
+          </div>
+          <div>
+            <span class="actor-badge actor-tenant">Tenant</span>
+            <span class="actor-badge actor-system" style="margin-left: 4px;">System</span>
+          </div>
+        </div>
+        <div class="step-body">
+          <p>Hajara reviews the final invoice (e.g., ₦650,000 total) and completes payment via Paystack/Monnify (Debit Card or Bank Transfer).</p>
+          <div class="split-grid">
+            <div class="split-box">
+              <strong>1. Legal Fee (5%)</strong>
+              Disbursed directly into legal drafter's bank account.
+            </div>
+            <div class="split-box">
+              <strong>2. Agency Fee (10%)</strong>
+              Disbursed directly into HB&A Partners' bank account.
+            </div>
+            <div class="split-box">
+              <strong>3. Caution Fee (10%)</strong>
+              Locked in merchant reserve / PayRep custody vault for 12 months.
+            </div>
+            <div class="split-box">
+              <strong>4. Annual Rent (75%)</strong>
+              Held in Key-in-Door Escrow Protection until key handover.
+            </div>
+          </div>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 8px;">
+            Hajara receives her digital <strong>Move-In Pass</strong>. Landlord receives SMS alert: <em>"Rent secured in escrow; clears upon move-in."</em>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Phase 4 -->
+    <section>
+      <h2>
+        <span>Phase 4: Key Handover & Escrow Clearance</span>
+        <span class="phase-badge">Steps 10–12</span>
+      </h2>
+
+      <div class="step-card">
+        <div class="step-header">
+          <div class="step-title-wrap">
+            <div class="step-number">10</div>
+            <div class="step-title">Move-In Day & Physical Key Collection</div>
+          </div>
+          <div>
+            <span class="actor-badge actor-tenant">Tenant</span>
+            <span class="actor-badge actor-manager" style="margin-left: 4px;">Manager</span>
+          </div>
+        </div>
+        <div class="step-body">
+          <p>On move-in day, Hajara arrives with her luggage. HB&A Partners meets her at the apartment, conducts a final check, and hands over the physical door keys.</p>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-header">
+          <div class="step-title-wrap">
+            <div class="step-number">11</div>
+            <div class="step-title">Escrow Payout Trigger & Settlement</div>
+          </div>
+          <div>
+            <span class="actor-badge actor-tenant">Tenant</span>
+            <span class="actor-badge actor-system" style="margin-left: 4px;">System</span>
+          </div>
+        </div>
+        <div class="step-body">
+          <p>Hajara tests the keys and unlocks the front door.</p>
+          <ul>
+            <li><strong>Primary Trigger:</strong> Hajara taps <strong>"Confirm Key Handover"</strong> in her Settlla dashboard. The held rent instantly disburses to the landlord's First Bank account.</li>
+            <li><strong>Safety Timer Fallback:</strong> If unconfirmed after 24 hours post-move-in time and no dispute is filed, funds automatically clear to the landlord.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="step-card">
+        <div class="step-header">
+          <div class="step-title-wrap">
+            <div class="step-number">12</div>
+            <div class="step-title">Tenancy Active & Caution Ringfenced</div>
+          </div>
+          <span class="actor-badge actor-system">Outcome</span>
+        </div>
+        <div class="step-body">
+          <p>Hajara is safely housed within her 14-day deadline. Her caution deposit remains securely locked in the ringfenced vault until lease end, protecting her savings from landlord misappropriation.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Parallel Manager Flow -->
+    <section>
+      <h2>
+        <span>Complementary Workflow: Property Manager Operational Flow</span>
+      </h2>
+      <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 16px;">
+        How HB&A Partners interacts with Settlla to service the tenant's journey:
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 8%;">Step</th>
+            <th style="width: 25%;">Manager Action</th>
+            <th style="width: 52%;">Description</th>
+            <th style="width: 15%;">Spec Mapping</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>M-01</strong></td>
+            <td><strong>Manager Onboarding</strong></td>
+            <td>Register agency profile and verify legal practice or management credentials.</td>
+            <td>Founder Decision</td>
+          </tr>
+          <tr>
+            <td><strong>M-02</strong></td>
+            <td><strong>Upload Mandated Listing</strong></td>
+            <td>Upload listing metadata, photos, and <strong>mandatory signed landlord management mandate</strong>.</td>
+            <td>FR-01</td>
+          </tr>
+          <tr>
+            <td><strong>M-03</strong></td>
+            <td><strong>Set Fixed Visiting Windows</strong></td>
+            <td>Configure recurring visiting hours (e.g., Tue/Thu 2–5 PM, Sat 10 AM–3 PM).</td>
+            <td>FR-02</td>
+          </tr>
+          <tr>
+            <td><strong>M-04</strong></td>
+            <td><strong>Receive Inspection Alerts</strong></td>
+            <td>Receive instant SMS alert with tenant name when a 30-minute slot is reserved.</td>
+            <td>FR-02</td>
+          </tr>
+          <tr>
+            <td><strong>M-05</strong></td>
+            <td><strong>Conduct Free Walkthrough</strong></td>
+            <td>Meet tenant at property and host in-person walkthrough with ₦0 fee.</td>
+            <td>FR-02</td>
+          </tr>
+          <tr>
+            <td><strong>M-06</strong></td>
+            <td><strong>E-Sign Lease under Mandate</strong></td>
+            <td>Review tenant ID/NIN and sign auto-generated lease as authorized attorney-in-fact.</td>
+            <td>FR-03, FR-04</td>
+          </tr>
+          <tr>
+            <td><strong>M-07</strong></td>
+            <td><strong>Receive Instant Agency Split</strong></td>
+            <td>Receive agency commission directly into firm bank account immediately at checkout.</td>
+            <td>FR-05</td>
+          </tr>
+          <tr>
+            <td><strong>M-08</strong></td>
+            <td><strong>Key Handover on Move-In</strong></td>
+            <td>Hand over keys; landlord rent clears upon tenant confirmation or 24-hr timer.</td>
+            <td>FR-07</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Exception Flow -->
+    <section>
+      <h2>
+        <span>Exception Flow: What Happens if There Is an Issue?</span>
+      </h2>
+      <div class="alert-box">
+        <div class="alert-title">
+          <span>⚠️ Safety Protocol: "Report a Problem"</span>
+        </div>
+        <p style="font-size: 0.95rem; margin-bottom: 10px;">
+          If Hajara arrives on move-in day and encounters fraud or major misrepresentation (e.g., keys do not work, flat was leased to someone else, or major undisclosed damage):
+        </p>
+        <ol style="padding-left: 20px; font-size: 0.9rem; line-height: 1.6;">
+          <li><strong>Tap "Report a Problem":</strong> Hajara taps the dispute button in her dashboard before the 24-hour countdown expires.</li>
+          <li><strong>Instant Escrow Freeze:</strong> The platform immediately freezes the escrow payout; zero funds transfer to the landlord.</li>
+          <li><strong>Rapid Investigation:</strong> Settlla operations contacts HB&A Partners within 2 hours to investigate.</li>
+          <li><strong>100% Indemnity Refund:</strong> If confirmed fraud or breach of contract, 100% of Hajara's annual rent and caution deposit are refunded to her account under Settlla's Scam Indemnity Guarantee.</li>
+        </ol>
+      </div>
+    </section>
+
+    <footer>
+      Settlla Startup Artifacts &bull; End-to-End User Flow &bull; Created 2026-09-15
+    </footer>
+  </div>
+</body>
+</html>

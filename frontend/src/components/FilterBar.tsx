@@ -1,0 +1,96 @@
+"use client";
+
+import React from "react";
+
+interface FilterBarProps {
+  neighborhood: string;
+  setNeighborhood: (val: string) => void;
+  maxBudget: string;
+  setMaxBudget: (val: string) => void;
+  propertyType: string;
+  setPropertyType: (val: string) => void;
+  quickFilter: string;
+  setQuickFilter: (val: string) => void;
+  onReset: () => void;
+  totalFound: number;
+}
+
+export const FilterBar: React.FC<FilterBarProps> = ({
+  neighborhood,
+  setNeighborhood,
+  maxBudget,
+  setMaxBudget,
+  propertyType,
+  setPropertyType,
+  quickFilter,
+  setQuickFilter,
+  onReset,
+  totalFound,
+}) => {
+  const chips = [
+    { id: "all", label: "All Properties" },
+    { id: "near-gtbank", label: "📍 Near GTBank Barnawa" },
+    { id: "under-700k", label: "🏷️ Under ₦700k Total" },
+    { id: "borehole", label: "💧 Borehole Water" },
+    { id: "prepaid", label: "⚡ Prepaid Meter" },
+  ];
+
+  const hasActiveFilters =
+    neighborhood !== "all" || maxBudget !== "all" || propertyType !== "all" || quickFilter !== "all";
+
+  return (
+    <div id="featured-properties" className="mb-8 pt-8">
+      {/* Section Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 border-b border-slate-200/80 pb-4">
+        <div>
+          <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-blue-600 mb-1">
+            <span>🛡️</span>
+            <span>Vetted Residential Feed</span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
+            Featured Properties in Kaduna
+          </h2>
+          <p className="mt-1 text-xs sm:text-sm text-slate-500 max-w-2xl">
+            Direct landlord mandates with HB&amp;A Partners &amp; Co. Every property includes guaranteed ₦0 physical inspection and transparent move-in pricing.
+          </p>
+        </div>
+
+        {/* Counter and Reset */}
+        <div className="flex items-center gap-3 self-start md:self-end">
+          <div className="rounded-xl bg-blue-50 px-3.5 py-1.5 border border-blue-100 text-xs font-bold text-blue-700">
+            {totalFound} {totalFound === 1 ? "Property" : "Properties"} Available
+          </div>
+          {hasActiveFilters && (
+            <button
+              onClick={onReset}
+              className="rounded-xl bg-slate-100 hover:bg-slate-200 px-3.5 py-1.5 text-xs font-bold text-slate-700 transition-colors cursor-pointer"
+            >
+              Reset Filters
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Quick Filter Chips */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs font-bold text-slate-400 mr-1 hidden sm:inline">Quick Filter:</span>
+        {chips.map((chip) => {
+          const isActive = quickFilter === chip.id;
+          return (
+            <button
+              key={chip.id}
+              onClick={() => setQuickFilter(isActive ? "all" : chip.id)}
+              className={`rounded-full px-4 py-2 text-xs font-bold transition-all cursor-pointer ${
+                isActive
+                  ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+                  : "bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-slate-200 shadow-2xs"
+              }`}
+            >
+              {chip.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};

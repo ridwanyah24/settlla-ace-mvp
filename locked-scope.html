@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settlla — Locked Scope (5-Day MVP Build)</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface-elevated: #21262d;
+      --border: #30363d;
+      --text-main: #c9d1d9;
+      --text-bright: #f0f6fc;
+      --text-muted: #8b949e;
+      --primary: #58a6ff;
+      --accent: #2ea043;
+      --warning: #d29922;
+      --danger: #f85149;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font);
+      line-height: 1.6;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 24px;
+      margin-bottom: 28px;
+    }
+
+    h1 {
+      color: var(--text-bright);
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 1.15rem;
+      color: var(--primary);
+      font-weight: 500;
+      margin-bottom: 16px;
+    }
+
+    .metadata {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .metadata-item {
+      background: var(--surface-elevated);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .metadata-item strong {
+      color: var(--text-bright);
+    }
+
+    /* Locked Scope Banner */
+    .lock-banner {
+      background: rgba(210, 153, 34, 0.12);
+      border: 1px solid rgba(210, 153, 34, 0.4);
+      border-left: 4px solid var(--warning);
+      padding: 16px 20px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .lock-icon {
+      font-size: 1.8rem;
+      line-height: 1;
+    }
+
+    .lock-text {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #e3b341;
+      letter-spacing: 0.2px;
+    }
+
+    .lock-sub {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      font-size: 0.9rem;
+      background: var(--surface);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    th, td {
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    th {
+      background: var(--surface-elevated);
+      color: var(--text-bright);
+      font-weight: 600;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .badge-must {
+      background: rgba(46, 160, 67, 0.15);
+      color: #3fb950;
+      border: 1px solid rgba(46, 160, 67, 0.3);
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    td strong {
+      color: var(--text-bright);
+      font-size: 0.95rem;
+    }
+
+    td em {
+      color: var(--text-muted);
+      font-size: 0.82rem;
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+      margin-top: 40px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Settlla — Locked Scope</h1>
+      <div class="subtitle">Strict 5-Day MVP Must-Have Scope Baseline</div>
+      <div class="metadata">
+        <div class="metadata-item"><strong>Date:</strong> 2026-09-15</div>
+        <div class="metadata-item"><strong>Target Wedge:</strong> Barnawa & Malali, Kaduna</div>
+        <div class="metadata-item"><strong>Status:</strong> Scope Locked (6 Features)</div>
+        <div class="metadata-item"><strong>Source:</strong> final-feature-list.md</div>
+      </div>
+    </header>
+
+    <div class="lock-banner">
+      <div class="lock-icon">🔒</div>
+      <div>
+        <div class="lock-text">Locked scope: no changes until Section 12.</div>
+        <div class="lock-sub">Strict 5-day team build boundary. All Should-have and Could-have items remain deferred.</div>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 24%;">Feature</th>
+          <th style="width: 38%;">Description</th>
+          <th style="width: 14%;">MoSCoW Category</th>
+          <th style="width: 24%;">Reason</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Verified Listing Showcase with All-In Pricing</strong><br><em>FR-01, Screen 1 & 2</em></td>
+          <td>Web feed and detail view of vetted Kaduna apartments displaying photos, amenities, and full upfront price breakdown (Annual Rent, 10% Caution, 5% Legal, 10% Agency, Total Move-In Cost).</td>
+          <td><span class="badge-must">Must have</span></td>
+          <td>The product is pointless without listings; full upfront price transparency is the core hook that eliminates hidden agent charges.</td>
+        </tr>
+        <tr>
+          <td><strong>Direct Inspection Slot Scheduling (₦0 Fee)</strong><br><em>FR-02, Screen 2 & 3</em></td>
+          <td>Booking drawer allowing tenants to select an open 30-minute walkthrough slot strictly constrained to property manager visiting windows, locking the slot at zero cost.</td>
+          <td><span class="badge-must">Must have</span></td>
+          <td>The product is broken without this; eliminating the predatory ₦3,000–₦5,000 roadside inspection fee is the primary wedge that drives tenant adoption.</td>
+        </tr>
+        <tr>
+          <td><strong>Dynamic Tenancy Agreement Generator</strong><br><em>FR-03, Screen 5</em></td>
+          <td>Automatic generation of a legally binding residential lease populated with tenant info, property title, fee schedule, statutory Kaduna covenants, and manager mandate clause.</td>
+          <td><span class="badge-must">Must have</span></td>
+          <td>Essential closing engine component; replaces chaotic physical paper drafting and 7-day landlord delays with an instant legal contract.</td>
+        </tr>
+        <tr>
+          <td><strong>Two-Party Electronic Signature Workflow</strong><br><em>FR-04, Screen 5 & 6</em></td>
+          <td>Digital signing pad for the tenant and manager counter-signature interface on behalf of the landlord under written mandate, with cryptographic audit timestamps.</td>
+          <td><span class="badge-must">Must have</span></td>
+          <td>A lease cannot be legally executed or enforced without valid signatures from both parties before money changes hands.</td>
+        </tr>
+        <tr>
+          <td><strong>Automated 4-Way Split Payment Engine</strong><br><em>FR-05, Screen 7</em></td>
+          <td>Paystack/Monnify payment integration accepting the all-in move-in sum and automatically splitting legal fees (5%), agency commission (10%), caution deposit (10%), and rent in escrow (75%).</td>
+          <td><span class="badge-must">Must have</span></td>
+          <td>Core transactional mechanism; guarantees property managers and lawyers get paid instantly, preventing agent remittance delays.</td>
+        </tr>
+        <tr>
+          <td><strong>Key-in-Door Move-In Escrow Protection</strong><br><em>FR-07, Screen 8</em></td>
+          <td>Holds the net annual rent in escrow until the tenant taps "Confirm Key Handover" or the 24-hour safety timer expires; includes immediate dispute freeze ("Report a Problem").</td>
+          <td><span class="badge-must">Must have</span></td>
+          <td>The central value proposition of Settlla; tenants will not pay upfront without an ironclad scam guarantee that rent only clears upon key handover.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <footer>
+      Settlla Startup Artifacts &bull; Locked Scope &bull; 2026-09-15 &bull; Locked scope: no changes until Section 12.
+    </footer>
+  </div>
+</body>
+</html>

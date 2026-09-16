@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settlla — Final MoSCoW Feature List (5-Day Build)</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface-elevated: #21262d;
+      --border: #30363d;
+      --text-main: #c9d1d9;
+      --text-bright: #f0f6fc;
+      --text-muted: #8b949e;
+      --primary: #58a6ff;
+      --accent: #2ea043;
+      --warning: #d29922;
+      --danger: #f85149;
+      --purple: #bc8cff;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font);
+      line-height: 1.6;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 24px;
+      margin-bottom: 32px;
+    }
+
+    h1 {
+      color: var(--text-bright);
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 1.15rem;
+      color: var(--primary);
+      font-weight: 500;
+      margin-bottom: 16px;
+    }
+
+    .metadata {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .metadata-item {
+      background: var(--surface-elevated);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .metadata-item strong {
+      color: var(--text-bright);
+    }
+
+    /* Strategy / Callout Box */
+    .constraint-box {
+      background: rgba(88, 166, 255, 0.08);
+      border: 1px solid rgba(88, 166, 255, 0.3);
+      border-left: 4px solid var(--primary);
+      padding: 20px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 36px;
+    }
+
+    .constraint-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-bright);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .constraint-box p {
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+    }
+
+    .constraint-box strong {
+      color: var(--text-bright);
+    }
+
+    .cut-badge {
+      background: rgba(210, 153, 34, 0.2);
+      color: #e3b341;
+      border: 1px solid rgba(210, 153, 34, 0.4);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    /* MoSCoW Summary Badges */
+    .moscow-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .moscow-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+    }
+
+    .moscow-card .count {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .moscow-card .label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .card-must { border-color: rgba(46, 160, 67, 0.4); }
+    .card-must .count, .card-must .label { color: #3fb950; }
+
+    .card-should { border-color: rgba(88, 166, 255, 0.4); }
+    .card-should .count, .card-should .label { color: #58a6ff; }
+
+    .card-could { border-color: rgba(210, 153, 34, 0.4); }
+    .card-could .count, .card-could .label { color: #d29922; }
+
+    .card-wont { border-color: rgba(248, 81, 73, 0.4); }
+    .card-wont .count, .card-wont .label { color: #f85149; }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+      font-size: 0.88rem;
+      background: var(--surface);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    th, td {
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    th {
+      background: var(--surface-elevated);
+      color: var(--text-bright);
+      font-weight: 600;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .badge-must {
+      background: rgba(46, 160, 67, 0.15);
+      color: #3fb950;
+      border: 1px solid rgba(46, 160, 67, 0.3);
+    }
+
+    .badge-should {
+      background: rgba(88, 166, 255, 0.15);
+      color: #58a6ff;
+      border: 1px solid rgba(88, 166, 255, 0.3);
+    }
+
+    .badge-could {
+      background: rgba(210, 153, 34, 0.15);
+      color: #d29922;
+      border: 1px solid rgba(210, 153, 34, 0.3);
+    }
+
+    .badge-wont {
+      background: rgba(248, 81, 73, 0.15);
+      color: #f85149;
+      border: 1px solid rgba(248, 81, 73, 0.3);
+    }
+
+    td strong {
+      color: var(--text-bright);
+    }
+
+    td em {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+      margin-top: 40px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Settlla — Final MoSCoW Feature List</h1>
+      <div class="subtitle">5-Day MVP Build Scope & Prioritization Matrix</div>
+      <div class="metadata">
+        <div class="metadata-item"><strong>Build Horizon:</strong> 5-Day Team Build</div>
+        <div class="metadata-item"><strong>Target Market:</strong> Barnawa & Malali, Kaduna</div>
+        <div class="metadata-item"><strong>Must-Have Cap:</strong> Maximum 6 Features</div>
+        <div class="metadata-item"><strong>Source:</strong> requirements.md & screen-specification.md</div>
+      </div>
+    </header>
+
+    <!-- Scope Constraint Notice -->
+    <div class="constraint-box">
+      <div class="constraint-title">
+        <span>⏱️ 5-Day Build Scope Enforcement: Must-Have Cap (Max 6)</span>
+      </div>
+      <p>
+        Across <code>requirements.md</code> and <code>screen-specification.md</code>, seven core features originally qualified for the Must-have tier. To guarantee high-quality execution in a 5-day team sprint, the Must-have list is strictly capped at <strong>6 features</strong>.
+      </p>
+      <p>
+        <span class="cut-badge">Decision / Cut Made</span> <strong>Ringfenced Caution Deposit Vault (FR-06)</strong> was demoted from <em>Must Have</em> to <em>Should Have</em>.
+      </p>
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0;">
+        <strong>Why cut first:</strong> Building external virtual custody API infrastructure (PayRep) adds high technical overhead. In 5 days, the 4-way payment split (FR-05) already protects the tenant by withholding the 10% caution fee from the landlord and parking it in a central merchant reserve. Dedicated per-tenancy custody ledgers and move-out refund reconciliation can be deferred without breaking the move-in loop.
+      </p>
+    </div>
+
+    <!-- Summary Metrics -->
+    <div class="moscow-summary">
+      <div class="moscow-card card-must">
+        <div class="count">6</div>
+        <div class="label">Must Have</div>
+      </div>
+      <div class="moscow-card card-should">
+        <div class="count">5</div>
+        <div class="label">Should Have</div>
+      </div>
+      <div class="moscow-card card-could">
+        <div class="count">5</div>
+        <div class="label">Could Have</div>
+      </div>
+      <div class="moscow-card card-wont">
+        <div class="count">9</div>
+        <div class="label">Won't Have</div>
+      </div>
+    </div>
+
+    <!-- Main Table -->
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 24%;">Feature</th>
+          <th style="width: 38%;">Description</th>
+          <th style="width: 14%;">MoSCoW Category</th>
+          <th style="width: 24%;">Reason</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- MUST HAVES -->
+        <tr>
+          <td><strong>Verified Listing Showcase with All-In Pricing</strong><br><em>FR-01, Screen 1 & 2</em></td>
+          <td>Web feed and detail view of vetted Kaduna apartments displaying photos, amenities, and full upfront price breakdown (Annual Rent, 10% Caution, 5% Legal, 10% Agency, Total Move-In Cost).</td>
+          <td><span class="badge badge-must">Must have</span></td>
+          <td>The product is pointless without listings; full upfront price transparency is the core hook that eliminates hidden agent charges.</td>
+        </tr>
+        <tr>
+          <td><strong>Direct Inspection Slot Scheduling (₦0 Fee)</strong><br><em>FR-02, Screen 2 & 3</em></td>
+          <td>Booking drawer allowing tenants to select an open 30-minute walkthrough slot strictly constrained to property manager visiting windows, locking the slot at zero cost.</td>
+          <td><span class="badge badge-must">Must have</span></td>
+          <td>The product is broken without this; eliminating the predatory ₦3,000–₦5,000 roadside inspection fee is the primary wedge that drives tenant adoption.</td>
+        </tr>
+        <tr>
+          <td><strong>Dynamic Tenancy Agreement Generator</strong><br><em>FR-03, Screen 5</em></td>
+          <td>Automatic generation of a legally binding residential lease populated with tenant info, property title, fee schedule, statutory Kaduna covenants, and manager mandate clause.</td>
+          <td><span class="badge badge-must">Must have</span></td>
+          <td>Essential closing engine component; replaces chaotic physical paper drafting and 7-day landlord delays with an instant legal contract.</td>
+        </tr>
+        <tr>
+          <td><strong>Two-Party Electronic Signature Workflow</strong><br><em>FR-04, Screen 5 & 6</em></td>
+          <td>Digital signing pad for the tenant and manager counter-signature interface on behalf of the landlord under written mandate, with cryptographic audit timestamps.</td>
+          <td><span class="badge badge-must">Must have</span></td>
+          <td>A lease cannot be legally executed or enforced without valid signatures from both parties before money changes hands.</td>
+        </tr>
+        <tr>
+          <td><strong>Automated 4-Way Split Payment Engine</strong><br><em>FR-05, Screen 7</em></td>
+          <td>Paystack/Monnify payment integration accepting the all-in move-in sum and automatically splitting legal fees (5%), agency commission (10%), caution deposit (10%), and rent in escrow (75%).</td>
+          <td><span class="badge badge-must">Must have</span></td>
+          <td>Core transactional mechanism; guarantees property managers and lawyers get paid instantly, preventing agent remittance delays.</td>
+        </tr>
+        <tr>
+          <td><strong>Key-in-Door Move-In Escrow Protection</strong><br><em>FR-07, Screen 8</em></td>
+          <td>Holds the net annual rent in escrow until the tenant taps "Confirm Key Handover" or the 24-hour safety timer expires; includes immediate dispute freeze ("Report a Problem").</td>
+          <td><span class="badge badge-must">Must have</span></td>
+          <td>The central value proposition of Settlla; tenants will not pay upfront without an ironclad scam guarantee that rent only clears upon key handover.</td>
+        </tr>
+
+        <!-- SHOULD HAVES -->
+        <tr>
+          <td><strong>Ringfenced Caution Deposit Vault</strong><br><em>FR-06</em></td>
+          <td>Dedicated per-tenancy virtual sub-account or PayRep custody holding balance isolating the 10% damage deposit for 12 months.</td>
+          <td><span class="badge badge-should">Should have</span></td>
+          <td>Important for long-term tenant trust, but the product functions on move-in day if caution is held in a central merchant reserve balance via the split engine.</td>
+        </tr>
+        <tr>
+          <td><strong>Basic Identity & Employment Verification</strong><br><em>FR-11, Screen 4</em></td>
+          <td>In-app form collecting and storing tenant National Identity Number (NIN) and photo upload of employment letter / NYSC posting letter.</td>
+          <td><span class="badge badge-should">Should have</span></td>
+          <td>High-value for landlord risk mitigation, but can be verified manually via WhatsApp/concierge by the team during a tight 5-day build.</td>
+        </tr>
+        <tr>
+          <td><strong>Automated Landlord & Manager SMS Notifications</strong><br><em>FR-10, Screens 3 & 7</em></td>
+          <td>Automated SMS alerts via Termii notifying landlords of secured escrow rent and alerting managers of booked tours.</td>
+          <td><span class="badge badge-should">Should have</span></td>
+          <td>Crucial for keeping non-app landlords informed, but fallback manual phone calls can cover the first 5 transactions if API setup lags.</td>
+        </tr>
+        <tr>
+          <td><strong>Digital Move-In Pass Issuance</strong><br><em>Screen 7 & 8</em></td>
+          <td>Verifiable digital pass and transaction receipt generated post-payment for the tenant to present to the manager on move-in day.</td>
+          <td><span class="badge badge-should">Should have</span></td>
+          <td>Provides professional reassurance at key handover, but the signed lease and payment confirmation screen already serve as legal proof.</td>
+        </tr>
+        <tr>
+          <td><strong>Manager Self-Serve Portal with Mandate Upload</strong><br><em>FR-01 Founder Decision</em></td>
+          <td>Dedicated manager portal to submit listing metadata, photos, and mandatory scanned landlord management mandate letters.</td>
+          <td><span class="badge badge-should">Should have</span></td>
+          <td>Critical for scale, but for the initial 5-day pilot, the 5 exclusive partner listings can be vetted offline and seeded directly via database/admin panel.</td>
+        </tr>
+
+        <!-- COULD HAVES -->
+        <tr>
+          <td><strong>Tenant Search Status & Preference Broadcast</strong><br><em>FR-08</em></td>
+          <td>Profile form where tenants post active housing criteria (budget, neighborhood, move-in deadline) for automated matching.</td>
+          <td><span class="badge badge-could">Could have</span></td>
+          <td>Helpful secondary acquisition channel, but tenants can browse published listings directly without requiring a broadcasting engine.</td>
+        </tr>
+        <tr>
+          <td><strong>Property Manager Lead Matching Dashboard</strong><br><em>FR-09</em></td>
+          <td>Manager view displaying pre-qualified inbound tenant profiles with contact invitation controls.</td>
+          <td><span class="badge badge-could">Could have</span></td>
+          <td>Valuable for subscription monetization later, but unnecessary when tenants book direct inspection slots on active listings.</td>
+        </tr>
+        <tr>
+          <td><strong>In-App Inspection Rescheduling</strong><br><em>FR-14</em></td>
+          <td>Self-serve interface allowing tenants or managers to reschedule booked tours up to 4 hours prior with SMS updates.</td>
+          <td><span class="badge badge-could">Could have</span></td>
+          <td>Convenient edge-case feature; during MVP, appointment adjustments can be handled via direct phone/WhatsApp contact.</td>
+        </tr>
+        <tr>
+          <td><strong>Virtual Video Tour Walkthrough Attachments</strong><br><em>FR-13</em></td>
+          <td>Pre-recorded compressed video tours embedded on listing detail pages to reduce physical inspections.</td>
+          <td><span class="badge badge-could">Could have</span></td>
+          <td>Nice visual perk, but high-res verified photos are sufficient for Hajara to decide whether to book an in-person walkthrough.</td>
+        </tr>
+        <tr>
+          <td><strong>Post-Move-Out Caution Reconciliation Flow</strong><br><em>FR-12</em></td>
+          <td>Digital protocol at 12-month lease expiration allowing managers to log damages with photos or return caution deposits.</td>
+          <td><span class="badge badge-could">Could have</span></td>
+          <td>Completely irrelevant to the Day-1 to Day-14 move-in closing sprint; only needed 12 months after the tenant takes possession.</td>
+        </tr>
+
+        <!-- WON'T HAVES -->
+        <tr>
+          <td><strong>Unlicensed Custodial Escrow Banking</strong><br><em>FR-15</em></td>
+          <td>Operating an unlicensed bank account where Settlla holds user deposits directly.</td>
+          <td><span class="badge badge-wont">Won't have</span></td>
+          <td>Explicitly out of scope to maintain legal compliance; all splits and escrow must execute via licensed payment processors (Paystack/Monnify).</td>
+        </tr>
+        <tr>
+          <td><strong>Rent Now Pay Later (RNPL) / Micro-lending</strong><br><em>FR-16</em></td>
+          <td>Financing tenant rents or issuing monthly installment credit.</td>
+          <td><span class="badge badge-wont">Won't have</span></td>
+          <td>Explicitly out of scope; introduces balance-sheet credit risk and underwriting overhead into a pure closing engine.</td>
+        </tr>
+        <tr>
+          <td><strong>Open Unregulated Street Agent Marketplace</strong><br><em>FR-17</em></td>
+          <td>Public listing submission portal for unvetted roadside freelance agents.</td>
+          <td><span class="badge badge-wont">Won't have</span></td>
+          <td>Explicitly out of scope; directly contradicts the core anti-scam value proposition of strictly vetted legal management mandates.</td>
+        </tr>
+        <tr>
+          <td><strong>Full Maintenance & Repair Work-Order Ticketing</strong><br><em>FR-18</em></td>
+          <td>In-app post-move-in facility management, plumbing, generator maintenance, and repair tickets.</td>
+          <td><span class="badge badge-wont">Won't have</span></td>
+          <td>Explicitly out of scope; Settlla is a transaction closing engine, not an ongoing property facilities management SaaS.</td>
+        </tr>
+        <tr>
+          <td><strong>Multi-City Expansion Outside Kaduna</strong><br><em>FR-19</em></td>
+          <td>Deploying search and operations in Abuja, Lagos, or other Nigerian states during V1.</td>
+          <td><span class="badge badge-wont">Won't have</span></td>
+          <td>Explicitly out of scope; hyper-local operational focus is restricted strictly to the Barnawa and Malali wedge in Kaduna.</td>
+        </tr>
+        <tr>
+          <td><strong>Direct Landlord In-App Accounts or Portal Onboarding</strong><br><em>Founder Decision</em></td>
+          <td>Requiring landlords to register accounts, download an app, or log into a portal to sign leases.</td>
+          <td><span class="badge badge-wont">Won't have</span></td>
+          <td>Explicitly out of scope; landlords are tech-averse and offsite; managers sign on their behalf under written mandate.</td>
+        </tr>
+        <tr>
+          <td><strong>Live Two-Way External Calendar Sync</strong><br><em>Founder Decision</em></td>
+          <td>Integrating third-party calendar engines (e.g. Google Calendar, Outlook) for inspection scheduling.</td>
+          <td><span class="badge badge-wont">Won't have</span></td>
+          <td>Explicitly out of scope; availability is strictly controlled via pre-set, recurring visiting windows configured by managers.</td>
+        </tr>
+        <tr>
+          <td><strong>Unmandated Property Listings</strong><br><em>Founder Decision</em></td>
+          <td>Allowing property listings to go live without an uploaded, verified landlord management mandate.</td>
+          <td><span class="badge badge-wont">Won't have</span></td>
+          <td>Explicitly out of scope; every listing strictly requires verified proof of landlord management authority.</td>
+        </tr>
+        <tr>
+          <td><strong>In-App Judicial Dispute Arbitration Court</strong><br><em>Out-of-Scope List</em></td>
+          <td>Settlla acting as a formal judicial court or issuing binding legal arbitration rulings.</td>
+          <td><span class="badge badge-wont">Won't have</span></td>
+          <td>Explicitly out of scope; agreements rely on standard Kaduna State tenancy statutes and Nigerian judicial courts.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <footer>
+      Settlla Startup Artifacts &bull; Final Feature List &bull; MoSCoW Prioritization &bull; 2026-09-15
+    </footer>
+  </div>
+</body>
+</html>
