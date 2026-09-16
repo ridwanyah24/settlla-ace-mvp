@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useParams } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { Listing } from "@/types/listing";
+import { getSeedListingById } from "@/data/seedListings";
 import { BookingDrawer } from "@/components/BookingDrawer";
 import { TenancyAgreementViewer } from "@/components/TenancyAgreementViewer";
 
@@ -24,13 +25,38 @@ export default function ListingDetailPage() {
   useEffect(() => {
     async function fetchDetail() {
       if (!id) return;
+
+      // Check seed data first
+      const seedItem = getSeedListingById(id);
+
       try {
-        const res = await fetch(`http://127.0.0.1:8000/api/listings/${id}`);
-        if (!res.ok) throw new Error("Listing not found");
-        const data: Listing = await res.json();
-        setListing(data);
-      } catch (err: any) {
-        setError(err.message || "Failed to load listing");
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+        if (backendUrl) {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 1200);
+          const res = await fetch(`${backendUrl}/api/listings/${id}`, {
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+          if (res.ok) {
+            const data: Listing = await res.json();
+            setListing(data);
+            setLoading(false);
+            return;
+          }
+        }
+        
+        if (seedItem) {
+          setListing(seedItem);
+        } else {
+          setError("Listing not found");
+        }
+      } catch {
+        if (seedItem) {
+          setListing(seedItem);
+        } else {
+          setError("Listing not found in verified registry");
+        }
       } finally {
         setLoading(false);
       }
