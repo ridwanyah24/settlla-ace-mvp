@@ -1,7 +1,7 @@
 import { Listing } from "@/types/listing";
 
-export function calculatePricing(annualRent: number) {
-  const cautionFee = Math.round(annualRent * 0.1);
+export function calculatePricing(annualRent: number, hasCautionFee: boolean = true) {
+  const cautionFee = hasCautionFee ? Math.round(annualRent * 0.1) : 0;
   const legalFee = Math.round(annualRent * 0.05);
   const agencyFee = Math.round(annualRent * 0.1);
   const totalMoveInCost = annualRent + cautionFee + legalFee + agencyFee;
@@ -9,6 +9,7 @@ export function calculatePricing(annualRent: number) {
   return {
     annual_rent: annualRent,
     caution_fee: cautionFee,
+    has_caution_fee: hasCautionFee,
     legal_fee: legalFee,
     agency_fee: agencyFee,
     total_move_in_cost: totalMoveInCost,
@@ -80,13 +81,14 @@ export const SEED_LISTINGS: Listing[] = [
       "Dedicated Security Guardhouse",
       "Fenced & Gated Perimeter",
       "Ensuite Bedrooms with Water Heaters",
+      "Zero Caution Deposit (Landlord Mandate)",
     ],
     images: [
       "/images/living_room.jpg",
       "/images/bedroom.jpg",
       "/images/exterior.jpg",
     ],
-    pricing: calculatePricing(750000),
+    pricing: calculatePricing(750000, false),
     mandate: {
       mandate_ref: "HBA-KD-BNW-2026-112",
       manager_name: "HB&A Partners & Co.",
@@ -162,13 +164,14 @@ export const SEED_LISTINGS: Listing[] = [
       "Night Watchman on Duty",
       "Private Balcony & Cross Ventilation",
       "Fully Tiled Interior",
+      "Zero Caution Fee (NYSC & Youth Concession)",
     ],
     images: [
       "/images/bedroom.jpg",
       "/images/living_room.jpg",
       "/images/exterior.jpg",
     ],
-    pricing: calculatePricing(420000),
+    pricing: calculatePricing(420000, false),
     mandate: {
       mandate_ref: "HBA-KD-MAL-2026-077",
       manager_name: "HB&A Partners & Co.",
@@ -304,13 +307,25 @@ export function filterSeedListings(
     if (quickFilter === "under_600k" && l.pricing.annual_rent > 600000) {
       return false;
     }
-    if (quickFilter === "self_billed") {
+    if (quickFilter === "under-700k" && l.pricing.total_move_in_cost > 700000) {
+      return false;
+    }
+    if (quickFilter === "near-gtbank" && !l.commute_badge.toLowerCase().includes("gtbank") && !l.commute_context.toLowerCase().includes("gtbank")) {
+      return false;
+    }
+    if (quickFilter === "borehole" && !l.amenities.some((a) => a.toLowerCase().includes("borehole"))) {
+      return false;
+    }
+    if (quickFilter === "prepaid" || quickFilter === "self_billed") {
       const hasSelfBilled = l.amenities.some((a) =>
         a.toLowerCase().includes("prepaid") || a.toLowerCase().includes("self-billed")
       );
       if (!hasSelfBilled) return false;
     }
     if (quickFilter === "2beds" && l.bedrooms < 2) {
+      return false;
+    }
+    if ((quickFilter === "no_caution" || quickFilter === "no-caution") && l.pricing.caution_fee > 0) {
       return false;
     }
 

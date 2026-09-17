@@ -14,6 +14,7 @@ export interface VisitingWindow {
 export interface PricingBreakdown {
   annual_rent: number;
   caution_fee: number;
+  has_caution_fee?: boolean;
   legal_fee: number;
   agency_fee: number;
   total_move_in_cost: number;
