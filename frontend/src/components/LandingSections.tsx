@@ -68,7 +68,7 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
   return (
     <div className="w-full space-y-20">
       {/* 1. Process Strip: "Finding Your Next Home Is Simple" (Deep Navy) */}
-      <section id="how-it-works" className="w-full bg-[#0B1528] py-16 sm:py-20 text-white">
+      <section id="how-it-works" className="w-full bg-[#0B1528] py-16 sm:py-20 text-white scroll-mt-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-2 rounded-full bg-blue-500/10 px-3.5 py-1 text-xs font-bold text-blue-400 border border-blue-500/20 mb-3">
             <Zap className="h-3.5 w-3.5 text-blue-400" />
@@ -119,7 +119,7 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
       </section>
 
       {/* 2. "Why People Choose Settlla" with Visual Estate Photo */}
-      <section id="why-settlla" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section id="why-settlla" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 scroll-mt-24">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Left: Estate Image with Badge */}
           <div className="relative">
@@ -134,7 +134,7 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
             </div>
 
             {/* Floating Trust Badge */}
-            <div className="absolute -bottom-6 -right-4 sm:right-6 rounded-2xl bg-white p-4 shadow-xl border border-slate-150 flex items-center gap-3">
+            <div className="absolute -bottom-5 right-2 sm:-bottom-6 sm:right-6 rounded-2xl bg-white p-3.5 sm:p-4 shadow-xl border border-slate-150 flex items-center gap-2.5 sm:gap-3 max-w-[90%]">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
                 <Check className="h-6 w-6 text-white" />
               </div>
@@ -285,7 +285,7 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
       </section>
 
       {/* 4. "Simple, Transparent Plans" Comparison */}
-      <section id="pricing-plans" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
+      <section id="pricing-plans" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center scroll-mt-24">
         <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700 border border-blue-200 mb-3">
           <Scale className="h-3.5 w-3.5 text-blue-700" />
           <span>NO HIDDEN FEES</span>
@@ -342,7 +342,7 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
           </div>
 
           {/* Card 2: Settlla Verified Move-In (Recommended) */}
-          <div className="rounded-3xl border-2 border-blue-600 bg-white p-6 sm:p-8 shadow-xl relative flex flex-col justify-between scale-105 z-10">
+          <div className="rounded-3xl border-2 border-blue-600 bg-white p-6 sm:p-8 shadow-xl relative flex flex-col justify-between md:scale-105 z-10">
             {/* Recommended Pill */}
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-4 py-1 text-[11px] font-black uppercase tracking-wider text-white shadow-md">
               Most Popular • Verified
@@ -594,7 +594,7 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
       </section>
 
       {/* 8. Frequently Asked Questions */}
-      <section id="faq-section" className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+      <section id="faq-section" className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 scroll-mt-24">
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700 border border-blue-200 mb-2">
             <HelpCircle className="h-3.5 w-3.5 text-blue-600" />

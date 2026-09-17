@@ -315,7 +315,7 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
       {/* Modal Dialog Container */}
       <div className="relative z-10 w-full max-w-5xl max-h-[94vh] bg-white rounded-3xl border border-slate-200 shadow-2xl flex flex-col overflow-hidden text-slate-900 animate-scale-up">
         {/* Top Workflow Navigation Bar */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 px-6 sm:px-8 py-4 bg-white sticky top-0 z-20">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 border-b border-slate-100 px-4 sm:px-8 py-3.5 sm:py-4 bg-white sticky top-0 z-20">
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-1">
               <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-blue-700 border border-blue-200/70">
@@ -359,14 +359,14 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
         </div>
 
         {/* View Selection Tabs */}
-        <div className="flex border-b border-slate-100 bg-slate-50/70 px-6 sm:px-8 text-xs font-bold">
+        <div className="flex border-b border-slate-100 bg-slate-50/70 px-3 sm:px-8 text-xs font-bold overflow-x-auto no-scrollbar whitespace-nowrap gap-1">
           <button
             type="button"
             onClick={() => {
               setActiveRole("tenant");
               setActiveView("sign");
             }}
-            className={`py-3 px-4 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
+            className={`py-3 px-3.5 sm:px-4 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 shrink-0 ${
               activeRole === "tenant" && activeView === "sign"
                 ? "border-blue-600 text-blue-600 bg-white rounded-t-xl"
                 : "border-transparent text-slate-500 hover:text-slate-900"
@@ -382,7 +382,7 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
               setActiveRole("manager");
               setActiveView("sign");
             }}
-            className={`py-3 px-4 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
+            className={`py-3 px-3.5 sm:px-4 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 shrink-0 ${
               activeRole === "manager" && activeView === "sign"
                 ? "border-blue-600 text-blue-600 bg-white rounded-t-xl"
                 : "border-transparent text-slate-500 hover:text-slate-900"
@@ -395,7 +395,7 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
           <button
             type="button"
             onClick={() => setActiveView("audit")}
-            className={`py-3 px-4 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
+            className={`py-3 px-3.5 sm:px-4 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 shrink-0 ${
               activeView === "audit"
                 ? "border-blue-600 text-blue-600 bg-white rounded-t-xl"
                 : "border-transparent text-slate-500 hover:text-slate-900"
@@ -410,7 +410,7 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
           <button
             type="button"
             onClick={() => setActiveView("indenture")}
-            className={`py-3 px-4 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
+            className={`py-3 px-3.5 sm:px-4 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 shrink-0 ${
               activeView === "indenture"
                 ? "border-blue-600 text-blue-600 bg-white rounded-t-xl"
                 : "border-transparent text-slate-500 hover:text-slate-900"
@@ -1103,7 +1103,7 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
         </div>
 
         {/* Modal Footer Actions */}
-        <div className="border-t border-slate-100 px-6 sm:px-8 py-4 bg-white flex flex-col sm:flex-row items-center justify-between gap-3 sticky bottom-0 z-20">
+        <div className="border-t border-slate-100 px-4 sm:px-8 py-3.5 sm:py-4 bg-white flex flex-col sm:flex-row items-center justify-between gap-3 sticky bottom-0 z-20">
           <div className="text-xs text-slate-500 text-center sm:text-left">
             <span className="font-bold text-slate-900 block text-xs">
               Agreement {agreement.agreement_id} &bull; Status: {agreement.status}
@@ -1111,7 +1111,7 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
             <span>Two-Party execution mandatory prior to move-in escrow payment</span>
           </div>
 
-          <div className="flex items-center gap-2.5 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
             <button
               type="button"
               onClick={onClose}

@@ -307,7 +307,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 overflow-y-auto">
         {/* Backdrop */}
         <div
           className="fixed inset-0 bg-slate-950/50 backdrop-blur-xs transition-opacity animate-fade-in"
@@ -317,7 +317,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
         {/* Modal Dialog Container */}
         <div className="relative z-10 w-full max-w-4xl max-h-[92vh] bg-white rounded-3xl border border-slate-200 shadow-2xl flex flex-col overflow-hidden text-slate-900 animate-scale-up">
           {/* Header Bar */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 px-6 sm:px-8 py-4 bg-white sticky top-0 z-20">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 px-4 sm:px-8 py-3.5 sm:py-4 bg-white sticky top-0 z-20">
             <div>
               <div className="flex flex-wrap items-center gap-2 mb-1">
                 <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-blue-700 border border-blue-200/70">
@@ -353,7 +353,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
           </div>
 
           {/* Modal Content Body */}
-          <div className="flex-1 overflow-y-auto p-6 sm:p-8 bg-[#F8FAFC] space-y-6">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-8 bg-[#F8FAFC] space-y-6">
             {transaction ? (
               /* ============================================================= */
               /* SUCCESS STATE: PAYMENT CLEARED & 4-WAY SPLIT CONFIRMATION     */
@@ -400,7 +400,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                 </div>
 
                 {/* 4-Way Split Atomic Disbursement Ledger */}
-                <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+                <div className="rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                     <div>
                       <h4 className="text-sm font-black text-slate-900 flex items-center gap-2">
@@ -538,7 +538,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
               /* ============================================================= */
               <div className="space-y-6">
                 {/* 1. Transparent 4-Way Fee Breakdown Card */}
-                <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+                <div className="rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm space-y-4">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
                     <div>
                       <h4 className="text-sm font-black text-slate-900">All-In Upfront Move-In Cost Breakdown</h4>
@@ -633,7 +633,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
 
                 {/* Inline Account Creation for Unauthenticated Users */}
                 {!isAuthenticated && (
-                  <div className="rounded-3xl border border-blue-200 bg-blue-50/60 p-6 space-y-4">
+                  <div className="rounded-3xl border border-blue-200 bg-blue-50/60 p-4 sm:p-6 space-y-4">
                     <div className="flex items-center gap-2 font-bold text-blue-950">
                       <User className="w-5 h-5 text-blue-600 flex-shrink-0" />
                       <span className="text-sm">Link Tenancy to Your Dashboard Account</span>
@@ -681,7 +681,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                 )}
 
                 {/* 3. Payment Gateway & Channel Selector */}
-                <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
+                <div className="rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm space-y-5">
                   {/* Gateway Provider Switcher */}
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
                     <div>

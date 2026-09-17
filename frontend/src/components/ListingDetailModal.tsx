@@ -66,7 +66,7 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Sticky Modal Header */}
-        <div className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200/90 bg-white/95 px-6 py-4 backdrop-blur-md">
+        <div className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200/90 bg-white/95 px-4 sm:px-6 py-3.5 sm:py-4 backdrop-blur-md">
           <div className="flex items-center gap-2.5">
             <span className="flex h-3 w-3 rounded-full bg-blue-600"></span>
             <div>
@@ -88,7 +88,7 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
         </div>
 
         {/* Modal Content Body */}
-        <div className="p-6 sm:p-8 space-y-8">
+        <div className="p-4 sm:p-8 space-y-6 sm:space-y-8">
           {/* Title & Address Header */}
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -194,8 +194,8 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
               </span>
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
-              <table className="w-full text-left text-xs sm:text-sm">
+            <div className="overflow-x-auto no-scrollbar rounded-2xl border border-slate-200 bg-white shadow-xs">
+              <table className="w-full min-w-[480px] sm:min-w-0 text-left text-xs sm:text-sm">
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50 text-slate-600 uppercase text-[11px] font-bold">
                     <th className="py-3 px-4">Cost Component</th>

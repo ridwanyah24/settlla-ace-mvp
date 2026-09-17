@@ -106,7 +106,7 @@ export default function ListingDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans pb-16 lg:pb-0">
       <Navbar verifiedCount={5} />
 
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
@@ -210,7 +210,7 @@ export default function ListingDetailPage() {
             <CreditCard className="w-5 h-5 text-emerald-400" />
             <span>All-In Upfront Pricing Breakdown (Zero Hidden Fees)</span>
           </h2>
-          <div className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/60 shadow-xl">
+          <div className="overflow-x-auto rounded-3xl border border-slate-800 bg-slate-900/60 shadow-xl no-scrollbar">
             <table className="w-full text-left text-xs sm:text-sm">
               <thead>
                 <tr className="border-b border-slate-800 bg-slate-900/90 text-slate-400 uppercase text-[11px] font-bold">

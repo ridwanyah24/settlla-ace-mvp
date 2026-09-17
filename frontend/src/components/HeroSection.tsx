@@ -31,7 +31,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onSearch,
 }) => {
   return (
-    <section id="hero" className="relative w-full overflow-hidden bg-slate-900 py-16 sm:py-24 lg:py-28">
+    <section id="hero" className="relative w-full overflow-hidden bg-slate-900 py-12 sm:py-24 lg:py-28 scroll-mt-24">
       {/* Background Image with Crisp Overlay */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -47,16 +47,16 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
         {/* Top Trust Pill */}
-        <div className="inline-flex items-center gap-2 rounded-full bg-blue-50/90 px-4 py-1.5 text-xs font-bold text-blue-700 border border-blue-200 shadow-xs mb-6 backdrop-blur-xs">
-          <span className="flex h-2 w-2 rounded-full bg-blue-600 animate-ping"></span>
-          <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
-          <span>Kaduna's Most Trusted Rental Platform</span>
+        <div className="inline-flex items-center gap-2 rounded-full bg-blue-50/90 px-3.5 sm:px-4 py-1.5 text-xs font-bold text-blue-700 border border-blue-200 shadow-xs mb-5 sm:mb-6 backdrop-blur-xs max-w-full">
+          <span className="flex h-2 w-2 rounded-full bg-blue-600 animate-ping shrink-0"></span>
+          <ShieldCheck className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+          <span className="truncate">Kaduna's Trusted Platform</span>
           <span className="hidden sm:inline text-blue-300">•</span>
           <span className="hidden sm:inline text-blue-600 font-medium">Barnawa &amp; Malali Wedge</span>
         </div>
 
         {/* Main Headline */}
-        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-slate-900 leading-[1.1]">
+        <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-slate-900 leading-[1.15] sm:leading-[1.1]">
           Rent <span className="text-blue-600">Smarter.</span> Pay{" "}
           <span className="text-blue-600">Safer.</span> <br className="hidden sm:block" />
           Live <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Better.</span>

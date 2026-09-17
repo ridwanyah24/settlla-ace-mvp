@@ -334,7 +334,7 @@ Audit Reference: SETT-SIG-MGR-${agreementId}
       {/* Modal Dialog Container — Light Theme matching Landing Page */}
       <div className="relative z-10 w-full max-w-5xl max-h-[92vh] bg-white rounded-3xl border border-slate-200 shadow-2xl flex flex-col overflow-hidden text-slate-900 animate-scale-up">
         {/* Header Bar */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 px-6 sm:px-8 py-5 bg-white/95 backdrop-blur-md sticky top-0 z-20">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 border-b border-slate-100 px-4 sm:px-8 py-3.5 sm:py-5 bg-white/95 backdrop-blur-md sticky top-0 z-20">
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-1">
               <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-blue-700 border border-blue-200/70">
@@ -807,7 +807,7 @@ Audit Reference: SETT-SIG-MGR-${agreementId}
         </div>
 
         {/* Footer Actions */}
-        <div className="border-t border-slate-100 px-6 sm:px-8 py-4 bg-white/95 backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-3 sticky bottom-0 z-20">
+        <div className="border-t border-slate-100 px-4 sm:px-8 py-3.5 sm:py-4 bg-white/95 backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-3 sticky bottom-0 z-20">
           <div className="text-xs text-slate-500 text-center sm:text-left">
             <span className="font-bold text-slate-900 block text-xs">
               {agreement ? agreement.agreement_id : "Generating agreement..."}
@@ -815,7 +815,7 @@ Audit Reference: SETT-SIG-MGR-${agreementId}
             <span>Governed by Kaduna State Tenancy Laws &bull; Move-in escrow protected</span>
           </div>
 
-          <div className="flex items-center gap-2.5 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
             <button
               type="button"
               onClick={onClose}

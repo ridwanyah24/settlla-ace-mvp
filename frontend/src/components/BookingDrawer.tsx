@@ -314,7 +314,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
       {/* Drawer Container — Crisp Landing Page Palette (White / Slate / Royal Blue) */}
       <div className="relative z-10 w-full max-w-xl bg-white border-l border-slate-200 shadow-2xl flex flex-col h-full overflow-hidden text-slate-900 transition-transform duration-300 ease-out">
         {/* Top Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-white/95 backdrop-blur-md sticky top-0 z-20">
+        <div className="flex items-center justify-between border-b border-slate-100 px-4 sm:px-6 py-3.5 sm:py-4 bg-white/95 backdrop-blur-md sticky top-0 z-20">
           <div>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200/80">
@@ -341,7 +341,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
         </div>
 
         {/* Step Indicator Row */}
-        <div className="flex border-b border-slate-100 bg-slate-50/70 px-6 py-2.5 text-xs font-semibold">
+        <div className="flex border-b border-slate-100 bg-slate-50/70 px-4 sm:px-6 py-2.5 text-xs font-semibold overflow-x-auto no-scrollbar whitespace-nowrap">
           <div className={`flex items-center gap-1.5 ${step >= 1 ? "text-blue-600" : "text-slate-400"}`}>
             <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${step >= 1 ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-600"}`}>1</span>
             <span>Slot Picker</span>
@@ -359,7 +359,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
         </div>
 
         {/* Property Summary Mini Card */}
-        <div className="px-6 py-3 bg-white border-b border-slate-100 flex items-center gap-3">
+        <div className="px-4 sm:px-6 py-3 bg-white border-b border-slate-100 flex items-center gap-3">
           <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl border border-slate-200">
             <Image
               src={listing.images[0] || "/images/living_room.jpg"}
@@ -382,7 +382,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
         </div>
 
         {/* Scrollable Drawer Body */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5 space-y-6">
           {/* STEP 1: DATE SELECTION & 30-MINUTE SLOTS */}
           {step === 1 && (
             <div>
@@ -425,12 +425,12 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                     )}
                   </div>
 
-                  {/* Date Selection Pills */}
-                  <div>
-                    <label className="text-xs font-bold text-slate-900 uppercase tracking-wider block mb-2.5">
-                      1. Choose Date (Next 14 Days)
-                    </label>
-                    <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-thin">
+                    {/* Date Selection Pills */}
+                    <div>
+                      <label className="text-xs font-bold text-slate-900 uppercase tracking-wider block mb-2.5">
+                        1. Choose Date (Next 14 Days)
+                      </label>
+                      <div className="flex gap-2.5 overflow-x-auto pb-2 no-scrollbar">
                       {schedules.map((day, idx) => {
                         const isSelected = idx === selectedDayIdx;
                         const dateParts = day.formatted_date.split(",");

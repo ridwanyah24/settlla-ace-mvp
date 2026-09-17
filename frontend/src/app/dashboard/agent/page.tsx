@@ -122,7 +122,7 @@ export default function AgentDashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col pb-16 lg:pb-0">
       {/* Top Navbar */}
       <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-xs">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
@@ -241,7 +241,7 @@ export default function AgentDashboardPage() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="border-b border-slate-200 bg-white rounded-2xl p-1.5 shadow-2xs flex overflow-x-auto gap-1">
+        <div className="border-b border-slate-200 bg-white rounded-2xl p-1.5 shadow-2xs flex overflow-x-auto gap-1 no-scrollbar">
           <button
             type="button"
             onClick={() => setActiveTab("listings")}
@@ -363,8 +363,8 @@ export default function AgentDashboardPage() {
             {/* Properties List */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {listings.map((item) => (
-                <div key={item.id} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xs flex gap-4">
-                  <div className="relative h-28 w-32 flex-shrink-0 overflow-hidden rounded-2xl border border-slate-200">
+                <div key={item.id} className="rounded-3xl border border-slate-200 bg-white p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row gap-3 sm:gap-4">
+                  <div className="relative h-40 sm:h-28 w-full sm:w-32 flex-shrink-0 overflow-hidden rounded-2xl border border-slate-200">
                     <Image
                       src={item.images[0] || "/images/living_room.jpg"}
                       alt={item.title}
@@ -828,9 +828,45 @@ export default function AgentDashboardPage() {
       </main>
 
       {/* Simple Footer */}
-      <footer className="border-t border-slate-200 bg-white px-4 py-4 text-center text-xs text-slate-500 mt-12">
+      <footer className="border-t border-slate-200 bg-white px-4 py-4 text-center text-xs text-slate-500 mt-12 mb-8 lg:mb-0">
         Settlla Kaduna Hub • Authorized Real Estate Partner &amp; Escrow Infrastructure
       </footer>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <nav
+        aria-label="Agent Mobile Navigation"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-lg px-4 py-2 pb-safe"
+      >
+        <div className="flex items-center justify-around max-w-md mx-auto">
+          <Link
+            href="/"
+            className="flex flex-col items-center justify-center py-1 text-slate-500 hover:text-slate-800 transition-colors"
+          >
+            <Home className="h-5 w-5" />
+            <span className="text-[10px] font-medium mt-0.5">Explore Feed</span>
+          </Link>
+          <div className="flex flex-col items-center justify-center py-1 text-emerald-700 font-bold">
+            <Building2 className="h-5 w-5" />
+            <span className="text-[10px] font-bold mt-0.5">Manager Desk</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => switchRole("tenant")}
+            className="flex flex-col items-center justify-center py-1 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+          >
+            <User className="h-5 w-5" />
+            <span className="text-[10px] font-medium mt-0.5">Tenant View</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => signOut()}
+            className="flex flex-col items-center justify-center py-1 text-rose-500 hover:text-rose-700 transition-colors cursor-pointer"
+          >
+            <LogOut className="h-5 w-5" />
+            <span className="text-[10px] font-medium mt-0.5">Sign Out</span>
+          </button>
+        </div>
+      </nav>
     </div>
   );
 }

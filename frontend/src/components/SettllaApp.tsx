@@ -87,6 +87,23 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
 
   useEffect(() => {
     refreshPendingCount();
+
+    // Cross-page or direct hash scrolling handler
+    const handleHashScroll = () => {
+      if (typeof window !== "undefined" && window.location.hash) {
+        const targetId = window.location.hash.replace("#", "");
+        setTimeout(() => {
+          const el = document.getElementById(targetId);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth" });
+          }
+        }, 150);
+      }
+    };
+
+    handleHashScroll();
+    window.addEventListener("hashchange", handleHashScroll);
+    return () => window.removeEventListener("hashchange", handleHashScroll);
   }, []);
 
   useEffect(() => {
@@ -198,7 +215,7 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-blue-600 selection:text-white">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-blue-600 selection:text-white pb-16 lg:pb-0">
       {/* 1. Header Navigation */}
       <Navbar
         verifiedCount={listings.length}
@@ -398,7 +415,7 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
 
       {/* Floating Active Pass / Escrow Quick-Access Notification */}
       {activePass && !activePassListing && (
-        <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-2 items-end">
+        <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40 flex flex-col gap-2 items-end">
           <button
             type="button"
             onClick={() => setEscrowDashboardOpen(true)}

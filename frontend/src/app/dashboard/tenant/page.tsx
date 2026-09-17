@@ -111,7 +111,7 @@ export default function TenantDashboardPage() {
     "5829 4810 3921";
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col pb-16 lg:pb-0">
       {/* Top Navbar */}
       <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-xs">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
@@ -229,7 +229,7 @@ export default function TenantDashboardPage() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="border-b border-slate-200 bg-white rounded-2xl p-1.5 shadow-2xs flex overflow-x-auto gap-1">
+        <div className="border-b border-slate-200 bg-white rounded-2xl p-1.5 shadow-2xs flex overflow-x-auto gap-1 no-scrollbar">
           <button
             type="button"
             onClick={() => setActiveTab("overview")}
@@ -356,8 +356,8 @@ export default function TenantDashboardPage() {
             {/* Current Residence Detail Card */}
             <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-xs space-y-6">
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-slate-100">
-                <div className="flex items-start gap-4">
-                  <div className="relative h-24 w-32 flex-shrink-0 overflow-hidden rounded-2xl border border-slate-200 shadow-2xs">
+                <div className="flex flex-col sm:flex-row items-start gap-4 w-full sm:w-auto">
+                  <div className="relative h-44 sm:h-24 w-full sm:w-32 flex-shrink-0 overflow-hidden rounded-2xl border border-slate-200 shadow-2xs">
                     <Image
                       src={home.images[0] || "/images/living_room.jpg"}
                       alt={home.title}
@@ -365,7 +365,7 @@ export default function TenantDashboardPage() {
                       className="object-cover"
                     />
                   </div>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-200 px-2.5 py-0.5 text-xs font-bold text-blue-700 mb-1">
                       <Home className="h-3 w-3" />
                       <span>{home.neighborhood} • {home.zone}</span>
@@ -722,9 +722,45 @@ export default function TenantDashboardPage() {
       </main>
 
       {/* Simple Footer */}
-      <footer className="border-t border-slate-200 bg-white px-4 py-4 text-center text-xs text-slate-500 mt-12">
+      <footer className="border-t border-slate-200 bg-white px-4 py-4 text-center text-xs text-slate-500 mt-12 mb-8 lg:mb-0">
         Settlla Kaduna Hub • Statutory Transparency, ₦0 Inspection Fee &amp; Move-In Escrow
       </footer>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <nav
+        aria-label="Tenant Mobile Navigation"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-lg px-4 py-2 pb-safe"
+      >
+        <div className="flex items-center justify-around max-w-md mx-auto">
+          <Link
+            href="/"
+            className="flex flex-col items-center justify-center py-1 text-slate-500 hover:text-slate-800 transition-colors"
+          >
+            <Home className="h-5 w-5" />
+            <span className="text-[10px] font-medium mt-0.5">Explore Feed</span>
+          </Link>
+          <div className="flex flex-col items-center justify-center py-1 text-blue-600 font-bold">
+            <User className="h-5 w-5" />
+            <span className="text-[10px] font-bold mt-0.5">My Tenancy</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => switchRole("agent")}
+            className="flex flex-col items-center justify-center py-1 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+          >
+            <Building2 className="h-5 w-5" />
+            <span className="text-[10px] font-medium mt-0.5">Agent View</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => signOut()}
+            className="flex flex-col items-center justify-center py-1 text-rose-500 hover:text-rose-700 transition-colors cursor-pointer"
+          >
+            <LogOut className="h-5 w-5" />
+            <span className="text-[10px] font-medium mt-0.5">Sign Out</span>
+          </button>
+        </div>
+      </nav>
     </div>
   );
 }
