@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { Listing } from "../types/listing";
+import { Button } from "./ui/Button";
 import {
   X,
   MapPin,
@@ -343,26 +344,30 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
               </div>
 
               {/* Action buttons placed underneath */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2 w-full">
+              <div className="flex w-full flex-col gap-3 pt-2 sm:flex-row sm:items-center">
                 {onDraftAgreement && (
-                  <button
+                  <Button
                     type="button"
+                    variant="primary"
+                    size="lg"
+                    className="flex-1"
                     onClick={() => onDraftAgreement(listing)}
-                    className="flex-1 rounded-xl bg-blue-600 hover:bg-blue-700 px-5 py-3.5 text-xs sm:text-sm font-bold text-white transition-all shadow-md shadow-blue-500/25 hover:shadow-blue-500/35 cursor-pointer text-center flex items-center justify-center gap-2"
                   >
-                    <Zap className="h-4 w-4 text-amber-300" />
-                    <span>Instant Rent (Skip Inspection)</span>
+                    <Zap className="h-4 w-4" />
+                    Instant rent
                     <ArrowRight className="h-4 w-4" />
-                  </button>
+                  </Button>
                 )}
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
+                  size="lg"
+                  className="flex-1 sm:flex-initial"
                   onClick={() => onBookInspection(listing)}
-                  className="flex-1 sm:flex-initial rounded-xl border border-slate-300 bg-white hover:bg-slate-50 px-5 py-3.5 text-xs sm:text-sm font-bold text-slate-800 transition-colors cursor-pointer text-center flex items-center justify-center gap-2"
                 >
                   <Calendar className="h-4 w-4 text-slate-500" />
-                  <span>Book Free Tour</span>
-                </button>
+                  Book free tour
+                </Button>
               </div>
             </div>
           </div>

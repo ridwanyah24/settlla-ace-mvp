@@ -1,10 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { UserRole } from "@/types/auth";
+import { Button } from "@/components/ui/Button";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+import {
+  assertPassword,
+  formatSupabaseAuthError,
+  dashboardPathForRole,
+  MIN_PASSWORD_LENGTH,
+} from "@/lib/settlla/authErrors";
 import {
   ShieldCheck,
   Building2,
@@ -17,27 +25,57 @@ import {
 
 export default function LoginPage() {
   const router = useRouter();
-  const { signIn } = useAuth();
+  const { signIn, currentUser, authReady } = useAuth();
+  const supabaseMode = isSupabaseConfigured();
 
   const [role, setRole] = useState<UserRole>("tenant");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [roleHint, setRoleHint] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (authReady && currentUser) {
+      router.replace(dashboardPathForRole(currentUser.role));
+    }
+  }, [authReady, currentUser, router]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setRoleHint(null);
+
     if (!email.trim()) {
       setError("Please enter your email address.");
       return;
     }
-    signIn(email.trim(), role, password);
-    router.push(role === "agent" ? "/dashboard/agent" : "/dashboard/tenant");
+
+    try {
+      assertPassword(password, supabaseMode);
+    } catch (err) {
+      setError(formatSupabaseAuthError(err));
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const profile = await signIn(email.trim(), role, password);
+      if (role !== profile.role) {
+        setRoleHint(
+          `This account is registered as a ${profile.role}. Opening your ${profile.role} dashboard.`
+        );
+      }
+      router.push(dashboardPathForRole(profile.role));
+    } catch (err) {
+      setError(formatSupabaseAuthError(err));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-between">
-      {/* Top Simple Header */}
       <header className="border-b border-slate-200 bg-white px-4 sm:px-8 py-4">
         <div className="mx-auto max-w-7xl flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 group">
@@ -63,32 +101,22 @@ export default function LoginPage() {
         </div>
       </header>
 
-      {/* Main Container */}
       <main className="flex-1 flex items-center justify-center px-4 py-12">
-        <div className="w-full max-w-lg bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden">
-          {/* Top Banner with Trust */}
-          <div className="bg-[#0B1528] text-white p-6 sm:p-8 relative overflow-hidden">
-            <div className="relative z-10">
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/20 px-3 py-1 text-xs font-bold text-blue-300 border border-blue-400/30 mb-3">
-                <ShieldCheck className="h-3.5 w-3.5" />
-                <span>HB&amp;A Mandate Verified Portal</span>
-              </div>
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-                Sign in to your account
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-300 mt-1">
-                Access your leases, 24-hr escrow protections, and visiting windows.
-              </p>
-            </div>
+        <div className="settlla-card w-full max-w-lg overflow-hidden shadow-[var(--shadow-lg)]">
+          <div className="relative overflow-hidden bg-[var(--settlla-navy)] p-6 text-white sm:p-8">
+            <p className="text-overline mb-3 text-blue-300">
+              <ShieldCheck className="mr-1 inline h-3.5 w-3.5" />
+              Verified portal
+            </p>
+            <h1 className="text-h2 text-white">Sign in</h1>
+            <p className="text-body mt-2 text-slate-300">
+              Leases, escrow protection, and tour bookings in one place.
+            </p>
           </div>
 
-          {/* Form Area */}
           <div className="p-6 sm:p-8 space-y-6">
-            {/* Role Selection */}
             <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-2">
-                Sign in as:
-              </label>
+              <label className="settlla-label">Sign in as</label>
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
@@ -140,17 +168,23 @@ export default function LoginPage() {
               </div>
             )}
 
-            {/* Inputs */}
+            {roleHint && !error && (
+              <div className="rounded-xl border border-blue-200 bg-blue-50 p-3.5 text-xs text-blue-800 font-semibold">
+                {roleHint}
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1.5">
-                  Email Address
+                <label className="settlla-label normal-case tracking-normal text-slate-600">
+                  Email
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
                   <input
                     type="email"
                     required
+                    autoComplete="email"
                     placeholder={
                       role === "tenant"
                         ? "e.g. yourname@gmail.com"
@@ -158,35 +192,50 @@ export default function LoginPage() {
                     }
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                    className="settlla-input pl-10"
+                    disabled={submitting}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1.5">
+                <label className="settlla-label normal-case tracking-normal text-slate-600">
                   Password
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
                   <input
                     type="password"
-                    required
+                    required={supabaseMode}
+                    minLength={supabaseMode ? MIN_PASSWORD_LENGTH : undefined}
+                    autoComplete="current-password"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                    className="settlla-input pl-10"
+                    disabled={submitting}
                   />
                 </div>
+                {supabaseMode && (
+                  <p className="mt-1 text-[11px] text-slate-400">
+                    At least {MIN_PASSWORD_LENGTH} characters
+                  </p>
+                )}
               </div>
 
-              <button
+              <Button
                 type="submit"
-                className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 py-3 text-xs sm:text-sm font-bold text-white transition-all shadow-md shadow-blue-500/25 flex items-center justify-center gap-2 cursor-pointer mt-2"
+                variant="primary"
+                size="lg"
+                fullWidth
+                className="mt-2"
+                disabled={submitting}
               >
-                <span>Sign In to {role === "agent" ? "Agent Desk" : "Tenant Dashboard"}</span>
-                <ArrowRight className="h-4 w-4" />
-              </button>
+                {submitting
+                  ? "Signing in…"
+                  : `Sign in to ${role === "agent" ? "agent desk" : "tenant hub"}`}
+                {!submitting && <ArrowRight className="h-4 w-4" />}
+              </Button>
             </form>
 
             <div className="pt-2 text-center text-xs text-slate-500 border-t border-slate-100">
@@ -202,7 +251,6 @@ export default function LoginPage() {
         </div>
       </main>
 
-      {/* Simple Footer */}
       <footer className="border-t border-slate-200 bg-white px-4 py-4 text-center text-xs text-slate-500">
         Settlla Kaduna Hub • Statutory 4-Way Transparency &amp; Escrow Protection
       </footer>

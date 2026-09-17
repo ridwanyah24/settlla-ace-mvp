@@ -7,6 +7,13 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Listing } from "@/types/listing";
 import { DaySchedule, TimeSlot, InspectionBookingResponse } from "@/types/booking";
+import { fetchListingVisitSlots, createInspectionBooking } from "@/lib/settlla/bookings";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+import {
+  assertPassword,
+  formatSupabaseAuthError,
+  MIN_PASSWORD_LENGTH,
+} from "@/lib/settlla/authErrors";
 import {
   Check,
   CheckCircle2,
@@ -29,9 +36,11 @@ import {
   User,
 } from "lucide-react";
 
+export type BookingDrawerCloseReason = "dismiss" | "complete";
+
 export interface BookingDrawerProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose: (reason?: BookingDrawerCloseReason) => void;
   listing: Listing;
   onProceedToAgreement?: (
     listing: Listing,
@@ -118,7 +127,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
 
     document.body.style.overflow = "hidden";
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onClose("dismiss");
     };
     window.addEventListener("keydown", handleKeyDown);
 
@@ -127,27 +136,14 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
     setSubmitError(null);
     setConfirmedBooking(null);
 
-    // Fetch schedules from backend or generate fallback
     async function loadSchedule() {
       setLoadingSchedule(true);
       try {
-        const res = await fetch(`http://127.0.0.1:8000/api/listings/${listing.id}/slots`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.days && data.days.length > 0) {
-            setSchedules(data.days);
-            setSelectedDayIdx(0);
-            return;
-          }
-        }
-        // If fetch failed or empty, generate fallback client-side
-        const fallback = generateClientSchedule(listing);
-        setSchedules(fallback);
+        const days = await fetchListingVisitSlots(listing);
+        setSchedules(days);
         setSelectedDayIdx(0);
       } catch {
-        const fallback = generateClientSchedule(listing);
-        setSchedules(fallback);
-        setSelectedDayIdx(0);
+        setSchedules([]);
       } finally {
         setLoadingSchedule(false);
       }
@@ -268,59 +264,18 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
     };
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        const data: InspectionBookingResponse = await res.json();
-        setConfirmedBooking(data);
-        saveBookingToStorage(data);
-        lockSlotLocally(selectedSlot.slot_id);
-        setStep(3);
-        return;
-      }
-
-      if (res.status === 409) {
-        setSubmitError("This slot was just locked by another prospective tenant. Please select a different slot.");
-        return;
-      }
-
-      const errData = await res.json();
-      throw new Error(errData.detail || "Booking failed");
-    } catch {
-      // Fallback local booking generation
-      const fakeRef = `SETT-BK-${Math.floor(1000 + Math.random() * 9000)}`;
-      const fallbackBooking: InspectionBookingResponse = {
-        booking_id: fakeRef,
-        listing_id: listing.id,
-        property_title: listing.title,
-        property_address: listing.full_address,
-        commute_badge: listing.commute_badge,
-        manager_name: listing.mandate.manager_name,
-        manager_accreditation: listing.mandate.accreditation,
-        manager_phone: "0803 555 1289",
-        manager_whatsapp: "2348035551289",
-        tenant_name: tenantName.trim(),
-        tenant_phone: tenantPhone.trim(),
-        tenant_email: tenantEmail.trim() || "tenant@settlla.ng",
-        date_str: selectedDay.date_str,
-        formatted_date: selectedDay.formatted_date,
-        slot_time: selectedSlot.time_label,
-        inspection_fee: 0,
-        fee_currency: "NGN",
-        booking_status: "confirmed",
-        directions: `Meet manager at ${listing.full_address}. ${listing.commute_context} Ask gate security for ${listing.mandate.manager_name}.`,
-        anti_scam_guarantee: "100% Free Walkthrough. Zero roadside fee.",
-        created_at: new Date().toISOString(),
-      };
-
-      setConfirmedBooking(fallbackBooking);
-      saveBookingToStorage(fallbackBooking);
+      const data = await createInspectionBooking(
+        listing,
+        payload,
+        selectedSlot.slot_id,
+        selectedDay.formatted_date
+      );
+      setConfirmedBooking(data);
+      saveBookingToStorage(data);
       lockSlotLocally(selectedSlot.slot_id);
       setStep(3);
+    } catch {
+      setSubmitError("Could not confirm this walkthrough slot. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -350,7 +305,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
     }
 
     if (isAuthenticated) {
-      onClose();
+      onClose("complete");
       router.push("/dashboard/tenant");
     } else {
       setAuthName(confirmedBooking?.tenant_name || tenantName);
@@ -368,6 +323,8 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
     setAuthError(null);
     setAuthLoading(true);
 
+    const supabaseMode = isSupabaseConfigured();
+
     try {
       if (authMode === "signup") {
         if (!authName.trim() || !authPhone.trim() || !authEmail.trim()) {
@@ -376,14 +333,31 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
           return;
         }
 
-        signUp({
+        try {
+          assertPassword(authPassword, supabaseMode);
+        } catch (err) {
+          setAuthError(formatSupabaseAuthError(err));
+          setAuthLoading(false);
+          return;
+        }
+
+        const result = await signUp({
           role: "tenant",
           fullName: authName.trim(),
           phoneNumber: authPhone.trim(),
           email: authEmail.trim(),
-          password: authPassword.trim() || "password123",
+          password: authPassword.trim(),
           relocationContext,
         });
+
+        if (result.needsEmailConfirmation) {
+          setAuthError(
+            `We sent a confirmation link to ${authEmail.trim()}. Confirm your email, then sign in here.`
+          );
+          setAuthMode("signin");
+          setAuthLoading(false);
+          return;
+        }
       } else {
         if (!authEmail.trim()) {
           setAuthError("Please enter your email address.");
@@ -391,7 +365,15 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
           return;
         }
 
-        signIn(authEmail.trim(), "tenant", authPassword.trim() || undefined);
+        try {
+          assertPassword(authPassword, supabaseMode);
+        } catch (err) {
+          setAuthError(formatSupabaseAuthError(err));
+          setAuthLoading(false);
+          return;
+        }
+
+        await signIn(authEmail.trim(), "tenant", authPassword.trim());
       }
 
       if (confirmedBooking) {
@@ -399,10 +381,10 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
       }
 
       setShowAuthPrompt(false);
-      onClose();
+      onClose("complete");
       router.push("/dashboard/tenant");
-    } catch (err: any) {
-      setAuthError(err?.message || "Authentication failed. Please try again.");
+    } catch (err: unknown) {
+      setAuthError(formatSupabaseAuthError(err));
     } finally {
       setAuthLoading(false);
     }
@@ -410,7 +392,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
 
   function handleSkipAuth() {
     setShowAuthPrompt(false);
-    onClose();
+    onClose("complete");
   }
 
   if (!isOpen) return null;
@@ -423,7 +405,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
       {/* Soft Backdrop matching landing theme */}
       <div
         className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs transition-opacity animate-fade-in"
-        onClick={onClose}
+        onClick={() => onClose("dismiss")}
       />
 
       {/* Drawer Container — Crisp Landing Page Palette (White / Slate / Royal Blue) */}
@@ -447,7 +429,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
           </div>
 
           <button
-            onClick={onClose}
+            onClick={() => onClose("dismiss")}
             className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors"
             title="Close Drawer"
           >
@@ -829,7 +811,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                   </div>
                   <Link
                     href="/dashboard/agent"
-                    onClick={onClose}
+                    onClick={() => onClose("dismiss")}
                     className="rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-3 py-1.5 font-bold text-xs flex items-center gap-1.5 transition-colors shadow-2xs"
                   >
                     <UserCheck className="h-3.5 w-3.5 text-blue-600" />
@@ -1035,12 +1017,13 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <input
                     type="password"
-                    required
+                    required={isSupabaseConfigured()}
+                    minLength={isSupabaseConfigured() ? MIN_PASSWORD_LENGTH : undefined}
                     value={authPassword}
                     onChange={(e) => setAuthPassword(e.target.value)}
                     placeholder={
                       authMode === "signup"
-                        ? "Choose a secure password"
+                        ? `At least ${MIN_PASSWORD_LENGTH} characters`
                         : "Enter your password"
                     }
                     className="w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 py-2.5 text-xs font-semibold text-slate-900 focus:bg-white focus:border-blue-500 outline-none"

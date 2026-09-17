@@ -1,8 +1,38 @@
 @import "tailwindcss";
 
+/* ─── Settlla design tokens ─── */
 :root {
-  --background: #F8FAFC;
-  --foreground: #0F172A;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+
+  --settlla-navy: #0b1528;
+  --settlla-brand: #2563eb;
+  --settlla-brand-hover: #1d4ed8;
+  --settlla-brand-muted: #eff6ff;
+
+  --settlla-surface: #ffffff;
+  --settlla-surface-muted: #f1f5f9;
+  --settlla-border: #e2e8f0;
+  --settlla-border-strong: #cbd5e1;
+
+  --settlla-text: #0f172a;
+  --settlla-text-secondary: #475569;
+  --settlla-text-muted: #64748b;
+  --settlla-text-subtle: #94a3b8;
+
+  --settlla-success: #059669;
+  --settlla-success-muted: #ecfdf5;
+
+  --radius-control: 0.75rem;
+  --radius-card: 1rem;
+  --radius-surface: 1.25rem;
+
+  --shadow-sm: 0 1px 2px rgb(15 23 42 / 0.05);
+  --shadow-md: 0 4px 12px rgb(15 23 42 / 0.08);
+  --shadow-lg: 0 12px 32px rgb(15 23 42 / 0.1);
+
+  --section-y: 4rem;
+  --content-gap: 1.5rem;
 }
 
 @theme inline {
@@ -17,6 +47,257 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Layout ─── */
+.settlla-container {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .settlla-container {
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .settlla-container {
+    padding-inline: 2rem;
+  }
+}
+
+.settlla-section {
+  padding-block: var(--section-y);
+}
+
+.settlla-section-header {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--settlla-border);
+}
+
+/* ─── Typography hierarchy ─── */
+.text-overline {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--settlla-brand);
+}
+
+.text-display {
+  font-size: clamp(1.875rem, 4vw, 3.25rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  color: var(--settlla-text);
+}
+
+.text-h2 {
+  font-size: clamp(1.5rem, 2.5vw, 1.875rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: var(--settlla-text);
+}
+
+.text-h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--settlla-text);
+}
+
+.text-body {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--settlla-text-secondary);
+}
+
+.text-caption {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--settlla-text-muted);
+}
+
+/* ─── Surfaces ─── */
+.settlla-card {
+  background: var(--settlla-surface);
+  border: 1px solid var(--settlla-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-sm);
+}
+
+.settlla-card-interactive {
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.settlla-card-interactive:hover {
+  border-color: rgb(37 99 235 / 0.35);
+  box-shadow: var(--shadow-md);
+}
+
+.settlla-panel-muted {
+  background: var(--settlla-surface-muted);
+  border: 1px solid var(--settlla-border);
+  border-radius: var(--radius-control);
+}
+
+/* ─── Buttons (consistent hit area & hierarchy) ─── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  line-height: 1;
+  border-radius: var(--radius-control);
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease,
+    box-shadow 0.15s ease;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-sm {
+  min-height: 2.25rem;
+  padding: 0.375rem 0.875rem;
+  font-size: 0.8125rem;
+}
+
+.btn-md {
+  min-height: 2.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+.btn-lg {
+  min-height: 2.75rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.9375rem;
+}
+
+.btn-primary {
+  background: var(--dashboard-accent, var(--settlla-brand));
+  color: #fff;
+  border: 1px solid transparent;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--dashboard-accent-hover, var(--settlla-brand-hover));
+}
+
+.btn-secondary {
+  background: var(--settlla-surface);
+  color: var(--settlla-text);
+  border: 1px solid var(--settlla-border-strong);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--settlla-surface-muted);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--settlla-text-secondary);
+  border: 1px solid transparent;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--settlla-surface-muted);
+  color: var(--settlla-text);
+}
+
+.btn-soft {
+  background: var(--settlla-brand-muted);
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.btn-soft:hover:not(:disabled) {
+  background: #dbeafe;
+}
+
+/* ─── Form controls ─── */
+.settlla-label {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-bottom: 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--settlla-text-muted);
+}
+
+.settlla-input {
+  width: 100%;
+  min-height: 2.75rem;
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+  padding-right: 0.875rem;
+  padding-left: 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--settlla-text);
+  background: var(--settlla-surface-muted);
+  border: 1px solid var(--settlla-border);
+  border-radius: var(--radius-control);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.settlla-input::placeholder {
+  color: var(--settlla-text-subtle);
+}
+
+.settlla-input:focus {
+  background: var(--settlla-surface);
+  border-color: var(--settlla-brand);
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 0.15);
+}
+
+/* ─── Chips & badges ─── */
+.settlla-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  border: 1px solid var(--settlla-border);
+  background: var(--settlla-surface);
+  color: var(--settlla-text-secondary);
+}
+
+.settlla-chip-active {
+  background: var(--settlla-brand);
+  border-color: var(--settlla-brand);
+  color: #fff;
+}
+
+.settlla-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  background: rgb(15 23 42 / 0.75);
+  color: #fff;
+  backdrop-filter: blur(4px);
 }
 
 /* Custom smooth scrollbar */
@@ -26,19 +307,18 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #F1F5F9;
+  background: #f1f5f9;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+  background: #cbd5e1;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
+  background: #94a3b8;
 }
 
-/* Animations */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -67,18 +347,235 @@ body {
   animation: slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Hide scrollbar for Chrome, Safari and Opera */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
 
-/* Hide scrollbar for IE, Edge and Firefox */
 .no-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-/* Safe area inset padding for modern mobile devices */
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+/* ─── Dashboard (tenant & agent) ─── */
+.dashboard-shell {
+  --dashboard-accent: var(--settlla-brand);
+  --dashboard-accent-hover: var(--settlla-brand-hover);
+  --dashboard-accent-muted: var(--settlla-brand-muted);
+}
+
+.dashboard-shell[data-accent="agent"] {
+  --dashboard-accent: var(--settlla-success);
+  --dashboard-accent-hover: #047857;
+  --dashboard-accent-muted: var(--settlla-success-muted);
+}
+
+.dashboard-hub-badge {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.375rem;
+  background: var(--dashboard-accent-muted);
+  color: var(--dashboard-accent);
+  border: 1px solid rgb(15 23 42 / 0.06);
+}
+
+.dashboard-user-pill {
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--settlla-border);
+  background: var(--settlla-surface-muted);
+  max-width: 12rem;
+}
+
+.dashboard-tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  overflow-x: auto;
+  border-radius: var(--radius-surface);
+  border: 1px solid var(--settlla-border);
+  background: var(--settlla-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.dashboard-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--settlla-text-muted);
+  border-radius: calc(var(--radius-control) + 2px);
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  cursor: pointer;
+}
+
+.dashboard-tab:hover {
+  color: var(--settlla-text);
+  background: var(--settlla-surface-muted);
+}
+
+.dashboard-tab-active {
+  background: var(--dashboard-accent) !important;
+  color: #fff !important;
+  box-shadow: var(--shadow-sm);
+}
+
+.dashboard-stat {
+  padding: 1.25rem;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--settlla-border);
+  background: var(--settlla-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.dashboard-stat-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--settlla-text-subtle);
+}
+
+.dashboard-stat-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--settlla-text);
+}
+
+.dashboard-stat-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  background: var(--settlla-surface-muted);
+  color: var(--settlla-text-secondary);
+  border: 1px solid var(--settlla-border);
+}
+
+.dashboard-mobile-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--settlla-text-muted);
+}
+
+.dashboard-mobile-nav-active {
+  color: var(--dashboard-accent);
+}
+
+.dashboard-panel {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.dashboard-countdown-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.dashboard-countdown-cell {
+  padding: 0.875rem 0.5rem;
+  text-align: center;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--settlla-border);
+  background: var(--settlla-surface);
+}
+
+.dashboard-countdown-value {
+  display: block;
+  font-size: 1.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  color: var(--settlla-text);
+}
+
+@media (min-width: 640px) {
+  .dashboard-countdown-value {
+    font-size: 2rem;
+  }
+}
+
+.dashboard-countdown-label {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--settlla-text-subtle);
+}
+
+/* Tenancy agreement — PDF-style reader page */
+.agreement-pdf-page {
+  width: 100%;
+  max-width: 816px;
+  min-height: 1056px;
+  background: #ffffff;
+  border-radius: 4px;
+  box-shadow:
+    0 1px 3px rgb(15 23 42 / 0.12),
+    0 16px 48px rgb(15 23 42 / 0.25);
+  padding: 48px 40px 56px;
+  color: #0f172a;
+  font-family: Georgia, "Times New Roman", Times, serif;
+}
+
+@media (max-width: 640px) {
+  .agreement-pdf-page {
+    padding: 28px 20px 40px;
+    min-height: auto;
+  }
+}
+
+.agreement-pdf-body {
+  font-family: inherit;
+}
+
+@media print {
+  .agreement-pdf-page {
+    box-shadow: none;
+    max-width: none;
+    min-height: auto;
+    padding: 0;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .agreement-focus-reader,
+  .agreement-focus-reader * {
+    visibility: visible;
+  }
+
+  .agreement-focus-reader {
+    position: absolute;
+    inset: 0;
+    background: #fff !important;
+  }
+
+  .agreement-focus-reader header {
+    display: none !important;
+  }
 }

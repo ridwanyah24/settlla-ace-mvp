@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useRestorableModalStack } from "@/hooks/useRestorableModalStack";
+import { RestorableModalLayer } from "@/types/modalStack";
 import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { Listing } from "@/types/listing";
-import { getSeedListingById } from "@/data/seedListings";
+import { fetchListingById } from "@/lib/settlla/listings";
 import { BookingDrawer } from "@/components/BookingDrawer";
 import { TenancyAgreementViewer } from "@/components/TenancyAgreementViewer";
 import {
@@ -35,6 +37,20 @@ export default function ListingDetailPage() {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [isAgreementOpen, setIsAgreementOpen] = useState(false);
 
+  const restoreModalLayer = useCallback((layer: RestorableModalLayer) => {
+    switch (layer.type) {
+      case "booking":
+        setIsBookingOpen(true);
+        break;
+      case "agreement":
+        setIsAgreementOpen(true);
+        break;
+    }
+  }, []);
+
+  const { pushModalLayer, clearModalStack, dismissWithRestore } =
+    useRestorableModalStack(restoreModalLayer);
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const searchParams = new URLSearchParams(window.location.search);
@@ -48,37 +64,15 @@ export default function ListingDetailPage() {
     async function fetchDetail() {
       if (!id) return;
 
-      // Check seed data first
-      const seedItem = getSeedListingById(id);
-
       try {
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-        if (backendUrl) {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 1200);
-          const res = await fetch(`${backendUrl}/api/listings/${id}`, {
-            signal: controller.signal,
-          });
-          clearTimeout(timeoutId);
-          if (res.ok) {
-            const data: Listing = await res.json();
-            setListing(data);
-            setLoading(false);
-            return;
-          }
-        }
-        
-        if (seedItem) {
-          setListing(seedItem);
-        } else {
-          setError("Listing not found");
-        }
-      } catch {
-        if (seedItem) {
-          setListing(seedItem);
+        const data = await fetchListingById(id);
+        if (data) {
+          setListing(data);
         } else {
           setError("Listing not found in verified registry");
         }
+      } catch {
+        setError("Listing not found in verified registry");
       } finally {
         setLoading(false);
       }
@@ -330,7 +324,10 @@ export default function ListingDetailPage() {
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
               <button
-                onClick={() => setIsAgreementOpen(true)}
+                onClick={() => {
+                  clearModalStack();
+                  setIsAgreementOpen(true);
+                }}
                 className="flex-1 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 px-5 py-3.5 text-xs sm:text-sm font-bold text-emerald-400 transition-all flex items-center justify-center gap-2"
               >
                 <FileText className="w-4 h-4 text-emerald-400" />
@@ -351,9 +348,19 @@ export default function ListingDetailPage() {
       {/* Booking Drawer (Screen 2 & 3 Flow) */}
       <BookingDrawer
         isOpen={isBookingOpen}
-        onClose={() => setIsBookingOpen(false)}
+        onClose={(reason) => {
+          if (reason === "complete") {
+            setIsBookingOpen(false);
+            clearModalStack();
+            return;
+          }
+          dismissWithRestore(() => setIsBookingOpen(false));
+        }}
         listing={listing}
         onProceedToAgreement={() => {
+          if (listing) {
+            pushModalLayer({ type: "booking", listing });
+          }
           setIsBookingOpen(false);
           setIsAgreementOpen(true);
         }}
@@ -362,7 +369,7 @@ export default function ListingDetailPage() {
       {/* Tenancy Agreement Viewer (Screen 5) */}
       <TenancyAgreementViewer
         isOpen={isAgreementOpen}
-        onClose={() => setIsAgreementOpen(false)}
+        onClose={() => dismissWithRestore(() => setIsAgreementOpen(false))}
         listing={listing}
       />
     </div>

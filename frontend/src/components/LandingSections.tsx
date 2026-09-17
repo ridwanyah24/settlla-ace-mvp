@@ -68,50 +68,50 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
   return (
     <div className="w-full space-y-20">
       {/* 1. Process Strip: "Finding Your Next Home Is Simple" (Deep Navy) */}
-      <section id="how-it-works" className="w-full bg-[#0B1528] py-16 sm:py-20 text-white scroll-mt-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full bg-blue-500/10 px-3.5 py-1 text-xs font-bold text-blue-400 border border-blue-500/20 mb-3">
-            <Zap className="h-3.5 w-3.5 text-blue-400" />
-            <span>Simple 3-Step Process</span>
-          </div>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white">
-            Finding Your Next Home Is Simple: Search, Inspect, And Settle In
+      <section
+        id="how-it-works"
+        className="w-full scroll-mt-24 bg-[var(--settlla-navy)] py-16 text-white sm:py-20"
+      >
+        <div className="settlla-container text-center">
+          <p className="text-overline mb-3 text-blue-300">How it works</p>
+          <h2 className="text-h2 mx-auto max-w-3xl !text-white">
+            Search, inspect for ₦0, and move in with escrow protection
           </h2>
-          <p className="mx-auto mt-3 max-w-2xl text-xs sm:text-sm text-slate-300">
-            We removed roadside agent extortion, surprise fees, and scam risks from the Kaduna rental market.
+          <p className="text-body mx-auto mt-3 max-w-2xl text-slate-300">
+            No roadside fees, no surprise charges — just verified mandates and clear move-in totals.
           </p>
 
-          <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+          <div className="mt-12 grid grid-cols-1 gap-6 text-left md:grid-cols-3 md:gap-8">
             {/* Step 1 */}
-            <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6 sm:p-8 relative overflow-hidden group hover:border-blue-500/40 transition-all">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600/20 text-blue-400 font-black text-xl mb-6 border border-blue-500/30">
+            <div className="settlla-card rounded-[var(--radius-surface)] border-slate-800 bg-slate-900/60 p-6 sm:p-8 transition-colors hover:border-blue-500/40">
+              <div className="mb-6 flex h-11 w-11 items-center justify-center rounded-xl border border-blue-500/30 bg-blue-600/20 text-lg font-semibold text-blue-300">
                 1
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">Choose your Apartment</h3>
-              <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+              <h3 className="text-h3 mb-2 text-white">Choose your apartment</h3>
+              <p className="text-caption text-slate-400">
                 Browse verified listings in Barnawa and Malali with authentic photos, verified commute distances, and the exact upfront move-in total.
               </p>
             </div>
 
             {/* Step 2 */}
-            <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6 sm:p-8 relative overflow-hidden group hover:border-blue-500/40 transition-all">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600/20 text-blue-400 font-black text-xl mb-6 border border-blue-500/30">
+            <div className="settlla-card rounded-[var(--radius-surface)] border-slate-800 bg-slate-900/60 p-6 sm:p-8 transition-colors hover:border-blue-500/40">
+              <div className="mb-6 flex h-11 w-11 items-center justify-center rounded-xl border border-blue-500/30 bg-blue-600/20 text-lg font-semibold text-blue-300">
                 2
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">Schedule ₦0 Inspection</h3>
-              <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-                Select an official 30-minute visiting window. Walk through the apartment with an accredited HB&amp;A manager. Zero agent fees.
+              <h3 className="text-h3 mb-2 text-white">Schedule ₦0 inspection</h3>
+              <p className="text-caption text-slate-400">
+                Pick a visiting window and tour with an accredited manager — no agent fees.
               </p>
             </div>
 
             {/* Step 3 */}
-            <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6 sm:p-8 relative overflow-hidden group hover:border-blue-500/40 transition-all">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600/20 text-blue-400 font-black text-xl mb-6 border border-blue-500/30">
+            <div className="settlla-card rounded-[var(--radius-surface)] border-slate-800 bg-slate-900/60 p-6 sm:p-8 transition-colors hover:border-blue-500/40">
+              <div className="mb-6 flex h-11 w-11 items-center justify-center rounded-xl border border-blue-500/30 bg-blue-600/20 text-lg font-semibold text-blue-300">
                 3
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">Move In Securely</h3>
-              <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-                Sign your statutory digital tenancy agreement, fund your escrow move-in package, and collect your keys within 72 hours.
+              <h3 className="text-h3 mb-2 text-white">Move in securely</h3>
+              <p className="text-caption text-slate-400">
+                Sign digitally, pay through escrow, and collect keys within 72 hours.
               </p>
             </div>
           </div>

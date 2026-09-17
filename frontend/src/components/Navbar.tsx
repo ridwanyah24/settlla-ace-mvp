@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -108,8 +109,8 @@ export const Navbar: React.FC<NavbarProps> = ({
     <>
       <header className="sticky top-0 z-40 w-full shadow-xs bg-white">
         {/* 1. Top Announcement Strip */}
-        <div className="bg-[#0B1528] text-slate-300 text-xs py-1.5 sm:py-2 px-3 sm:px-6 lg:px-8 border-b border-slate-800">
-          <div className="mx-auto max-w-7xl flex items-center justify-between gap-2">
+        <div className="border-b border-slate-800 bg-[var(--settlla-navy)] px-3 py-2 text-xs text-slate-300 sm:px-6 lg:px-8">
+          <div className="settlla-container flex items-center justify-between gap-2 !px-0">
             {/* Left Contact & Location */}
             <div className="flex items-center gap-2 sm:gap-3 text-[11px] sm:text-xs">
               <a
@@ -150,25 +151,23 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* 2. Main Navigation Bar */}
         <nav className="border-b border-slate-200/80 bg-white">
-          <div className="mx-auto flex max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3">
+          <div className="settlla-container flex items-center justify-between py-3 !px-3 sm:!px-6 lg:!px-8">
             {/* Brand Logo */}
             <Link
               href="/"
               className="flex items-center gap-2 sm:gap-2.5 select-none group shrink-0"
             >
-              <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/25 group-hover:bg-blue-700 transition-colors">
-                <Home className="h-4 w-4 sm:h-5 sm:w-5" />
-              </div>
-              <div>
-                <div className="flex items-center gap-1 sm:gap-1.5">
-                  <span className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">
-                    Settlla
-                  </span>
-                  <span className="rounded-md bg-blue-50 px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-bold text-blue-700 border border-blue-200">
-                    Kaduna
-                  </span>
-                </div>
-              </div>
+              <Image
+                src="/settlla-4x.png"
+                alt="Settlla"
+                width={512}
+                height={512}
+                className="h-8 w-auto object-contain sm:h-9 transition-opacity group-hover:opacity-90"
+                priority
+              />
+              <span className="rounded-md bg-blue-50 px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-bold text-blue-700 border border-blue-200">
+                Kaduna
+              </span>
             </Link>
 
             {/* Desktop Navigation Links */}
@@ -216,7 +215,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={() => onOpenAISearch && onOpenAISearch()}
-                className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border border-blue-200/90 px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-bold text-blue-900 transition-all cursor-pointer shadow-xs group"
+                className="btn btn-soft btn-sm group"
                 title="Search with Settlla AI (Ctrl+K)"
               >
                 <Sparkles className="h-3.5 w-3.5 text-blue-600 group-hover:rotate-12 transition-transform" />
@@ -341,14 +340,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <div className="flex items-center gap-1 sm:gap-2">
                   <Link
                     href="/login"
-                    className="flex items-center gap-1 sm:gap-1.5 rounded-lg sm:rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-xs font-bold text-slate-700 transition-colors"
+                    className="btn btn-secondary btn-sm"
                   >
                     <LogIn className="h-3.5 w-3.5 text-slate-600 shrink-0" />
                     <span>Sign In</span>
                   </Link>
                   <Link
                     href="/signup"
-                    className="hidden sm:flex items-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 px-3.5 py-2 text-xs font-bold text-white shadow-md shadow-blue-600/25 transition-all"
+                    className="btn btn-primary btn-sm hidden sm:inline-flex"
                   >
                     <UserPlus className="h-3.5 w-3.5 text-white shrink-0" />
                     <span>Sign Up</span>
@@ -392,15 +391,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center gap-2 select-none"
                 >
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md">
-                    <Home className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <span className="text-xl font-black text-slate-900">Settlla</span>
-                    <span className="ml-1 text-[10px] font-bold text-blue-700 bg-blue-100/70 px-1.5 py-0.5 rounded">
-                      Kaduna
-                    </span>
-                  </div>
+                  <Image
+                    src="/settlla-4x.png"
+                    alt="Settlla"
+                    width={512}
+                    height={512}
+                    className="h-8 w-auto object-contain"
+                  />
+                  <span className="text-[10px] font-bold text-blue-700 bg-blue-100/70 px-1.5 py-0.5 rounded">
+                    Kaduna
+                  </span>
                 </Link>
 
                 <button

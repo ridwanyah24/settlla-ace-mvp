@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { TenancyAgreement } from "@/types/agreement";
 import { Listing } from "@/types/listing";
 import { X, Sparkles, Check, Scale, ArrowRight } from "lucide-react";
+import { fetchPendingAgreements } from "@/lib/settlla/manager";
 
 interface ManagerQueueModalProps {
   isOpen: boolean;
@@ -21,61 +22,14 @@ export const ManagerQueueModal: React.FC<ManagerQueueModalProps> = ({
   const [agreements, setAgreements] = useState<TenancyAgreement[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch pending agreements from backend
   useEffect(() => {
     if (!isOpen) return;
 
     async function loadAgreements() {
       setLoading(true);
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/manager/pending-signatures");
-        if (res.ok) {
-          const data = await res.json();
-          const all = [...(data.pending_agreements || []), ...(data.executed_agreements || [])];
-          setAgreements(all);
-          return;
-        }
-        throw new Error("Backend error");
-      } catch {
-        // Fallback demo agreements if backend is not yet populated
-        if (listings.length > 0) {
-          const l = listings[0];
-          const demoAgreement: TenancyAgreement = {
-            agreement_id: "SETT-AGR-2026-1001",
-            listing_id: l.id,
-            property_title: l.title,
-            property_address: l.full_address,
-            title_reference: l.title_reference || "KADGIS Certificate of Occupancy No. KDL-BNW-2018-0941",
-            landlord_name: l.mandate.landlord_name,
-            manager_name: l.mandate.manager_name,
-            manager_accreditation: l.mandate.accreditation,
-            manager_mandate_ref: l.mandate.mandate_ref,
-            tenant: {
-              full_name: "Aminu Mohammed",
-              phone_number: "0803 555 7890",
-              email_address: "aminu.mohammed@example.com",
-              nin_number: "28491029384",
-              employer_name: "Guaranty Trust Bank (GTBank), Barnawa Branch",
-              residential_address: "Plot 5, Constitution Road, Kaduna",
-            },
-            lease_start_date: "2026-10-01",
-            lease_end_date: "2027-09-30",
-            tenure_months: 12,
-            pricing: l.pricing,
-            covenants: [],
-            manager_mandate_clause: `The Landlord (${l.mandate.landlord_name}) irrevocably designates ${l.mandate.manager_name} as lawful Attorney-in-Fact...`,
-            escrow_clause: "Rent held in Move-In Escrow...",
-            caution_ringfencing_clause: "Caution fee ringfenced in PayRep vault...",
-            full_legal_text: "RESIDENTIAL TENANCY INDENTURE...",
-            status: "tenant_signed",
-            created_at: new Date().toISOString(),
-            tenant_signature: "data:image/png;base64,demo",
-            tenant_signed_at: "2026-09-16 11:30:00",
-            tenant_audit_ref: "SETT-SIG-TEN-1001",
-            tenant_sha256_hash: "3f84c982b17a6d89201f9c84e1b023491823904fa8bc",
-          };
-          setAgreements([demoAgreement]);
-        }
+        const pending = await fetchPendingAgreements();
+        setAgreements((pending as TenancyAgreement[]) || []);
       } finally {
         setLoading(false);
       }
@@ -142,7 +96,7 @@ export const ManagerQueueModal: React.FC<ManagerQueueModalProps> = ({
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
               <span className="text-slate-400 uppercase font-bold block text-[10px]">Active Landlord Mandates</span>
-              <strong className="text-2xl font-black text-blue-600 block mt-1">5</strong>
+              <strong className="text-2xl font-black text-blue-600 block mt-1">{listings.length}</strong>
               <span className="text-slate-500 text-[11px]">HB&amp;A Partners &bull; NBA Kaduna Verified</span>
             </div>
           </div>

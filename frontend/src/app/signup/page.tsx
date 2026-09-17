@@ -1,10 +1,17 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { UserRole } from "@/types/auth";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+import {
+  assertPassword,
+  formatSupabaseAuthError,
+  dashboardPathForRole,
+  MIN_PASSWORD_LENGTH,
+} from "@/lib/settlla/authErrors";
 import {
   ShieldCheck,
   Building2,
@@ -16,11 +23,13 @@ import {
   Home,
   Briefcase,
   BadgeCheck,
+  CheckCircle2,
 } from "lucide-react";
 
 export default function SignupPage() {
   const router = useRouter();
-  const { signUp } = useAuth();
+  const { signUp, currentUser, authReady } = useAuth();
+  const supabaseMode = isSupabaseConfigured();
 
   const [role, setRole] = useState<UserRole>("tenant");
   const [fullName, setFullName] = useState("");
@@ -32,8 +41,16 @@ export default function SignupPage() {
   const [agencyName, setAgencyName] = useState("");
   const [accreditation, setAccreditation] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [confirmEmailSent, setConfirmEmailSent] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (authReady && currentUser && !confirmEmailSent) {
+      router.replace(dashboardPathForRole(currentUser.role));
+    }
+  }, [authReady, currentUser, router, confirmEmailSent]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -42,24 +59,84 @@ export default function SignupPage() {
       return;
     }
 
-    signUp({
-      role,
-      fullName: fullName.trim(),
-      email: email.trim(),
-      phoneNumber: phoneNumber.trim(),
-      password: password.trim(),
-      ninNumber: role === "tenant" ? ninNumber.trim() : undefined,
-      relocationContext: role === "tenant" ? relocationContext : undefined,
-      agencyName: role === "agent" ? agencyName.trim() || "Kaduna Prime Realtors" : undefined,
-      accreditation: role === "agent" ? accreditation.trim() || "ESVARBON / NIESV Registered" : undefined,
-    });
+    try {
+      assertPassword(password, supabaseMode);
+    } catch (err) {
+      setError(formatSupabaseAuthError(err));
+      return;
+    }
 
-    router.push(role === "agent" ? "/dashboard/agent" : "/dashboard/tenant");
+    setSubmitting(true);
+    try {
+      const result = await signUp({
+        role,
+        fullName: fullName.trim(),
+        email: email.trim(),
+        phoneNumber: phoneNumber.trim(),
+        password: password.trim(),
+        ninNumber: role === "tenant" ? ninNumber.trim() : undefined,
+        relocationContext: role === "tenant" ? relocationContext : undefined,
+        agencyName: role === "agent" ? agencyName.trim() || "Kaduna Prime Realtors" : undefined,
+        accreditation:
+          role === "agent" ? accreditation.trim() || "ESVARBON / NIESV Registered" : undefined,
+      });
+
+      if (result.needsEmailConfirmation) {
+        setConfirmEmailSent(email.trim());
+        return;
+      }
+
+      const destRole = result.user?.role || role;
+      router.push(dashboardPathForRole(destRole));
+    } catch (err) {
+      setError(formatSupabaseAuthError(err));
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  if (confirmEmailSent) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col justify-between">
+        <header className="border-b border-slate-200 bg-white px-4 sm:px-8 py-4">
+          <div className="mx-auto max-w-7xl flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-2.5 group">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/25">
+                <Home className="h-5 w-5" />
+              </div>
+              <span className="text-xl font-black tracking-tight text-slate-900">Settlla</span>
+            </Link>
+          </div>
+        </header>
+        <main className="flex-1 flex items-center justify-center px-4 py-12">
+          <div className="w-full max-w-md bg-white rounded-3xl border border-slate-200 shadow-xl p-8 text-center space-y-4">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+              <CheckCircle2 className="h-7 w-7" />
+            </div>
+            <h1 className="text-xl font-black text-slate-900">Check your email</h1>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              We sent a confirmation link to{" "}
+              <strong className="text-slate-900">{confirmEmailSent}</strong>. Confirm your email,
+              then sign in to open your dashboard.
+            </p>
+            <Link
+              href="/login"
+              className="inline-flex items-center justify-center gap-2 w-full rounded-xl bg-blue-600 hover:bg-blue-700 py-3 text-sm font-bold text-white transition-all"
+            >
+              Go to sign in
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </main>
+        <footer className="border-t border-slate-200 bg-white px-4 py-4 text-center text-xs text-slate-500">
+          Settlla Kaduna Hub • Statutory 4-Way Transparency &amp; Escrow Protection
+        </footer>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-between">
-      {/* Top Simple Header */}
       <header className="border-b border-slate-200 bg-white px-4 sm:px-8 py-4">
         <div className="mx-auto max-w-7xl flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 group">
@@ -85,10 +162,8 @@ export default function SignupPage() {
         </div>
       </header>
 
-      {/* Main Container */}
       <main className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-xl bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden">
-          {/* Top Banner with Trust */}
           <div className="bg-[#0B1528] text-white p-6 sm:p-8 relative overflow-hidden">
             <div className="relative z-10">
               <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/20 px-3 py-1 text-xs font-bold text-blue-300 border border-blue-400/30 mb-3">
@@ -104,9 +179,7 @@ export default function SignupPage() {
             </div>
           </div>
 
-          {/* Form Area */}
           <div className="p-6 sm:p-8 space-y-6">
-            {/* Role Selection */}
             <div>
               <label className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-2">
                 I am registering as:
@@ -162,7 +235,6 @@ export default function SignupPage() {
               </div>
             )}
 
-            {/* Inputs */}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1.5">
@@ -177,6 +249,7 @@ export default function SignupPage() {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                    disabled={submitting}
                   />
                 </div>
               </div>
@@ -191,10 +264,12 @@ export default function SignupPage() {
                     <input
                       type="email"
                       required
+                      autoComplete="email"
                       placeholder="user@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                      disabled={submitting}
                     />
                   </div>
                 </div>
@@ -212,17 +287,18 @@ export default function SignupPage() {
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
                       className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                      disabled={submitting}
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Role Specific Fields */}
               {role === "tenant" ? (
                 <>
                   <div>
                     <label className="text-xs font-bold text-slate-700 block mb-1.5">
-                      National ID Number (NIN) <span className="text-slate-400">(Optional for verified badge)</span>
+                      National ID Number (NIN){" "}
+                      <span className="text-slate-400">(Optional for verified badge)</span>
                     </label>
                     <div className="relative">
                       <BadgeCheck className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
@@ -232,6 +308,7 @@ export default function SignupPage() {
                         value={ninNumber}
                         onChange={(e) => setNinNumber(e.target.value)}
                         className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                        disabled={submitting}
                       />
                     </div>
                   </div>
@@ -246,12 +323,17 @@ export default function SignupPage() {
                         value={relocationContext}
                         onChange={(e) => setRelocationContext(e.target.value)}
                         className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3.5 py-2.5 text-xs text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                        disabled={submitting}
                       >
                         <option value="Corporate / Bank Transferee">Corporate / Bank Transferee</option>
                         <option value="NYSC Corps Member">NYSC Corps Member</option>
-                        <option value="Remote Tech Worker / Professional">Remote Tech Worker / Professional</option>
+                        <option value="Remote Tech Worker / Professional">
+                          Remote Tech Worker / Professional
+                        </option>
                         <option value="Relocating Family">Relocating Family</option>
-                        <option value="Civil Servant / Kaduna State Employee">Civil Servant / Kaduna State Employee</option>
+                        <option value="Civil Servant / Kaduna State Employee">
+                          Civil Servant / Kaduna State Employee
+                        </option>
                       </select>
                     </div>
                   </div>
@@ -271,6 +353,7 @@ export default function SignupPage() {
                         value={agencyName}
                         onChange={(e) => setAgencyName(e.target.value)}
                         className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                        disabled={submitting}
                       />
                     </div>
                   </div>
@@ -287,6 +370,7 @@ export default function SignupPage() {
                         value={accreditation}
                         onChange={(e) => setAccreditation(e.target.value)}
                         className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                        disabled={submitting}
                       />
                     </div>
                   </div>
@@ -301,21 +385,32 @@ export default function SignupPage() {
                   <Lock className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
                   <input
                     type="password"
-                    required
+                    required={supabaseMode}
+                    minLength={supabaseMode ? MIN_PASSWORD_LENGTH : undefined}
+                    autoComplete="new-password"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                    disabled={submitting}
                   />
                 </div>
+                {supabaseMode && (
+                  <p className="mt-1 text-[11px] text-slate-400">
+                    At least {MIN_PASSWORD_LENGTH} characters
+                  </p>
+                )}
               </div>
 
               <button
                 type="submit"
-                className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 py-3 text-xs sm:text-sm font-bold text-white transition-all shadow-md shadow-blue-500/25 flex items-center justify-center gap-2 cursor-pointer mt-2"
+                disabled={submitting}
+                className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-60 py-3 text-xs sm:text-sm font-bold text-white transition-all shadow-md shadow-blue-500/25 flex items-center justify-center gap-2 cursor-pointer mt-2"
               >
-                <span>Complete Registration &amp; Open Dashboard</span>
-                <ArrowRight className="h-4 w-4" />
+                <span>
+                  {submitting ? "Creating account…" : "Complete Registration & Open Dashboard"}
+                </span>
+                {!submitting && <ArrowRight className="h-4 w-4" />}
               </button>
             </form>
 
@@ -332,7 +427,6 @@ export default function SignupPage() {
         </div>
       </main>
 
-      {/* Simple Footer */}
       <footer className="border-t border-slate-200 bg-white px-4 py-4 text-center text-xs text-slate-500">
         Settlla Kaduna Hub • Statutory 4-Way Transparency &amp; Escrow Protection
       </footer>

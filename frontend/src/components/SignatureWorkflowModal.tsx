@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { TenancyAgreement, CryptographicAuditRecord } from "@/types/agreement";
+import { TenancyAgreement } from "@/types/agreement";
+import { signTenantAgreement, signManagerAgreement } from "@/lib/settlla/signatures";
 import { Listing } from "@/types/listing";
 import { DigitalSignaturePad } from "./DigitalSignaturePad";
 import {
@@ -82,25 +83,6 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
     }
   }, [initialAgreement]);
 
-  // Client-side SHA-256 helper for fallback
-  async function computeClientSha256(message: string): Promise<string> {
-    try {
-      const msgBuffer = new TextEncoder().encode(message);
-      const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-    } catch {
-      // Simple fallback hash
-      let hash = 0;
-      for (let i = 0; i < message.length; i++) {
-        const char = message.charCodeAt(i);
-        hash = (hash << 5) - hash + char;
-        hash |= 0;
-      }
-      return "000" + Math.abs(hash).toString(16) + "e84920fcb38910a";
-    }
-  }
-
   // Handle Tenant Signature Submission
   const handleTenantSign = async () => {
     if (!tenantSignatureData) {
@@ -124,88 +106,12 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
     };
 
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/agreements/${agreement.agreement_id}/sign/tenant`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        const updated: TenancyAgreement = await res.json();
-        setAgreement(updated);
-        if (onAgreementUpdated) onAgreementUpdated(updated);
-        setActionSuccess("Tenant digital signature cryptographically verified and recorded!");
-        return;
-      }
-      throw new Error("Backend signing response error");
+      const updated = await signTenantAgreement(agreement, payload);
+      setAgreement(updated);
+      if (onAgreementUpdated) onAgreementUpdated(updated);
+      setActionSuccess("Your signature is saved.");
     } catch {
-      // Client-side fallback execution
-      const nowIso = new Date().toISOString().replace("T", " ").substring(0, 19);
-      const auditRef = `SETT-SIG-TEN-${agreement.agreement_id.split("-").pop() || "1001"}`;
-      const shaHash = await computeClientSha256(
-        `${agreement.agreement_id}|TENANT|${payload.signer_name}|${nowIso}|${payload.signature_data.substring(0, 64)}`
-      );
-
-      const auditRecord: CryptographicAuditRecord = {
-        audit_ref: auditRef,
-        agreement_id: agreement.agreement_id,
-        signer_role: "tenant",
-        signer_name: payload.signer_name,
-        signer_title: "Prospective Residential Tenant",
-        attestation_text: `I, ${payload.signer_name}, hereby execute this Kaduna State Residential Tenancy Indenture as Tenant and agree to all covenants herein.`,
-        timestamp: nowIso,
-        sha256_hash: shaHash,
-        signature_digest: shaHash.substring(0, 16),
-        ip_address: "102.89.43.19 (Kaduna, NG)",
-        verification_status: "verified_authentic",
-      };
-
-      const managerAuditRef = agreement.manager_audit_ref || `SETT-SIG-MGR-${agreement.agreement_id.split("-").pop() || "1001"}`;
-      const managerSignedDate = agreement.manager_signed_at || "2026-09-01 09:00:00";
-      const managerShaHash = agreement.manager_sha256_hash || `sha256_mandate_${agreement.manager_mandate_ref}_mgr_seal`;
-      const managerSignature = agreement.manager_signature || `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="220" height="60"><path d="M10 40 Q 40 10, 80 35 T 150 25 T 210 38" fill="none" stroke="%230F172A" stroke-width="2.5" stroke-linecap="round"/><text x="10" y="55" font-family="sans-serif" font-size="10" font-weight="bold" fill="%230F766E">Barr. H. B. Abubakar (Pre-Certified)</text></svg>`;
-      const masterSeal = await computeClientSha256(
-        `MASTER_SEAL|${agreement.agreement_id}|${shaHash}|${managerShaHash}|${nowIso}`
-      );
-
-      const managerAuditRecord: CryptographicAuditRecord = {
-        audit_ref: managerAuditRef,
-        agreement_id: agreement.agreement_id,
-        signer_role: "manager",
-        signer_name: agreement.manager_name,
-        signer_title: `Managing Partner & Principal Counsel (${agreement.manager_accreditation})`,
-        attestation_text: `I, ${agreement.manager_name}, hereby attest under registered Landlord Management Mandate Ref: ${agreement.manager_mandate_ref} that I am fully authorized as lawful Attorney-in-Fact to pre-execute this indenture on behalf of Landlord (${agreement.landlord_name}).`,
-        timestamp: managerSignedDate,
-        sha256_hash: managerShaHash,
-        signature_digest: managerShaHash.substring(0, 16),
-        ip_address: "105.112.98.14 (Kaduna, NG)",
-        verification_status: "verified_authentic",
-      };
-
-      const fallbackUpdated: TenancyAgreement = {
-        ...agreement,
-        tenant_signature: payload.signature_data,
-        tenant_signed_at: nowIso,
-        tenant_audit_ref: auditRef,
-        tenant_sha256_hash: shaHash,
-        manager_signature: managerSignature,
-        manager_signed_at: managerSignedDate,
-        manager_audit_ref: managerAuditRef,
-        manager_sha256_hash: managerShaHash,
-        mandate_attestation_confirmed: true,
-        master_seal_hash: masterSeal,
-        status: "fully_executed",
-        audit_trail: [
-          ...(agreement.audit_trail || []).filter((r) => r.signer_role !== "tenant" && r.signer_role !== "manager"),
-          managerAuditRecord,
-          auditRecord,
-        ],
-      };
-
-      setAgreement(fallbackUpdated);
-      if (onAgreementUpdated) onAgreementUpdated(fallbackUpdated);
-      setActionSuccess("Lease agreement fully executed and sealed! Manager counter-signature pre-certified under mandate.");
-      setActiveView("indenture");
+      setErrorMessage("Could not save signature. Please try again.");
     } finally {
       setTenantSubmitting(false);
     }
@@ -235,65 +141,13 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
     };
 
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/agreements/${agreement.agreement_id}/sign/manager`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        const updated: TenancyAgreement = await res.json();
-        setAgreement(updated);
-        if (onAgreementUpdated) onAgreementUpdated(updated);
-        setActionSuccess("Indenture counter-signed under mandate! Lease is now fully executed and sealed.");
-        setActiveView("indenture");
-        return;
-      }
-      throw new Error("Backend manager sign error");
-    } catch {
-      // Client-side fallback execution
-      const nowIso = new Date().toISOString().replace("T", " ").substring(0, 19);
-      const auditRef = `SETT-SIG-MGR-${agreement.agreement_id.split("-").pop() || "1001"}`;
-      const shaHash = await computeClientSha256(
-        `${agreement.agreement_id}|MANAGER|${payload.manager_name}|${payload.mandate_ref}|${nowIso}|${payload.signature_data.substring(0, 64)}`
-      );
-      const masterSeal = await computeClientSha256(
-        `MASTER_SEAL|${agreement.agreement_id}|${agreement.tenant_sha256_hash}|${shaHash}|${nowIso}`
-      );
-
-      const auditRecord: CryptographicAuditRecord = {
-        audit_ref: auditRef,
-        agreement_id: agreement.agreement_id,
-        signer_role: "manager",
-        signer_name: payload.manager_name,
-        signer_title: payload.manager_title,
-        attestation_text: `I, ${payload.manager_name} (${payload.manager_title}), hereby attest under registered Landlord Management Mandate Ref: ${payload.mandate_ref} that I am fully authorized as lawful Attorney-in-Fact to execute this indenture on behalf of the Landlord (${agreement.landlord_name}).`,
-        timestamp: nowIso,
-        sha256_hash: shaHash,
-        signature_digest: shaHash.substring(0, 16),
-        ip_address: "105.112.98.14 (Kaduna, NG)",
-        verification_status: "verified_authentic",
-      };
-
-      const fallbackUpdated: TenancyAgreement = {
-        ...agreement,
-        manager_signature: payload.signature_data,
-        manager_signed_at: nowIso,
-        manager_audit_ref: auditRef,
-        manager_sha256_hash: shaHash,
-        master_seal_hash: masterSeal,
-        mandate_attestation_confirmed: true,
-        status: "fully_executed",
-        audit_trail: [
-          ...(agreement.audit_trail || []).filter((r) => r.signer_role !== "manager"),
-          auditRecord,
-        ],
-      };
-
-      setAgreement(fallbackUpdated);
-      if (onAgreementUpdated) onAgreementUpdated(fallbackUpdated);
+      const updated = await signManagerAgreement(agreement, payload);
+      setAgreement(updated);
+      if (onAgreementUpdated) onAgreementUpdated(updated);
       setActionSuccess("Indenture counter-signed under mandate! Lease is now fully executed and sealed.");
       setActiveView("indenture");
+    } catch {
+      setErrorMessage("Could not save counter-signature. Please try again.");
     } finally {
       setManagerSubmitting(false);
     }
@@ -303,6 +157,123 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
 
   const isTenantSigned = Boolean(agreement.tenant_signature || agreement.status === "tenant_signed" || agreement.status === "fully_executed");
   const isFullyExecuted = agreement.status === "fully_executed";
+  const isTenantSigningFlow = initialRole === "tenant";
+
+  if (isTenantSigningFlow) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6">
+        <div
+          className="fixed inset-0 bg-slate-950/50 backdrop-blur-xs"
+          onClick={onClose}
+          aria-hidden
+        />
+        <div className="relative z-10 flex w-full max-w-md max-h-[min(92vh,640px)] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl animate-scale-up">
+          <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
+            <div>
+              <h2 className="text-lg font-black text-slate-900">Electronic signature</h2>
+              <p className="mt-0.5 text-xs text-slate-500 line-clamp-2">
+                {agreement.property_title}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200"
+              aria-label="Close"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 space-y-4">
+            <p className="text-xs text-slate-600">
+              Signing as <span className="font-bold text-slate-900">{tenantSignerName || agreement.tenant.full_name}</span>
+            </p>
+
+            {errorMessage && (
+              <p className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-800">
+                {errorMessage}
+              </p>
+            )}
+            {actionSuccess && (
+              <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 flex items-center gap-2">
+                <Check className="h-4 w-4 shrink-0" />
+                {actionSuccess}
+              </p>
+            )}
+
+            {isTenantSigned ? (
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-4 text-center text-sm">
+                <Check className="mx-auto mb-2 h-8 w-8 text-emerald-600" />
+                <p className="font-bold text-slate-900">Lease signed</p>
+                <p className="mt-1 text-xs text-slate-600">You can continue to move-in payment.</p>
+              </div>
+            ) : (
+              <>
+                <DigitalSignaturePad
+                  signerName={tenantSignerName || agreement.tenant.full_name}
+                  onSignatureChange={(dataUrl) => setTenantSignatureData(dataUrl)}
+                  title="Your signature"
+                  roleLabel="Tenant"
+                />
+                <label className="flex items-start gap-2.5 cursor-pointer text-xs text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={tenantConsent}
+                    onChange={(e) => setTenantConsent(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600"
+                  />
+                  <span>
+                    I agree to the tenancy agreement ({agreement.agreement_id}) and confirm this
+                    e-signature is legally binding.
+                  </span>
+                </label>
+              </>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-2 border-t border-slate-100 px-5 py-4 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              {isTenantSigned ? "Close" : "Cancel"}
+            </button>
+            {isTenantSigned ? (
+              <button
+                type="button"
+                onClick={() => onProceedToPayment?.(agreement)}
+                className="rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 flex items-center justify-center gap-2"
+              >
+                Continue to payment
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={tenantSubmitting || !tenantSignatureData || !tenantConsent}
+                onClick={handleTenantSign}
+                className="rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {tenantSubmitting ? (
+                  <>
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    Saving…
+                  </>
+                ) : (
+                  <>
+                    <PenTool className="h-4 w-4" />
+                    Sign lease
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">

@@ -23,6 +23,7 @@ import {
   Users,
   BarChart3,
 } from "lucide-react";
+import { persistEscrowHoldUpdate } from "@/lib/settlla/rentals";
 
 interface MoveInEscrowDashboardModalProps {
   isOpen: boolean;
@@ -130,6 +131,13 @@ export const MoveInEscrowDashboardModal: React.FC<MoveInEscrowDashboardModalProp
 
   if (!isOpen) return null;
 
+  const syncEscrow = async (updated: EscrowHoldRecord) => {
+    const rentalId = transaction?.transaction_id ?? updated.transaction_id;
+    if (rentalId) {
+      await persistEscrowHoldUpdate(rentalId, updated as unknown as Record<string, unknown>);
+    }
+  };
+
   const formatTimer = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
@@ -142,21 +150,6 @@ export const MoveInEscrowDashboardModal: React.FC<MoveInEscrowDashboardModalProp
     setConfirmingHandover(true);
     setErrorMessage(null);
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/escrow/${escrow.escrow_id}/confirm-key-handover`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-      if (res.ok) {
-        const updated: EscrowHoldRecord = await res.json();
-        setEscrow(updated);
-        setHandoverSuccess(true);
-        setTimerPaused(true);
-        if (onEscrowUpdated) onEscrowUpdated(updated);
-        return;
-      }
-      throw new Error("Failed to confirm key handover with backend");
-    } catch {
-      // Local fallback for demo simulation
       const nowIso = new Date().toISOString().replace("T", " ").substring(0, 19);
       const updated: EscrowHoldRecord = {
         ...escrow,
@@ -168,10 +161,13 @@ export const MoveInEscrowDashboardModal: React.FC<MoveInEscrowDashboardModalProp
           new Date().getDate()
         ).padStart(2, "0")}_${escrow.escrow_id.split("-").pop() || "1001"}`,
       };
+      await syncEscrow(updated);
       setEscrow(updated);
       setHandoverSuccess(true);
       setTimerPaused(true);
       if (onEscrowUpdated) onEscrowUpdated(updated);
+    } catch {
+      setErrorMessage("Could not confirm key handover. Please try again.");
     } finally {
       setConfirmingHandover(false);
     }
@@ -182,20 +178,6 @@ export const MoveInEscrowDashboardModal: React.FC<MoveInEscrowDashboardModalProp
     setConfirmingHandover(true);
     setErrorMessage(null);
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/escrow/${escrow.escrow_id}/auto-release-trigger`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-      if (res.ok) {
-        const updated: EscrowHoldRecord = await res.json();
-        setEscrow(updated);
-        setTimerSecondsLeft(0);
-        setTimerPaused(true);
-        if (onEscrowUpdated) onEscrowUpdated(updated);
-        return;
-      }
-      throw new Error("Failed to trigger safety timer with backend");
-    } catch {
       const nowIso = new Date().toISOString().replace("T", " ").substring(0, 19);
       const updated: EscrowHoldRecord = {
         ...escrow,
@@ -205,10 +187,13 @@ export const MoveInEscrowDashboardModal: React.FC<MoveInEscrowDashboardModalProp
         release_reason: "auto_timer_24h",
         disbursement_ref: `TRF_AUTO24H_${escrow.escrow_id.split("-").pop() || "1001"}`,
       };
+      await syncEscrow(updated);
       setEscrow(updated);
       setTimerSecondsLeft(0);
       setTimerPaused(true);
       if (onEscrowUpdated) onEscrowUpdated(updated);
+    } catch {
+      setErrorMessage("Could not trigger safety release. Please try again.");
     } finally {
       setConfirmingHandover(false);
     }
@@ -235,39 +220,8 @@ export const MoveInEscrowDashboardModal: React.FC<MoveInEscrowDashboardModalProp
     };
 
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/escrow/${escrow.escrow_id}/dispute`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        const dispute: MoveInDisputeRecord = await res.json();
-        setDisputeRecord(dispute);
-        setEscrow((prev) => ({
-          ...prev,
-          escrow_status: "disputed_frozen",
-          dispute_active: true,
-          timer_paused: true,
-          active_dispute: dispute,
-        }));
-        setTimerPaused(true);
-        setActiveTab("overview");
-        if (onEscrowUpdated) {
-          onEscrowUpdated({
-            ...escrow,
-            escrow_status: "disputed_frozen",
-            dispute_active: true,
-            timer_paused: true,
-            active_dispute: dispute,
-          });
-        }
-        return;
-      }
-      throw new Error("Failed to register dispute with backend");
-    } catch {
       const nowIso = new Date().toISOString().replace("T", " ").substring(0, 19);
-      const fallbackDispute: MoveInDisputeRecord = {
+      const dispute: MoveInDisputeRecord = {
         dispute_id: `SETT-DSP-2026-${Math.floor(100 + Math.random() * 900)}`,
         escrow_id: escrow.escrow_id,
         agreement_id: escrow.agreement_id,
@@ -285,18 +239,21 @@ export const MoveInEscrowDashboardModal: React.FC<MoveInEscrowDashboardModalProp
         indemnity_seal: "100% Scam Indemnity Guarantee",
       };
 
-      setDisputeRecord(fallbackDispute);
       const updated: EscrowHoldRecord = {
         ...escrow,
         escrow_status: "disputed_frozen",
         dispute_active: true,
         timer_paused: true,
-        active_dispute: fallbackDispute,
+        active_dispute: dispute,
       };
+      await syncEscrow(updated);
+      setDisputeRecord(dispute);
       setEscrow(updated);
       setTimerPaused(true);
       setActiveTab("overview");
       if (onEscrowUpdated) onEscrowUpdated(updated);
+    } catch {
+      setErrorMessage("Could not register dispute. Please try again.");
     } finally {
       setSubmittingDispute(false);
     }
@@ -307,31 +264,7 @@ export const MoveInEscrowDashboardModal: React.FC<MoveInEscrowDashboardModalProp
     setResolvingAction(true);
     setErrorMessage(null);
 
-    const payload = {
-      action: action,
-      verdict: action === "refund" ? "fault_landlord" : "resolved_amicably",
-      notes:
-        action === "refund"
-          ? "Full 100% refund executed under Scam Indemnity Guarantee."
-          : "Replacement keys tested and confirmed on-site by HB&A Partners.",
-    };
-
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/escrow/${escrow.escrow_id}/resolve-dispute`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        const updated: EscrowHoldRecord = await res.json();
-        setEscrow(updated);
-        if (updated.active_dispute) setDisputeRecord(updated.active_dispute);
-        if (onEscrowUpdated) onEscrowUpdated(updated);
-        return;
-      }
-      throw new Error("Failed to resolve dispute on backend");
-    } catch {
       const refundRef = `REF_INDEMNITY_${escrow.escrow_id.split("-").pop() || "1001"}_9921`;
       const transferRef = `TRF_RESOLVED_${escrow.escrow_id.split("-").pop() || "1001"}`;
       const nowIso = new Date().toISOString().replace("T", " ").substring(0, 19);
@@ -355,6 +288,7 @@ export const MoveInEscrowDashboardModal: React.FC<MoveInEscrowDashboardModalProp
           disbursement_ref: refundRef,
           active_dispute: updatedDispute,
         };
+        await syncEscrow(updated);
         setEscrow(updated);
         setDisputeRecord(updatedDispute);
         if (onEscrowUpdated) onEscrowUpdated(updated);
@@ -378,10 +312,13 @@ export const MoveInEscrowDashboardModal: React.FC<MoveInEscrowDashboardModalProp
           disbursement_ref: transferRef,
           active_dispute: updatedDispute,
         };
+        await syncEscrow(updated);
         setEscrow(updated);
         setDisputeRecord(updatedDispute);
         if (onEscrowUpdated) onEscrowUpdated(updated);
       }
+    } catch {
+      setErrorMessage("Could not resolve dispute. Please try again.");
     } finally {
       setResolvingAction(false);
     }

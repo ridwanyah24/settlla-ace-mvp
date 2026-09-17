@@ -274,9 +274,12 @@ export function filterSeedListings(
   neighborhood = "all",
   maxBudget = "all",
   propertyType = "all",
-  quickFilter = "all"
+  quickFilter = "all",
+  minBedrooms = "all",
+  maxMoveInCost = "all",
+  source: Listing[] = SEED_LISTINGS
 ): Listing[] {
-  return SEED_LISTINGS.filter((l) => {
+  return source.filter((l) => {
     // Neighborhood filter
     if (neighborhood !== "all" && l.neighborhood.toLowerCase() !== neighborhood.toLowerCase()) {
       return false;
@@ -291,10 +294,24 @@ export function filterSeedListings(
       }
     }
 
-    // Max budget filter
+    // Max annual rent filter
     if (maxBudget !== "all") {
       const budgetNum = parseInt(maxBudget, 10);
       if (!isNaN(budgetNum) && l.pricing.annual_rent > budgetNum) {
+        return false;
+      }
+    }
+
+    if (minBedrooms !== "all") {
+      const min = parseInt(minBedrooms, 10);
+      if (!isNaN(min) && l.bedrooms < min) {
+        return false;
+      }
+    }
+
+    if (maxMoveInCost !== "all") {
+      const cap = parseInt(maxMoveInCost, 10);
+      if (!isNaN(cap) && l.pricing.total_move_in_cost > cap) {
         return false;
       }
     }

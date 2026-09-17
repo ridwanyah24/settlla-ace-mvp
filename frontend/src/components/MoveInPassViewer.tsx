@@ -198,7 +198,7 @@ export const MoveInPassViewer: React.FC<MoveInPassViewerProps> = ({
                 }}
                 className="w-full sm:w-auto rounded-xl bg-blue-600 hover:bg-blue-700 px-6 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md shadow-blue-500/25 transition-all cursor-pointer flex items-center justify-center gap-1.5"
               >
-                <span>Go to Move-In Dashboard</span>
+                <span>Confirm key in dashboard</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             )}

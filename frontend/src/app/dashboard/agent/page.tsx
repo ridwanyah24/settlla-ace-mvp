@@ -6,10 +6,11 @@ import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
 import { SEED_LISTINGS, calculatePricing } from "@/data/seedListings";
 import { Listing } from "@/types/listing";
+import { InspectionBookingResponse } from "@/types/booking";
+import { TenancyAgreement } from "@/types/agreement";
 import {
   Building2,
   PlusCircle,
-  FileSignature,
   CalendarCheck,
   Wallet,
   MapPin,
@@ -20,32 +21,73 @@ import {
   Home,
   ArrowRight,
   User,
-  LogOut,
   ExternalLink,
   MessageSquare,
-  Scale,
   Sparkles,
   UserCheck,
 } from "lucide-react";
+import {
+  DashboardShell,
+  DashboardStat,
+  DashboardSectionHead,
+  DashboardCallout,
+  type DashboardTabItem,
+} from "@/components/dashboard/DashboardShell";
+import { upsertListing, fetchPublishedListingsFromBrowser, seedListingsIfEmpty } from "@/lib/settlla/listings";
+import { loadCurrentTenantRental, fetchAgentRentals } from "@/lib/settlla/rentals";
+import { fetchAgentBookings } from "@/lib/settlla/bookings";
+import { fetchPendingAgreements } from "@/lib/settlla/manager";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+
+const AGENT_TABS: DashboardTabItem[] = [
+  { id: "listings", label: "Properties", icon: Home },
+  { id: "add_property", label: "Add listing", icon: PlusCircle },
+  { id: "counter_sign", label: "Leases", icon: BadgeCheck },
+  { id: "tours", label: "Tours", icon: CalendarCheck },
+  { id: "payouts", label: "Payouts", icon: Wallet },
+];
 
 export default function AgentDashboardPage() {
   const { currentUser, signOut, switchRole } = useAuth();
   const [activeTab, setActiveTab] = useState<"listings" | "add_property" | "counter_sign" | "tours" | "payouts">("listings");
 
-  const [listings, setListings] = useState<Listing[]>(SEED_LISTINGS);
+  const [listings, setListings] = useState<Listing[]>([]);
   const [activeRental, setActiveRental] = useState<any>(null);
+  const [tours, setTours] = useState<InspectionBookingResponse[]>([]);
+  const [pendingLeases, setPendingLeases] = useState<TenancyAgreement[]>([]);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    let cancelled = false;
+    (async () => {
       try {
-        const saved = localStorage.getItem("settlla_current_rental");
-        if (saved) {
-          setActiveRental(JSON.parse(saved));
+        if (isSupabaseConfigured()) {
+          await seedListingsIfEmpty();
+          const [liveListings, rentals, agentTours, leases] = await Promise.all([
+            fetchPublishedListingsFromBrowser(),
+            fetchAgentRentals(),
+            fetchAgentBookings(),
+            fetchPendingAgreements(),
+          ]);
+          if (!cancelled) {
+            setListings(liveListings);
+            if (rentals[0]) setActiveRental(rentals[0]);
+            setTours(agentTours);
+            setPendingLeases(leases as TenancyAgreement[]);
+          }
+        } else {
+          const rental = await loadCurrentTenantRental();
+          if (!cancelled) {
+            setListings(SEED_LISTINGS);
+            if (rental) setActiveRental(rental);
+          }
         }
       } catch (e) {
-        console.error("Failed to load rental in agent dashboard", e);
+        console.error("Failed to load agent dashboard", e);
       }
-    }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // New Property Form State
@@ -115,6 +157,7 @@ export default function AgentDashboardPage() {
     };
 
     setListings([newListing, ...listings]);
+    void upsertListing(newListing, currentUser?.id ?? null);
     setSuccessMessage(`Successfully listed ${newListing.title} under mandate ${newListing.mandate.mandate_ref}!`);
     setTimeout(() => {
       setSuccessMessage(null);
@@ -122,249 +165,89 @@ export default function AgentDashboardPage() {
     }, 1500);
   };
 
+  const agencyName = currentUser?.agencyName || "HB&A Partners & Co.";
+
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col pb-16 lg:pb-0">
-      {/* Top Navbar */}
-      <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-xs">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-md shadow-emerald-600/25 group-hover:bg-emerald-700 transition-colors">
-                <Building2 className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xl font-black tracking-tight text-slate-900">Settlla</span>
-                  <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-800 border border-emerald-200">
-                    Manager Desk
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-500 hidden sm:block">
-                  HB&amp;A Authorized Property Management Portal
-                </p>
-              </div>
-            </Link>
-
-            <nav className="hidden md:flex items-center gap-4 text-xs font-semibold text-slate-600">
-              <Link href="/" className="hover:text-emerald-700 transition-colors">
-                View Public Feed
-              </Link>
-              <span className="text-slate-300">•</span>
-              <span className="text-emerald-700 font-bold flex items-center gap-1">
-                <Building2 className="h-3.5 w-3.5" />
-                <span>Agent Operations Desk</span>
-              </span>
-            </nav>
-          </div>
-
-          {/* Right User Actions */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 rounded-xl bg-emerald-50/80 border border-emerald-200/80 px-3 py-1.5">
-              <Building2 className="h-4 w-4 text-emerald-700" />
-              <div className="text-left hidden sm:block">
-                <span className="text-xs font-bold text-slate-900 leading-tight block">
-                  {currentUser?.agencyName || "HB&A Partners & Co."}
-                </span>
-                <span className="text-[10px] font-semibold text-emerald-800 block">
-                  ESVARBON Accredited
-                </span>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => switchRole("tenant")}
-              className="hidden lg:flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 transition-colors cursor-pointer"
-              title="Switch to Tenant view to test tenant dashboard"
-            >
-              <User className="h-3.5 w-3.5 text-blue-600" />
-              <span>Switch to Tenant</span>
-            </button>
-
-            <Link
-              href="/"
-              onClick={() => signOut()}
-              className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white hover:bg-rose-50 text-slate-600 hover:text-rose-700 px-3 py-2 text-xs font-semibold transition-colors"
-            >
-              <LogOut className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Sign Out</span>
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content Area */}
-      <main className="flex-1 mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Welcome Agency Banner */}
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="flex items-start gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white font-black text-2xl shadow-lg shadow-emerald-600/25 flex-shrink-0">
-              <Building2 className="h-8 w-8" />
-            </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black text-slate-900">
-                  {currentUser?.agencyName || "HB&A Partners & Co."}
-                </h1>
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-bold text-emerald-800">
-                  <BadgeCheck className="h-3.5 w-3.5 text-emerald-600" />
-                  <span>{currentUser?.accreditation || "ESVARBON / NIESV Reg. #A2840"}</span>
-                </span>
-              </div>
-              <p className="text-xs sm:text-sm text-slate-600 mt-1 flex items-center gap-2">
-                <span>Managing Officer: {currentUser?.fullName || "Barrister Amina Yakubu"}</span>
-                <span className="text-slate-300">•</span>
-                <span>{currentUser?.phoneNumber || "0803 555 1289"}</span>
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 border border-emerald-200 px-2.5 py-1 text-xs font-semibold text-emerald-800">
-                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-                  <span>Direct Landlord Mandates Verified</span>
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-lg bg-slate-100 border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-700">
-                  <Scale className="h-3.5 w-3.5 text-slate-500" />
-                  <span>10% Agency &amp; 5% Legal Statutory Custody</span>
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-stretch md:items-center gap-2.5 w-full md:w-auto">
-            <button
-              type="button"
-              onClick={() => setActiveTab("add_property")}
-              className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-3 text-xs sm:text-sm shadow-md shadow-emerald-600/25 transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              <PlusCircle className="h-4 w-4" />
-              <span>List New Kaduna Property</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Tab Navigation */}
-        <div className="border-b border-slate-200 bg-white rounded-2xl p-1.5 shadow-2xs flex overflow-x-auto gap-1 no-scrollbar">
-          <button
-            type="button"
-            onClick={() => setActiveTab("listings")}
-            className={`flex items-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === "listings"
-                ? "bg-emerald-600 text-white shadow-xs"
-                : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            <Home className="h-4 w-4" />
-            <span>Managed Properties ({listings.length})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("add_property")}
-            className={`flex items-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === "add_property"
-                ? "bg-emerald-600 text-white shadow-xs"
-                : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            <PlusCircle className="h-4 w-4" />
-            <span>List New Property</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("counter_sign")}
-            className={`flex items-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === "counter_sign"
-                ? "bg-emerald-600 text-white shadow-xs"
-                : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            <BadgeCheck className="h-4 w-4" />
-            <span>Mandates &amp; Executed Leases</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("tours")}
-            className={`flex items-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === "tours"
-                ? "bg-emerald-600 text-white shadow-xs"
-                : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            <CalendarCheck className="h-4 w-4" />
-            <span>Walkthrough Bookings (1)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab("payouts")}
-            className={`flex items-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === "payouts"
-                ? "bg-emerald-600 text-white shadow-xs"
-                : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            <Wallet className="h-4 w-4" />
-            <span>Commission &amp; Escrow Payouts</span>
-          </button>
-        </div>
-
+    <DashboardShell
+      accent="agent"
+      hubBadge="Agent"
+      hubSubtitle="Property & mandate desk"
+      currentNavLabel="Agent dashboard"
+      feedLinkLabel="Public listings"
+      userTitle={agencyName}
+      userSubtitle={currentUser?.accreditation || "ESVARBON accredited"}
+      pageTitle={agencyName}
+      pageDescription={`Officer: ${currentUser?.fullName || "Barrister Amina Yakubu"} · ${currentUser?.phoneNumber || "0803 555 1289"}`}
+      pageMeta={
+        <>
+          <span className="settlla-chip">
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+            Mandates verified
+          </span>
+          <span className="settlla-chip">{listings.length} active listings</span>
+        </>
+      }
+      pageAction={
+        <button
+          type="button"
+          onClick={() => setActiveTab("add_property")}
+          className="btn btn-md btn-primary w-full sm:w-auto"
+        >
+          <PlusCircle className="h-4 w-4" />
+          Add property
+        </button>
+      }
+      tabs={AGENT_TABS}
+      activeTab={activeTab}
+      onTabChange={(id) => setActiveTab(id as typeof activeTab)}
+      onSwitchRole={() => switchRole("tenant")}
+      switchRoleLabel="Tenant view"
+      onSignOut={signOut}
+      mobileNavActiveLabel="Desk"
+    >
         {/* TAB 1: MANAGED PROPERTIES */}
         {activeTab === "listings" && (
           <div className="space-y-6">
-            {/* Stat Cards */}
+            <DashboardSectionHead
+              title="Portfolio"
+              description="Managed listings on the Settlla feed."
+            />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs">
-                <div className="flex items-center justify-between text-slate-400 mb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider">Active Inventory</span>
-                  <Home className="h-4 w-4 text-emerald-600" />
-                </div>
-                <p className="text-2xl font-black text-slate-900">{listings.length} Homes</p>
-                <span className="inline-flex items-center gap-1 mt-2 text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                  <CheckCircle2 className="h-3 w-3" />
-                  <span>100% Vetted Mandates</span>
-                </span>
-              </div>
-
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs">
-                <div className="flex items-center justify-between text-slate-400 mb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider">Executed Leases</span>
-                  <BadgeCheck className="h-4 w-4 text-emerald-600" />
-                </div>
-                <p className="text-2xl font-black text-slate-900">{activeRental ? 1 : 0} Leases</p>
-                <span className="inline-flex items-center gap-1 mt-2 text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                  <CheckCircle2 className="h-3 w-3" />
-                  <span>Pre-Certified Mandates</span>
-                </span>
-              </div>
-
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs">
-                <div className="flex items-center justify-between text-slate-400 mb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider">Agency Fees Accrued</span>
-                  <Wallet className="h-4 w-4 text-blue-600" />
-                </div>
-                <p className="text-2xl font-black text-blue-700">₦432,000</p>
-                <span className="inline-flex items-center gap-1 mt-2 text-[10px] font-bold text-blue-800 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
-                  <span>10% Statutory Rate</span>
-                </span>
-              </div>
-
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs">
-                <div className="flex items-center justify-between text-slate-400 mb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider">Tour Policy</span>
-                  <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                </div>
-                <p className="text-2xl font-black text-emerald-700">₦0 Free Tour</p>
-                <span className="inline-flex items-center gap-1 mt-2 text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                  <span>Optional for Tenants</span>
-                </span>
-              </div>
+              <DashboardStat
+                label="Listings"
+                value={`${listings.length}`}
+                icon={Home}
+                hint={<span className="dashboard-stat-hint">Vetted mandates</span>}
+              />
+              <DashboardStat
+                label="Executed leases"
+                value={activeRental ? 1 : 0}
+                icon={BadgeCheck}
+                hint={<span className="dashboard-stat-hint">Live tenancies</span>}
+              />
+              <DashboardStat
+                label="Agency fees"
+                value={`₦${listings.reduce((sum, l) => sum + (l.pricing.agency_fee || 0), 0).toLocaleString("en-NG")}`}
+                icon={Wallet}
+                hint={<span className="dashboard-stat-hint">10% statutory</span>}
+              />
+              <DashboardStat
+                label="Walkthroughs"
+                value={`${tours.length}`}
+                icon={ShieldCheck}
+                hint={<span className="dashboard-stat-hint">Booked tours</span>}
+              />
             </div>
 
             {/* Properties List */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {listings.map((item) => (
-                <div key={item.id} className="rounded-3xl border border-slate-200 bg-white p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row gap-3 sm:gap-4">
+              {listings.length === 0 ? (
+                <div className="settlla-card p-8 text-center text-sm text-slate-500 md:col-span-2">
+                  No listings in Supabase yet. Use <strong>Add listing</strong> to publish one.
+                </div>
+              ) : (
+              listings.map((item) => (
+                <div key={item.id} className="settlla-card settlla-card-interactive p-4 sm:p-5 flex flex-col sm:flex-row gap-3 sm:gap-4">
                   <div className="relative h-40 sm:h-28 w-full sm:w-32 flex-shrink-0 overflow-hidden rounded-2xl border border-slate-200">
                     <Image
                       src={item.images[0] || "/images/living_room.jpg"}
@@ -401,7 +284,8 @@ export default function AgentDashboardPage() {
                     </div>
                   </div>
                 </div>
-              ))}
+              ))
+              )}
             </div>
           </div>
         )}
@@ -409,15 +293,13 @@ export default function AgentDashboardPage() {
         {/* TAB 2: ADD PROPERTY */}
         {activeTab === "add_property" && (
           <div className="space-y-6">
-            <div className="rounded-3xl bg-emerald-50/70 border border-emerald-200 p-6 flex items-start gap-4">
-              <Sparkles className="h-6 w-6 text-emerald-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <h3 className="text-base font-bold text-slate-900">List a Verified Property</h3>
-                <p className="text-xs text-emerald-900 mt-1 leading-relaxed">
-                  Settlla automatically computes statutory 4-way upfront pricing (10% Caution, 5% Legal, 10% Agency) and binds to your agency mandate for transparent tenant leasing.
-                </p>
-              </div>
-            </div>
+            <DashboardSectionHead
+              title="New listing"
+              description="Move-in pricing (rent, caution, legal & agency) is calculated automatically from annual rent."
+            />
+            <DashboardCallout variant="success" icon={Sparkles} title="Publish to the Settlla feed">
+              Listings must have a verified landlord mandate. Tenants see full upfront cost before they sign or pay.
+            </DashboardCallout>
 
             {successMessage && (
               <div className="rounded-2xl bg-emerald-600 text-white p-4 text-center font-bold text-sm flex items-center justify-center gap-2 animate-fade-in">
@@ -426,7 +308,7 @@ export default function AgentDashboardPage() {
               </div>
             )}
 
-            <form onSubmit={handleAddPropertySubmit} className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-xs space-y-5">
+            <form onSubmit={handleAddPropertySubmit} className="settlla-card p-6 sm:p-8 space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1.5">
@@ -629,12 +511,9 @@ export default function AgentDashboardPage() {
                 </div>
               </div>
 
-              <button
-                type="submit"
-                className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 py-3.5 text-xs sm:text-sm font-bold text-white transition-all shadow-md shadow-emerald-600/25 cursor-pointer flex items-center justify-center gap-2"
-              >
+              <button type="submit" className="btn btn-lg btn-primary w-full">
                 <PlusCircle className="h-4 w-4" />
-                <span>Publish Verified Property to Settlla Feed</span>
+                Publish listing
               </button>
             </form>
           </div>
@@ -707,33 +586,26 @@ export default function AgentDashboardPage() {
                   </div>
                 </div>
               </div>
-            ) : (
-              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-                  <div>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold px-2.5 py-0.5 border border-blue-200">
-                      <ShieldCheck className="h-3 w-3" />
-                      <span>Pre-Certified Mandate Active</span>
+            ) : pendingLeases.length > 0 ? (
+              <div className="space-y-3">
+                {pendingLeases.map((agr) => (
+                  <div
+                    key={agr.agreement_id}
+                    className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs space-y-2"
+                  >
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-800 text-[10px] font-bold px-2.5 py-0.5 border border-amber-200">
+                      {agr.status}
                     </span>
-                    <h4 className="text-base font-bold text-slate-900 mt-1">
-                      Barnawa Terraces Flat 1 (1-Bedroom)
-                    </h4>
-                    <p className="text-xs text-slate-600 mt-0.5">
-                      Mandate Ref: <strong>HBA-KD-BNW-2026-089</strong> &bull; ESVARBON/NIESV Registered
+                    <h4 className="text-base font-bold text-slate-900">{agr.property_title}</h4>
+                    <p className="text-xs text-slate-600">
+                      Tenant: <strong>{agr.tenant?.full_name}</strong> · Mandate {agr.manager_mandate_ref}
                     </p>
                   </div>
-                  <div className="text-right">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Lease Value</span>
-                    <span className="text-base font-black text-blue-700">₦625,000</span>
-                  </div>
-                </div>
-
-                <div className="text-xs text-slate-600 flex items-center justify-between">
-                  <span>Pre-signed with digital certificate. Dual execution activates instantly upon tenant signing.</span>
-                  <span className="font-mono text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
-                    Pre-Certified Ready
-                  </span>
-                </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-3xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
+                No leases waiting for counter-signature. They appear here when a tenant signs.
               </div>
             )}
           </div>
@@ -742,56 +614,45 @@ export default function AgentDashboardPage() {
         {/* TAB 4: TOUR APPOINTMENTS */}
         {activeTab === "tours" && (
           <div className="space-y-4">
-            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-                <div>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2.5 py-0.5 border border-emerald-200">
-                    <CheckCircle2 className="h-3 w-3" />
-                    <span>Confirmed Walkthrough Tour</span>
-                  </span>
-                  <h4 className="text-base font-bold text-slate-900 mt-1">Aminu Mohammed (NYSC Corps Member)</h4>
-                  <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-                    <MapPin className="h-3.5 w-3.5 text-slate-400" />
-                    <span>Plot 12 Coronation Crescent, Barnawa, Kaduna</span>
-                  </p>
-                </div>
-                <div className="text-right">
-                  <span className="text-sm font-bold text-blue-600 block">Fri, Sep 18, 2026</span>
-                  <span className="text-xs text-slate-500">2:30 PM - 3:00 PM</span>
-                </div>
+            {tours.length === 0 ? (
+              <div className="settlla-card p-8 text-center text-sm text-slate-500">
+                No walkthrough bookings yet. They appear here when a tenant books a tour.
               </div>
-
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs pt-2">
-                <span className="text-slate-500">
-                  Meeting at gate. Remember: 100% Free Walkthrough (₦0). Zero roadside fee allowed.
-                </span>
-
-                <Link
-                  href="/dashboard/tenant"
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 px-3.5 py-2 font-bold text-xs transition-colors"
-                >
-                  <UserCheck className="h-3.5 w-3.5 text-blue-600" />
-                  <span>View Tenant Profile</span>
-                </Link>
-              </div>
-            </div>
+            ) : (
+              tours.map((tour) => (
+                <div key={tour.booking_id} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+                    <div>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2.5 py-0.5 border border-emerald-200">
+                        <CheckCircle2 className="h-3 w-3" />
+                        <span>{tour.booking_status || "Confirmed"}</span>
+                      </span>
+                      <h4 className="text-base font-bold text-slate-900 mt-1">{tour.tenant_name}</h4>
+                      <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                        <MapPin className="h-3.5 w-3.5 text-slate-400" />
+                        <span>{tour.property_address}</span>
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-sm font-bold text-blue-600 block">{tour.formatted_date}</span>
+                      <span className="text-xs text-slate-500">{tour.slot_time}</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-500">{tour.directions}</p>
+                </div>
+              ))
+            )}
           </div>
         )}
 
         {/* TAB 5: COMMISSION & PAYOUTS */}
         {activeTab === "payouts" && (
           <div className="space-y-4">
-            <div>
-              <h3 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
-                <Wallet className="h-5 w-5 text-emerald-600" />
-                <span>Statutory Commission &amp; Legal Fee Payouts</span>
-              </h3>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Automatic disbursements settled upon 24-hour key handover verification.
-              </p>
-            </div>
-
-            <div className="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-xs">
+            <DashboardSectionHead
+              title="Commission & payouts"
+              description="Disbursed after tenant confirms key handover."
+            />
+            <div className="settlla-card overflow-hidden">
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-[10px] font-bold">
                   <tr>
@@ -803,65 +664,35 @@ export default function AgentDashboardPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700">
+                  {activeRental ? (
                   <tr>
-                    <td className="py-4 px-4 font-bold text-slate-900">Barnawa Terraces Flat 1</td>
-                    <td className="py-4 px-4 font-mono text-slate-500">HBA-KD-BNW-2026-089</td>
-                    <td className="py-4 px-4 font-black text-emerald-700 text-sm">₦50,000</td>
-                    <td className="py-4 px-4 font-black text-blue-700 text-sm">₦25,000</td>
+                    <td className="py-4 px-4 font-bold text-slate-900">{activeRental.listing?.title}</td>
+                    <td className="py-4 px-4 font-mono text-slate-500">{activeRental.listing?.mandate?.mandate_ref}</td>
+                    <td className="py-4 px-4 font-black text-emerald-700 text-sm">
+                      ₦{(activeRental.listing?.pricing?.agency_fee || 0).toLocaleString("en-NG")}
+                    </td>
+                    <td className="py-4 px-4 font-black text-blue-700 text-sm">
+                      ₦{(activeRental.listing?.pricing?.legal_fee || 0).toLocaleString("en-NG")}
+                    </td>
                     <td className="py-4 px-4 text-right">
                       <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 text-[10px] font-bold">
                         <CheckCircle2 className="h-3 w-3" />
-                        <span>Ready for Disbursal</span>
+                        <span>{activeRental.escrow_hold?.escrow_status || "holding"}</span>
                       </span>
                     </td>
                   </tr>
+                  ) : (
+                  <tr>
+                    <td className="py-8 px-4 text-center text-slate-500" colSpan={5}>
+                      Payouts appear after a tenant completes checkout (payment is still simulated).
+                    </td>
+                  </tr>
+                  )}
                 </tbody>
               </table>
             </div>
           </div>
         )}
-      </main>
-
-      {/* Simple Footer */}
-      <footer className="border-t border-slate-200 bg-white px-4 py-4 text-center text-xs text-slate-500 mt-12 mb-8 lg:mb-0">
-        Settlla Kaduna Hub • Authorized Real Estate Partner &amp; Escrow Infrastructure
-      </footer>
-
-      {/* Mobile Bottom Navigation Bar */}
-      <nav
-        aria-label="Agent Mobile Navigation"
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-lg px-4 py-2 pb-safe"
-      >
-        <div className="flex items-center justify-around max-w-md mx-auto">
-          <Link
-            href="/"
-            className="flex flex-col items-center justify-center py-1 text-slate-500 hover:text-slate-800 transition-colors"
-          >
-            <Home className="h-5 w-5" />
-            <span className="text-[10px] font-medium mt-0.5">Explore Feed</span>
-          </Link>
-          <div className="flex flex-col items-center justify-center py-1 text-emerald-700 font-bold">
-            <Building2 className="h-5 w-5" />
-            <span className="text-[10px] font-bold mt-0.5">Manager Desk</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => switchRole("tenant")}
-            className="flex flex-col items-center justify-center py-1 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
-          >
-            <User className="h-5 w-5" />
-            <span className="text-[10px] font-medium mt-0.5">Tenant View</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => signOut()}
-            className="flex flex-col items-center justify-center py-1 text-rose-500 hover:text-rose-700 transition-colors cursor-pointer"
-          >
-            <LogOut className="h-5 w-5" />
-            <span className="text-[10px] font-medium mt-0.5">Sign Out</span>
-          </button>
-        </div>
-      </nav>
-    </div>
+    </DashboardShell>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { Navbar } from "./Navbar";
 import { HeroSection } from "./HeroSection";
@@ -13,7 +14,6 @@ import { SignatureWorkflowModal } from "./SignatureWorkflowModal";
 import { ManagerQueueModal } from "./ManagerQueueModal";
 import { CheckoutPaymentModal } from "./CheckoutPaymentModal";
 import { MoveInPassViewer } from "./MoveInPassViewer";
-import { MoveInEscrowDashboardModal } from "./MoveInEscrowDashboardModal";
 import { AISearchModal } from "./AISearchModal";
 import { LandingSections } from "./LandingSections";
 import { Listing } from "@/types/listing";
@@ -22,18 +22,24 @@ import { TenantProfile, TenancyAgreement } from "@/types/agreement";
 import { MoveInPass, PaymentTransaction, EscrowHoldRecord } from "@/types/payment";
 import { AIMatchResult } from "@/types/aiSearch";
 import { runAISearch } from "@/utils/aiSearch";
+import { fetchPendingSignatureCount } from "@/lib/settlla/manager";
+import { seedListingsIfEmpty, fetchPublishedListingsFromBrowser } from "@/lib/settlla/listings";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { RestorableModalLayer } from "@/types/modalStack";
+import { useRestorableModalStack } from "@/hooks/useRestorableModalStack";
 import { AlertCircle, Search, ShieldCheck, Ticket, Sparkles } from "lucide-react";
 
 interface SettllaAppProps {
   initialListings?: Listing[];
 }
 
+const TENANT_ESCROW_DASHBOARD_PATH = "/dashboard/tenant?tab=escrow";
+
 const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LISTINGS }) => {
   const { currentUser, role } = useAuth();
+  const router = useRouter();
 
-  const [listings, setListings] = useState<Listing[]>(
-    initialListings && initialListings.length > 0 ? initialListings : SEED_LISTINGS
-  );
+  const [listings, setListings] = useState<Listing[]>(initialListings ?? []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,6 +48,8 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
   const [maxBudget, setMaxBudget] = useState("all");
   const [propertyType, setPropertyType] = useState("all");
   const [quickFilter, setQuickFilter] = useState("all");
+  const [minBedrooms, setMinBedrooms] = useState("all");
+  const [maxMoveInCost, setMaxMoveInCost] = useState("all");
 
   // Settlla AI Search States
   const [aiSearchOpen, setAiSearchOpen] = useState(false);
@@ -60,7 +68,7 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
   const [signingListing, setSigningListing] = useState<Listing | null>(null);
   const [signingRole, setSigningRole] = useState<"tenant" | "manager">("tenant");
   const [managerQueueOpen, setManagerQueueOpen] = useState(false);
-  const [pendingCount, setPendingCount] = useState(1);
+  const [pendingCount, setPendingCount] = useState(0);
 
   // 4-Way Split Payment Engine & Move-In Pass States (Feature #5)
   const [checkoutAgreement, setCheckoutAgreement] = useState<TenancyAgreement | null>(null);
@@ -72,25 +80,54 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
 
   // Key-in-Door Move-In Escrow Protection States (Feature #6)
   const [activeEscrow, setActiveEscrow] = useState<EscrowHoldRecord | null>(null);
-  const [escrowDashboardOpen, setEscrowDashboardOpen] = useState(false);
+
+  const restoreModalLayer = useCallback((layer: RestorableModalLayer) => {
+    switch (layer.type) {
+      case "ai-search":
+        setAiSearchOpen(true);
+        break;
+      case "listing-detail":
+        setListingForDetail(layer.listing);
+        break;
+      case "booking":
+        setListingForBooking(layer.listing);
+        break;
+      case "agreement":
+        setAgreementTenant(layer.tenant);
+        setListingForAgreement(layer.listing);
+        break;
+      case "signature":
+        setSigningAgreement(layer.agreement);
+        setSigningListing(layer.listing);
+        setSigningRole(layer.role);
+        break;
+      case "checkout":
+        setCheckoutAgreement(layer.agreement);
+        setCheckoutListing(layer.listing);
+        break;
+      case "move-in-pass":
+        setActivePass(layer.pass);
+        setActivePassAgreement(layer.agreement);
+        setActivePassListing(layer.listing);
+        break;
+      case "escrow-dashboard":
+        router.push(TENANT_ESCROW_DASHBOARD_PATH);
+        break;
+      case "manager-queue":
+        setManagerQueueOpen(true);
+        break;
+    }
+  }, [router]);
+
+  const { pushModalLayer, clearModalStack, dismissWithRestore } =
+    useRestorableModalStack(restoreModalLayer);
 
   // Fetch pending signature count for manager badge
   const refreshPendingCount = async () => {
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 800);
-      const res = await fetch(`${backendUrl}/api/manager/pending-signatures`, {
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-      if (res.ok) {
-        const data = await res.json();
-        setPendingCount(data.pending_count || 0);
-      }
+      setPendingCount(await fetchPendingSignatureCount());
     } catch {
-      // Offline fallback: keep default 1 pending lease in manager desk
-      setPendingCount(1);
+      setPendingCount(0);
     }
   };
 
@@ -131,52 +168,55 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
       }
 
       setAiMatchesMap({});
-      // 1. Instant client-side filtering from seed inventory
-      const clientFiltered = filterSeedListings(neighborhood, maxBudget, propertyType, quickFilter);
+      let inventory = initialListings ?? [];
+      if (isSupabaseConfigured()) {
+        try {
+          await seedListingsIfEmpty();
+          inventory = await fetchPublishedListingsFromBrowser();
+        } catch {
+          /* use initialListings */
+        }
+      } else if (!inventory.length) {
+        inventory = SEED_LISTINGS;
+      }
+      const clientFiltered = filterSeedListings(
+        neighborhood,
+        maxBudget,
+        propertyType,
+        quickFilter,
+        minBedrooms,
+        maxMoveInCost,
+        inventory
+      );
       setListings(clientFiltered);
       setError(null);
-
-      // 2. Optionally query backend if available and configured
-      try {
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-        if (backendUrl) {
-          const params = new URLSearchParams();
-          if (neighborhood !== "all") params.append("neighborhood", neighborhood);
-          if (maxBudget !== "all") params.append("max_budget", maxBudget);
-          if (propertyType !== "all") params.append("property_type", propertyType);
-          if (quickFilter !== "all") params.append("quick_filter", quickFilter);
-
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 1000);
-          const res = await fetch(`${backendUrl}/api/listings?${params.toString()}`, {
-            signal: controller.signal,
-          });
-          clearTimeout(timeoutId);
-          if (res.ok) {
-            const data = await res.json();
-            if (data.listings) {
-              setListings(data.listings);
-            }
-          }
-        }
-      } catch {
-        // Silently use clientFiltered without showing error
-      }
     }
 
     loadFiltered();
-  }, [neighborhood, maxBudget, propertyType, quickFilter, activeAIQuery, initialListings]);
+  }, [
+    neighborhood,
+    maxBudget,
+    propertyType,
+    quickFilter,
+    minBedrooms,
+    maxMoveInCost,
+    activeAIQuery,
+    initialListings,
+  ]);
 
   const handleResetFilters = () => {
     setNeighborhood("all");
     setMaxBudget("all");
     setPropertyType("all");
     setQuickFilter("all");
+    setMinBedrooms("all");
+    setMaxMoveInCost("all");
     setActiveAIQuery(null);
     setAiMatchesMap({});
   };
 
   const handleOpenAISearch = (queryPrompt?: string) => {
+    clearModalStack();
     if (queryPrompt !== undefined) {
       setAiSearchInitialQuery(queryPrompt);
     }
@@ -210,16 +250,45 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
   const handleOpenDetail = (item: Listing) => {
     setListingForBooking(null);
     setListingForAgreement(null);
+    if (aiSearchOpen) {
+      pushModalLayer({ type: "ai-search" });
+      setAiSearchOpen(false);
+    } else {
+      clearModalStack();
+    }
     setListingForDetail(item);
   };
 
   const handleOpenBooking = (item: Listing) => {
-    setListingForDetail(null);
     setListingForAgreement(null);
+    if (listingForDetail?.id === item.id) {
+      pushModalLayer({ type: "listing-detail", listing: listingForDetail });
+    } else if (aiSearchOpen) {
+      pushModalLayer({ type: "ai-search" });
+      setAiSearchOpen(false);
+    }
+    setListingForDetail(null);
     setListingForBooking(item);
   };
 
+  const handleCloseBooking = (reason?: "dismiss" | "complete") => {
+    if (reason === "complete") {
+      setListingForBooking(null);
+      clearModalStack();
+      return;
+    }
+    dismissWithRestore(() => setListingForBooking(null));
+  };
+
   const handleOpenAgreement = (item: Listing, tenantData?: Partial<TenantProfile>) => {
+    if (listingForBooking) {
+      pushModalLayer({ type: "booking", listing: listingForBooking });
+    } else if (listingForDetail) {
+      pushModalLayer({ type: "listing-detail", listing: listingForDetail });
+    } else if (aiSearchOpen) {
+      pushModalLayer({ type: "ai-search" });
+      setAiSearchOpen(false);
+    }
     setListingForDetail(null);
     setListingForBooking(null);
     const profileToUse: Partial<TenantProfile> = tenantData || {
@@ -235,6 +304,13 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
 
   const handleProceedToSignature = (agreement: TenancyAgreement) => {
     const targetListing = listings.find((l) => l.id === agreement.listing_id) || listingForAgreement || listings[0];
+    if (listingForAgreement) {
+      pushModalLayer({
+        type: "agreement",
+        listing: listingForAgreement,
+        tenant: agreementTenant,
+      });
+    }
     setListingForAgreement(null);
     setSigningListing(targetListing);
     setSigningAgreement(agreement);
@@ -242,9 +318,20 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
   };
 
   const handleOpenSigningWorkflowFromQueue = (agreement: TenancyAgreement, listing: Listing, roleToSign: "tenant" | "manager") => {
+    if (managerQueueOpen) {
+      pushModalLayer({ type: "manager-queue" });
+      setManagerQueueOpen(false);
+    }
     setSigningAgreement(agreement);
     setSigningListing(listing);
     setSigningRole(roleToSign);
+  };
+
+  const handleOpenEscrowDashboard = () => {
+    setActivePass(null);
+    setActivePassAgreement(null);
+    setActivePassListing(null);
+    router.push(TENANT_ESCROW_DASHBOARD_PATH);
   };
 
   const handleAgreementUpdated = (updated: TenancyAgreement) => {
@@ -264,13 +351,13 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-blue-600 selection:text-white pb-16 lg:pb-0">
+    <div className="min-h-screen bg-[var(--background)] text-slate-900 font-sans selection:bg-blue-600 selection:text-white pb-16 lg:pb-0">
       {/* 1. Header Navigation */}
       <Navbar
         verifiedCount={listings.length}
         pendingManagerSignatures={pendingCount}
         activeEscrowStatus={activeEscrow?.escrow_status || "holding"}
-        onOpenEscrowDashboard={() => setEscrowDashboardOpen(true)}
+        onOpenEscrowDashboard={handleOpenEscrowDashboard}
         onOpenAISearch={handleOpenAISearch}
       />
 
@@ -282,29 +369,34 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
         setMaxBudget={setMaxBudget}
         propertyType={propertyType}
         setPropertyType={setPropertyType}
+        minBedrooms={minBedrooms}
+        setMinBedrooms={setMinBedrooms}
+        maxMoveInCost={maxMoveInCost}
+        setMaxMoveInCost={setMaxMoveInCost}
+        quickFilter={quickFilter}
+        setQuickFilter={setQuickFilter}
+        onResetFilters={handleResetFilters}
         onSearch={scrollToFeed}
         onOpenAISearch={handleOpenAISearch}
       />
 
       {/* 3. Main Web Feed: Featured Vetted Apartments */}
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+      <main className="settlla-container py-8 sm:py-10">
         {/* Filter Bar with Quick Chips */}
         <FilterBar
           neighborhood={neighborhood}
-          setNeighborhood={setNeighborhood}
           maxBudget={maxBudget}
-          setMaxBudget={setMaxBudget}
           propertyType={propertyType}
-          setPropertyType={setPropertyType}
+          minBedrooms={minBedrooms}
+          maxMoveInCost={maxMoveInCost}
           quickFilter={quickFilter}
-          setQuickFilter={setQuickFilter}
           onReset={handleResetFilters}
           totalFound={listings.length}
         />
 
         {/* Active AI Query Banner (if filtered by AI) */}
         {activeAIQuery && (
-          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 border border-blue-200 p-4 shadow-xs">
+          <div className="mb-8 flex flex-col justify-between gap-3 rounded-[var(--radius-card)] border border-blue-200 bg-blue-50 p-4 sm:flex-row sm:items-center">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-xs shrink-0">
                 <Sparkles className="h-4 w-4 text-amber-300 animate-pulse" />
@@ -385,7 +477,6 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
                   listing={listing}
                   onSelect={handleOpenDetail}
                   onBookInspection={handleOpenBooking}
-                  onDirectApply={(item) => handleOpenAgreement(item)}
                   aiMatchScore={aiMatchesMap[listing.id]?.relevanceScore}
                   aiHighlightReason={aiMatchesMap[listing.id]?.matchHighlights[0]}
                 />
@@ -401,11 +492,8 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
       {/* 5. Listing Detail Modal */}
       <ListingDetailModal
         listing={listingForDetail}
-        onClose={() => setListingForDetail(null)}
-        onBookInspection={(item) => {
-          setListingForDetail(null);
-          setListingForBooking(item);
-        }}
+        onClose={() => dismissWithRestore(() => setListingForDetail(null))}
+        onBookInspection={handleOpenBooking}
         onDraftAgreement={(item) => handleOpenAgreement(item)}
       />
 
@@ -413,7 +501,7 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
       {listingForBooking && (
         <BookingDrawer
           isOpen={Boolean(listingForBooking)}
-          onClose={() => setListingForBooking(null)}
+          onClose={handleCloseBooking}
           listing={listingForBooking}
           onProceedToAgreement={(item, tenant) => {
             handleOpenAgreement(item, {
@@ -430,7 +518,7 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
       {listingForAgreement && (
         <TenancyAgreementViewer
           isOpen={Boolean(listingForAgreement)}
-          onClose={() => setListingForAgreement(null)}
+          onClose={() => dismissWithRestore(() => setListingForAgreement(null))}
           listing={listingForAgreement}
           initialTenantProfile={agreementTenant}
           onProceedToSignature={handleProceedToSignature}
@@ -441,7 +529,12 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
       {signingAgreement && signingListing && (
         <SignatureWorkflowModal
           isOpen={Boolean(signingAgreement)}
-          onClose={() => setSigningAgreement(null)}
+          onClose={() =>
+            dismissWithRestore(() => {
+              setSigningAgreement(null);
+              setSigningListing(null);
+            })
+          }
           agreement={signingAgreement}
           listing={signingListing}
           initialRole={signingRole}
@@ -449,7 +542,16 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
           onProceedToPayment={(agr) => {
             const targetListing =
               listings.find((l) => l.id === agr.listing_id) || signingListing || listings[0];
+            if (signingAgreement && signingListing) {
+              pushModalLayer({
+                type: "signature",
+                agreement: signingAgreement,
+                listing: signingListing,
+                role: signingRole,
+              });
+            }
             setSigningAgreement(null);
+            setSigningListing(null);
             setCheckoutAgreement(agr);
             setCheckoutListing(targetListing);
           }}
@@ -460,23 +562,26 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
       {checkoutAgreement && checkoutListing && (
         <CheckoutPaymentModal
           isOpen={Boolean(checkoutAgreement && checkoutListing)}
-          onClose={() => setCheckoutAgreement(null)}
+          onClose={() =>
+            dismissWithRestore(() => {
+              setCheckoutAgreement(null);
+              setCheckoutListing(null);
+            })
+          }
           agreement={checkoutAgreement}
           listing={checkoutListing}
           onPaymentSuccess={(tx) => {
+            clearModalStack();
             setRecentTransaction(tx);
             if (tx.escrow_hold) {
               setActiveEscrow(tx.escrow_hold);
             }
-            if (tx.move_in_pass) {
-              setActivePass(tx.move_in_pass);
-              setActivePassAgreement(checkoutAgreement);
-              setActivePassListing(checkoutListing);
-            }
-            // Mark property as reserved/occupied
+            setCheckoutAgreement(null);
+            setCheckoutListing(null);
             setListings((prev) =>
               prev.map((l) => (l.id === checkoutListing.id ? { ...l, status: "occupied" } : l))
             );
+            router.push(TENANT_ESCROW_DASHBOARD_PATH);
           }}
         />
       )}
@@ -485,26 +590,23 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
       {activePass && (
         <MoveInPassViewer
           isOpen={Boolean(activePass)}
-          onClose={() => setActivePass(null)}
+          onClose={() =>
+            dismissWithRestore(() => {
+              setActivePass(null);
+              setActivePassAgreement(null);
+              setActivePassListing(null);
+            })
+          }
           pass={activePass}
           transaction={recentTransaction || undefined}
-          onOpenDashboard={() => setEscrowDashboardOpen(true)}
+          onOpenDashboard={handleOpenEscrowDashboard}
         />
       )}
 
-      {/* 11. Feature #6: Screen 8 Move-In Escrow Protection & Key Handover Dashboard Modal */}
-      <MoveInEscrowDashboardModal
-        isOpen={escrowDashboardOpen}
-        onClose={() => setEscrowDashboardOpen(false)}
-        escrowRecord={activeEscrow}
-        listing={activePassListing || listings[0]}
-        onEscrowUpdated={(updated) => setActiveEscrow(updated)}
-      />
-
-      {/* 12. Manager Lease Counter-Signing Desk Modal (Screen 6 Queue) */}
+      {/* 11. Manager Lease Counter-Signing Desk Modal (Screen 6 Queue) */}
       <ManagerQueueModal
         isOpen={managerQueueOpen}
-        onClose={() => setManagerQueueOpen(false)}
+        onClose={() => dismissWithRestore(() => setManagerQueueOpen(false))}
         listings={listings}
         onOpenSigningWorkflow={handleOpenSigningWorkflowFromQueue}
       />
@@ -526,11 +628,11 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
         <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40 flex flex-col gap-2 items-end">
           <button
             type="button"
-            onClick={() => setEscrowDashboardOpen(true)}
+            onClick={handleOpenEscrowDashboard}
             className="flex items-center gap-2 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 shadow-xl shadow-blue-600/30 text-xs sm:text-sm font-bold transition-all cursor-pointer"
           >
             <ShieldCheck className="h-4 w-4" />
-            <span>Move-In Escrow Dashboard</span>
+            <span>Escrow &amp; confirm key</span>
           </button>
           <button
             type="button"
