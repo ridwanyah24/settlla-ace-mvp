@@ -36,6 +36,15 @@ export default function ListingDetailPage() {
   const [isAgreementOpen, setIsAgreementOpen] = useState(false);
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      if (searchParams.get("start_agreement") === "true") {
+        setIsAgreementOpen(true);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     async function fetchDetail() {
       if (!id) return;
 
@@ -231,14 +240,9 @@ export default function ListingDetailPage() {
                   <td className="py-3.5 px-5 text-right font-bold">{formatNaira(listing.pricing.caution_fee)}</td>
                 </tr>
                 <tr>
-                  <td className="py-3.5 px-5 font-semibold">Legal Documentation Fee</td>
-                  <td className="py-3.5 px-5 text-slate-400">5% Statutory Tenancy Agreement drafting &amp; stamp duty</td>
-                  <td className="py-3.5 px-5 text-right font-bold">{formatNaira(listing.pricing.legal_fee)}</td>
-                </tr>
-                <tr>
-                  <td className="py-3.5 px-5 font-semibold">Property Management / Agency</td>
-                  <td className="py-3.5 px-5 text-slate-400">10% Professional management under HB&amp;A mandate</td>
-                  <td className="py-3.5 px-5 text-right font-bold">{formatNaira(listing.pricing.agency_fee)}</td>
+                  <td className="py-3.5 px-5 font-semibold">Legal &amp; Agency Fee</td>
+                  <td className="py-3.5 px-5 text-slate-400">15% Statutory Tenancy drafting, stamp duty &amp; professional management under HB&amp;A mandate</td>
+                  <td className="py-3.5 px-5 text-right font-bold">{formatNaira(listing.pricing.legal_and_agency_fee || (listing.pricing.legal_fee + listing.pricing.agency_fee))}</td>
                 </tr>
                 <tr className="bg-emerald-950/20 text-emerald-300">
                   <td className="py-3.5 px-5 font-bold flex items-center gap-1.5">
@@ -305,10 +309,10 @@ export default function ListingDetailPage() {
 
         {/* Visiting Windows & Free Inspection Booking */}
         <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-6 sm:p-8 shadow-2xl">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h3 className="text-base font-bold text-white">Manager Recurring Visiting Windows</h3>
-              <p className="text-xs text-slate-400 mt-1">
+          <div className="flex flex-col gap-5">
+            <div className="w-full">
+              <h3 className="text-base sm:text-lg font-bold text-white">Manager Recurring Visiting Windows</h3>
+              <p className="text-xs sm:text-sm text-slate-400 mt-1 leading-relaxed">
                 Walkthroughs are conducted strictly during official visiting windows by HB&amp;A Partners staff. Physical inspection is 100% optional.
               </p>
               <div className="mt-3 flex flex-wrap gap-2.5">
@@ -324,19 +328,20 @@ export default function ListingDetailPage() {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-shrink-0">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
               <button
                 onClick={() => setIsAgreementOpen(true)}
-                className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 px-5 py-3.5 text-xs sm:text-sm font-bold text-emerald-400 transition-all flex items-center justify-center gap-2"
+                className="flex-1 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 px-5 py-3.5 text-xs sm:text-sm font-bold text-emerald-400 transition-all flex items-center justify-center gap-2"
               >
                 <FileText className="w-4 h-4 text-emerald-400" />
                 <span>Instant Lease Preview (₦0)</span>
               </button>
               <button
                 onClick={() => setIsBookingOpen(true)}
-                className="rounded-2xl bg-emerald-600 hover:bg-emerald-500 px-6 py-3.5 text-xs sm:text-sm font-bold text-slate-950 transition-all shadow-xl shadow-emerald-600/30 hover:shadow-emerald-500/50"
+                className="flex-1 sm:flex-initial rounded-2xl bg-emerald-600 hover:bg-emerald-500 px-6 py-3.5 text-xs sm:text-sm font-bold text-slate-950 transition-all shadow-xl shadow-emerald-600/30 hover:shadow-emerald-500/50 flex items-center justify-center gap-2"
               >
-                Book Inspection (Optional)
+                <Calendar className="w-4 h-4 text-slate-950" />
+                <span>Book Free Tour</span>
               </button>
             </div>
           </div>

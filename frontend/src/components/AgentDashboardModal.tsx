@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { Listing } from "@/types/listing";
 import { TenancyAgreement } from "@/types/agreement";
@@ -23,6 +24,7 @@ import {
   BadgeCheck,
   ShieldCheck,
   CheckCircle2,
+  UserCheck,
 } from "lucide-react";
 
 interface AgentDashboardModalProps {
@@ -525,22 +527,18 @@ export const AgentDashboardModal: React.FC<AgentDashboardModalProps> = ({
                       Total Move-In: ₦{calculatedPricing.total_move_in_cost.toLocaleString("en-NG")}
                     </span>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
                     <div className="bg-white p-2 rounded-xl border border-slate-200">
                       <span className="text-slate-500 block text-[10px]">Net Rent:</span>
                       <strong>₦{calculatedPricing.annual_rent.toLocaleString("en-NG")}</strong>
                     </div>
                     <div className="bg-white p-2 rounded-xl border border-slate-200">
-                      <span className="text-slate-500 block text-[10px]">Caution (10%):</span>
-                      <strong>₦{calculatedPricing.caution_fee.toLocaleString("en-NG")}</strong>
+                      <span className="text-slate-500 block text-[10px]">Caution ({calculatedPricing.caution_fee > 0 ? "10%" : "₦0 Waived"}):</span>
+                      <strong>{calculatedPricing.caution_fee > 0 ? `₦${calculatedPricing.caution_fee.toLocaleString("en-NG")}` : "₦0 (Waived)"}</strong>
                     </div>
                     <div className="bg-white p-2 rounded-xl border border-slate-200">
-                      <span className="text-slate-500 block text-[10px]">Legal (5%):</span>
-                      <strong>₦{calculatedPricing.legal_fee.toLocaleString("en-NG")}</strong>
-                    </div>
-                    <div className="bg-white p-2 rounded-xl border border-slate-200">
-                      <span className="text-slate-500 block text-[10px]">Agency (10%):</span>
-                      <strong>₦{calculatedPricing.agency_fee.toLocaleString("en-NG")}</strong>
+                      <span className="text-slate-500 block text-[10px]">Legal &amp; Agency Fee (15%):</span>
+                      <strong>₦{(calculatedPricing.legal_and_agency_fee || (calculatedPricing.legal_fee + calculatedPricing.agency_fee)).toLocaleString("en-NG")}</strong>
                     </div>
                   </div>
                 </div>
@@ -740,15 +738,14 @@ export const AgentDashboardModal: React.FC<AgentDashboardModalProps> = ({
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <a
-                    href="https://wa.me/2348031234567"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 px-3 py-1.5 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                  <Link
+                    href="/dashboard/tenant"
+                    onClick={onClose}
+                    className="rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 px-3 py-1.5 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
-                    <MessageSquare className="w-3.5 h-3.5" />
-                    <span>WhatsApp Tenant</span>
-                  </a>
+                    <UserCheck className="w-3.5 h-3.5 text-blue-600" />
+                    <span>View Tenant Profile</span>
+                  </Link>
                 </div>
               </div>
             </div>

@@ -215,29 +215,27 @@ export const ListingCard: React.FC<ListingCardProps> = ({
             </span>
           </div>
 
-          {/* 4-Way Statutory Breakdown Table */}
-          <div className="grid grid-cols-2 gap-1.5 text-[11px]">
-            <div className="rounded-lg bg-white px-2 py-1 border border-slate-200/80 flex justify-between">
-              <span className="text-slate-500">Rent:</span>
-              <strong className="text-slate-800">{formatNaira(listing.pricing.annual_rent)}</strong>
+          {/* Statutory Breakdown */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 text-[11px]">
+            <div className="rounded-lg bg-white px-2 py-1 border border-slate-200/80 flex justify-between sm:flex-col sm:justify-start">
+              <span className="text-slate-500 text-[10px]">Rent:</span>
+              <strong className="text-slate-800 font-bold">{formatNaira(listing.pricing.annual_rent)}</strong>
             </div>
-            <div className={`rounded-lg px-2 py-1 border flex justify-between ${
+            <div className={`rounded-lg px-2 py-1 border flex justify-between sm:flex-col sm:justify-start ${
               listing.pricing.caution_fee === 0
                 ? "bg-emerald-50/70 border-emerald-200 text-emerald-800"
                 : "bg-white border-slate-200/80"
             }`}>
-              <span className={listing.pricing.caution_fee === 0 ? "text-emerald-700 font-medium" : "text-slate-500"}>Caution:</span>
+              <span className={`text-[10px] ${listing.pricing.caution_fee === 0 ? "text-emerald-700 font-medium" : "text-slate-500"}`}>Caution:</span>
               <strong className={listing.pricing.caution_fee === 0 ? "text-emerald-700 font-bold" : "text-slate-800"}>
                 {listing.pricing.caution_fee > 0 ? formatNaira(listing.pricing.caution_fee) : "₦0 (Waived)"}
               </strong>
             </div>
-            <div className="rounded-lg bg-white px-2 py-1 border border-slate-200/80 flex justify-between">
-              <span className="text-slate-500">Legal (5%):</span>
-              <strong className="text-slate-800">{formatNaira(listing.pricing.legal_fee)}</strong>
-            </div>
-            <div className="rounded-lg bg-white px-2 py-1 border border-slate-200/80 flex justify-between">
-              <span className="text-slate-500">Agency (10%):</span>
-              <strong className="text-slate-800">{formatNaira(listing.pricing.agency_fee)}</strong>
+            <div className="rounded-lg bg-white px-2 py-1 border border-slate-200/80 flex justify-between sm:flex-col sm:justify-start">
+              <span className="text-slate-500 text-[10px]">Legal &amp; Agency (15%):</span>
+              <strong className="text-slate-800 font-bold">
+                {formatNaira(listing.pricing.legal_and_agency_fee || (listing.pricing.legal_fee + listing.pricing.agency_fee))}
+              </strong>
             </div>
           </div>
 
@@ -263,11 +261,11 @@ export const ListingCard: React.FC<ListingCardProps> = ({
           <button
             type="button"
             onClick={() => onBookInspection ? onBookInspection(listing) : onSelect(listing)}
-            className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-3 py-2.5 text-xs font-bold text-slate-800 transition-colors shadow-2xs cursor-pointer"
-            title="Book an optional free walkthrough inspection"
+            className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-2.5 py-2.5 text-xs font-bold text-slate-800 transition-colors shadow-2xs cursor-pointer"
+            title="Book an optional free tour"
           >
             <Calendar className="h-3.5 w-3.5 text-slate-500" />
-            <span>Tour (Optional)</span>
+            <span>Book Free Tour</span>
           </button>
         </div>
       </div>

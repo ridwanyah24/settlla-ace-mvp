@@ -39,8 +39,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   const chips = [
     { id: "all", label: "All Properties", icon: Home },
     { id: "no-caution", label: "₦0 Caution Fee", icon: ShieldCheck },
+    { id: "under-300k", label: "Under ₦300k Rent", icon: Tag },
     { id: "near-gtbank", label: "Near GTBank Barnawa", icon: MapPin },
-    { id: "under-700k", label: "Under ₦700k Total", icon: Tag },
     { id: "borehole", label: "Borehole Water", icon: Droplets },
     { id: "prepaid", label: "Prepaid Meter", icon: Zap },
   ];

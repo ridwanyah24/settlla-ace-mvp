@@ -12,36 +12,36 @@ export const AI_PROMPT_SUGGESTIONS: AISuggestedPrompt[] = [
   {
     id: "malali-nysc-studio",
     emoji: "🎓",
-    label: "Affordable Malali Studio for NYSC",
-    query: "affordable studio or mini-flat in Malali under 500k for NYSC or single professional",
-    tag: "Malali • Budget",
+    label: "Malali Studio ₦200k (NYSC & Student)",
+    query: "affordable studio or mini-flat in Malali under 200k for NYSC or student",
+    tag: "Malali • ₦200k",
   },
   {
-    id: "malali-duplex-luxury",
+    id: "malali-3bed-modern",
     emoji: "🏰",
-    label: "Executive Duplex with Solar & Security",
-    query: "luxury 3-bedroom duplex in Malali with 24/7 security and solar inverter pre-wiring",
-    tag: "Malali • Luxury",
+    label: "Modern 3-Bedroom in Malali",
+    query: "spacious 3-bedroom apartment in Malali with borehole and solar",
+    tag: "Malali • 3-Bed",
   },
   {
     id: "barnawa-family-3bed",
     emoji: "👨‍👩‍👧",
-    label: "Barnawa 3-Bed Family Flat",
-    query: "modern 3-bedroom family flat in Barnawa GRA with constant water and parking",
-    tag: "Barnawa • Family",
+    label: "Barnawa 3-Bed Executive Flat",
+    query: "executive 3-bedroom flat in Barnawa GRA under 400k",
+    tag: "Barnawa • 3-Bed",
   },
   {
-    id: "budget-under-600k",
+    id: "budget-under-300k",
     emoji: "💰",
-    label: "Verified Home Under ₦600,000",
-    query: "verified flat under 600k in Kaduna with personal meter and borehole",
-    tag: "Kaduna • Under 600k",
+    label: "Verified Home Under ₦300,000",
+    query: "verified flat under 300k in Kaduna with personal meter and borehole",
+    tag: "Kaduna • Under 300k",
   },
   {
     id: "zero-caution-barnawa",
     emoji: "🎉",
     label: "Barnawa Flat with ₦0 Caution Fee",
-    query: "2-bedroom in Barnawa near GTBank with zero caution deposit",
+    query: "2-bedroom in Barnawa near GTBank under 300k with zero caution deposit",
     tag: "₦0 Caution • Barnawa",
   },
 ];
@@ -155,8 +155,8 @@ export function parseNaturalLanguageQuery(rawQuery: string): AISearchCriteria {
       calculated = rawVal * 1000;
     }
 
-    // Typical Nigerian rental amounts in range 200,000 to 10,000,000
-    if (calculated >= 200000 && calculated <= 10000000) {
+    // Typical Nigerian rental amounts in range 100,000 to 10,000,000
+    if (calculated >= 100000 && calculated <= 10000000) {
       if (isTotalMoveInCost) {
         maxTotalCost = calculated;
       } else {
@@ -166,12 +166,12 @@ export function parseNaturalLanguageQuery(rawQuery: string): AISearchCriteria {
     }
   }
 
-  // Also check explicit standard numbers like "600000" or "600,000"
+  // Also check explicit standard numbers like "300000" or "200,000"
   if (!maxBudget && !maxTotalCost) {
     const directNumberMatch = normalized.match(/(?:₦|naira\s*)?(\d{1,3}(?:,\d{3})+|\d{6,7})/i);
     if (directNumberMatch) {
       const cleanNum = parseInt(directNumberMatch[1].replace(/,/g, ""), 10);
-      if (cleanNum >= 200000 && cleanNum <= 10000000) {
+      if (cleanNum >= 100000 && cleanNum <= 10000000) {
         if (isTotalMoveInCost) {
           maxTotalCost = cleanNum;
         } else {
@@ -275,6 +275,16 @@ export function parseNaturalLanguageQuery(rawQuery: string): AISearchCriteria {
   const lifestyleContext: string[] = [];
   if (normalized.includes("nysc") || normalized.includes("corper")) {
     lifestyleContext.push("nysc");
+  }
+  if (
+    normalized.includes("student") ||
+    normalized.includes("campus") ||
+    normalized.includes("poly") ||
+    normalized.includes("kasu") ||
+    normalized.includes("university") ||
+    normalized.includes("school")
+  ) {
+    lifestyleContext.push("student");
   }
   if (
     normalized.includes("doctor") ||
@@ -504,10 +514,18 @@ export function scoreListing(listing: Listing, criteria: AISearchCriteria): AIMa
 
   // 6. Lifestyle Context Matching
   if (criteria.lifestyleContext && criteria.lifestyleContext.length > 0) {
-    if (criteria.lifestyleContext.includes("nysc") || criteria.lifestyleContext.includes("single_professional")) {
+    if (
+      criteria.lifestyleContext.includes("nysc") ||
+      criteria.lifestyleContext.includes("student") ||
+      criteria.lifestyleContext.includes("single_professional")
+    ) {
       if (listing.property_type === "Mini-flat" || listing.bedrooms === 1) {
         score += 15;
-        matchHighlights.push(`🎓 Ideal for NYSC corps members & single professionals`);
+        matchHighlights.push(`🎓 Ideal layout for students, NYSC corps members & young professionals`);
+      }
+      if (listing.pricing.annual_rent <= 300000) {
+        score += 20;
+        matchHighlights.push(`💰 Student/NYSC budget friendly: ₦${listing.pricing.annual_rent.toLocaleString("en-NG")}/year`);
       }
     }
 

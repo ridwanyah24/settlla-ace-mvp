@@ -76,48 +76,48 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         </h1>
 
         {/* Subtitle */}
-        <p className="mx-auto mt-4 max-w-2xl text-base sm:text-lg text-slate-600 font-medium leading-relaxed">
+        <p className="mx-auto mt-4 sm:mt-5 mb-8 sm:mb-10 max-w-2xl px-4 sm:px-6 py-2 text-base sm:text-lg text-slate-600 font-medium leading-relaxed">
           Find vetted apartments in Kaduna with transparent pricing, zero hidden fees, and verified landlords.
         </p>
 
         {/* Floating Search Bar Card with Dual Modes (AI Search & Standard Filters) */}
-        <div className="mx-auto mt-10 max-w-5xl rounded-3xl bg-white p-4 sm:p-6 shadow-2xl shadow-blue-950/10 border border-slate-200/80 backdrop-blur-md">
+        <div className="mx-auto max-w-5xl rounded-3xl bg-white p-5 sm:p-7 lg:p-8 shadow-2xl shadow-blue-950/10 border border-slate-200/80 backdrop-blur-md">
           {/* Top Mode Switcher Bar */}
-          <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5 text-left">
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 border-b border-slate-100 pb-4 text-left">
             {/* Mode Switcher Tabs */}
-            <div className="inline-flex items-center rounded-2xl bg-slate-100 p-1 border border-slate-200/80 max-w-fit">
+            <div className="inline-flex items-center rounded-2xl bg-slate-100 p-1.5 border border-slate-200/80 max-w-fit">
               <button
                 type="button"
                 onClick={() => setSearchMode("ai")}
-                className={`flex items-center gap-1.5 rounded-xl px-3 sm:px-4 py-2 text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center gap-2 rounded-xl px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                   searchMode === "ai"
                     ? "bg-blue-600 text-white shadow-md shadow-blue-600/30"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                <Sparkles className="h-3.5 w-3.5 text-amber-300 animate-pulse" />
-                <span>Settlla AI Natural Search</span>
-                <span className="rounded-full bg-white/20 px-1.5 py-0.2 text-[9px] font-black uppercase">
+                <Sparkles className="h-4 w-4 text-amber-300 animate-pulse" />
+                <span className="tracking-tight">Settlla AI Natural Search</span>
+                <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider">
                   Smart
                 </span>
               </button>
               <button
                 type="button"
                 onClick={() => setSearchMode("manual")}
-                className={`flex items-center gap-1.5 rounded-xl px-3 sm:px-4 py-2 text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center gap-2 rounded-xl px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                   searchMode === "manual"
                     ? "bg-white text-slate-900 shadow-xs border border-slate-200"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                <Search className="h-3.5 w-3.5 text-slate-500" />
-                <span>Standard Filters</span>
+                <Search className="h-4 w-4 text-slate-500" />
+                <span className="tracking-tight">Standard Filters</span>
               </button>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-                <CheckCircle2 className="h-3 w-3" />
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
                 <span>₦0 Inspection Fee Guarantee</span>
               </span>
             </div>
@@ -135,8 +135,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     type="text"
                     value={aiPromptInput}
                     onChange={(e) => setAiPromptInput(e.target.value)}
-                    placeholder="Ask Settlla AI: e.g. 'Quiet 2-bed in Barnawa near GTBank under 800k with prepaid meter'..."
-                    className="w-full rounded-2xl bg-slate-50 border border-slate-300/80 pl-12 pr-4 py-4 text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 outline-none transition-all shadow-xs"
+                    placeholder="Ask Settlla AI: e.g. 'Student 2-bed in Barnawa under 300k' or 'Malali studio 200k for NYSC'..."
+                    className="w-full rounded-2xl bg-slate-50 border border-slate-300/80 pl-13 sm:pl-14 pr-4 py-4 sm:py-4.5 text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 outline-none transition-all shadow-xs"
                   />
                 </div>
                 <button
@@ -156,24 +156,24 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 </span>
                 {[
                   {
-                    emoji: "⚡",
-                    label: "Barnawa 2-bed with prepaid meter",
-                    query: "quiet 2-bedroom in Barnawa near GTBank under 800k with prepaid meter",
-                  },
-                  {
                     emoji: "🎓",
-                    label: "Malali studio for NYSC",
-                    query: "affordable studio or mini-flat in Malali under 500k for NYSC",
+                    label: "Malali Studio ₦200k (NYSC)",
+                    query: "affordable studio mini-flat in Malali under 200k for NYSC corper",
                   },
                   {
-                    emoji: "🏰",
-                    label: "Executive duplex with solar",
-                    query: "luxury 3-bedroom duplex in Malali with 24/7 security and solar",
+                    emoji: "⚡",
+                    label: "Barnawa 2-bed under ₦300k",
+                    query: "2-bedroom in Barnawa near GTBank under 300k with prepaid meter",
+                  },
+                  {
+                    emoji: "🎉",
+                    label: "Zero Caution Deposit",
+                    query: "verified flat with zero caution deposit for students",
                   },
                   {
                     emoji: "💰",
-                    label: "Verified flat under ₦600k",
-                    query: "verified flat under 600k with personal meter and borehole",
+                    label: "Student Flat under ₦250k",
+                    query: "verified flat under 250k in Kaduna with personal meter",
                   },
                 ].map((item, idx) => (
                   <button
@@ -244,10 +244,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   className="w-full bg-transparent text-sm font-semibold text-slate-900 outline-none cursor-pointer"
                 >
                   <option value="all">Any Total Cost</option>
-                  <option value="600000">Up to ₦600,000 Total</option>
-                  <option value="750000">Up to ₦750,000 Total</option>
-                  <option value="900000">Up to ₦900,000 Total</option>
-                  <option value="1200000">Up to ₦1,200,000 Total</option>
+                  <option value="250000">Up to ₦250,000</option>
+                  <option value="300000">Up to ₦300,000</option>
+                  <option value="350000">Up to ₦350,000</option>
+                  <option value="450000">Up to ₦450,000</option>
                 </select>
               </div>
 

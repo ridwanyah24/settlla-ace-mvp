@@ -2,14 +2,16 @@ import { Listing } from "@/types/listing";
 
 export function calculatePricing(annualRent: number, hasCautionFee: boolean = true) {
   const cautionFee = hasCautionFee ? Math.round(annualRent * 0.1) : 0;
+  const legalAndAgencyFee = Math.round(annualRent * 0.15);
   const legalFee = Math.round(annualRent * 0.05);
-  const agencyFee = Math.round(annualRent * 0.1);
-  const totalMoveInCost = annualRent + cautionFee + legalFee + agencyFee;
+  const agencyFee = legalAndAgencyFee - legalFee;
+  const totalMoveInCost = annualRent + cautionFee + legalAndAgencyFee;
 
   return {
     annual_rent: annualRent,
     caution_fee: cautionFee,
     has_caution_fee: hasCautionFee,
+    legal_and_agency_fee: legalAndAgencyFee,
     legal_fee: legalFee,
     agency_fee: agencyFee,
     total_move_in_cost: totalMoveInCost,
@@ -20,7 +22,7 @@ export function calculatePricing(annualRent: number, hasCautionFee: boolean = tr
 export const SEED_LISTINGS: Listing[] = [
   {
     id: "prop_barnawa_01",
-    title: "Executive 1-Bedroom Flat at Barnawa Terraces",
+    title: "Affordable 1-Bedroom Flat at Barnawa Terraces",
     neighborhood: "Barnawa",
     zone: "Barnawa GRA",
     full_address: "Plot 12 Coronation Crescent, Barnawa, Kaduna",
@@ -33,7 +35,7 @@ export const SEED_LISTINGS: Listing[] = [
     commute_context:
       "Direct 4-minute drive or keke ride to GTBank Barnawa and Barnawa Shopping Complex.",
     description:
-      "Tastefully finished modern 1-bedroom flat in a calm, secured residential cul-de-sac. Features dedicated self-billed prepaid electricity, uninterrupted borehole water supply, POP ceilings, fully tiled floors, and perimeter security fencing.",
+      "Tastefully finished 1-bedroom flat ideal for students, NYSC corps members, or young professionals. Features dedicated self-billed prepaid electricity, uninterrupted borehole water supply, POP ceilings, fully tiled floors, and perimeter security fencing.",
     amenities: [
       "Dedicated Prepaid Meter (Self-Billed)",
       "Borehole Water + 5,000L Overhead Tank",
@@ -46,7 +48,7 @@ export const SEED_LISTINGS: Listing[] = [
       "/images/bedroom.jpg",
       "/images/exterior.jpg",
     ],
-    pricing: calculatePricing(500000),
+    pricing: calculatePricing(240000),
     mandate: {
       mandate_ref: "HBA-KD-BNW-2026-089",
       manager_name: "HB&A Partners & Co.",
@@ -61,7 +63,7 @@ export const SEED_LISTINGS: Listing[] = [
   },
   {
     id: "prop_barnawa_02",
-    title: "Serviced 2-Bedroom Apartment off Barnawa Close",
+    title: "Serviced 2-Bedroom Flat off Barnawa Close (₦0 Caution)",
     neighborhood: "Barnawa",
     zone: "Barnawa Phase 1",
     full_address: "8 Barnawa Close, near GTBank Branch, Kaduna",
@@ -74,21 +76,21 @@ export const SEED_LISTINGS: Listing[] = [
     commute_context:
       "Walking distance (approx 200m) to GTBank Barnawa branch and commercial axis.",
     description:
-      "Spacious serviced 2-bedroom flat with both rooms ensuite. Complete with fitted kitchen, automated borehole water system, dedicated prepaid meter, and private security guard on site.",
+      "Spacious serviced 2-bedroom flat with both bedrooms ensuite. Complete with fitted kitchen, automated borehole water system, dedicated prepaid meter, and zero caution deposit concession.",
     amenities: [
       "Independent Prepaid Electric Meter",
       "Automated Borehole Pumping System",
       "Dedicated Security Guardhouse",
       "Fenced & Gated Perimeter",
       "Ensuite Bedrooms with Water Heaters",
-      "Zero Caution Deposit (Landlord Mandate)",
+      "Zero Caution Deposit (Student & Youth Mandate)",
     ],
     images: [
       "/images/living_room.jpg",
       "/images/bedroom.jpg",
       "/images/exterior.jpg",
     ],
-    pricing: calculatePricing(750000, false),
+    pricing: calculatePricing(300000, false),
     mandate: {
       mandate_ref: "HBA-KD-BNW-2026-112",
       manager_name: "HB&A Partners & Co.",
@@ -103,7 +105,7 @@ export const SEED_LISTINGS: Listing[] = [
   },
   {
     id: "prop_malali_01",
-    title: "Contemporary 2-Bedroom Flat in Malali Low Cost",
+    title: "Student & Corper 2-Bedroom Flat in Malali Low Cost",
     neighborhood: "Malali",
     zone: "Malali Low Cost",
     full_address: "Block 4, Gwari Crescent, Malali Low Cost, Kaduna",
@@ -116,7 +118,7 @@ export const SEED_LISTINGS: Listing[] = [
     commute_context:
       "Fast access to Malali Roundabout, NDA Road, and Kaduna metropolis transit points.",
     description:
-      "Well-maintained 2-bedroom flat in a quiet residential neighborhood of Malali Low Cost. Constant water from industrial borehole, personal prepaid meter, cross-ventilation, and dedicated generator changeover switch.",
+      "Well-maintained 2-bedroom flat in a calm, student-friendly residential area of Malali Low Cost. Constant water from industrial borehole, personal prepaid meter, cross-ventilation, and dedicated generator changeover switch.",
     amenities: [
       "Personal Prepaid Meter",
       "Heavy-Duty Industrial Borehole",
@@ -129,7 +131,7 @@ export const SEED_LISTINGS: Listing[] = [
       "/images/living_room.jpg",
       "/images/bedroom.jpg",
     ],
-    pricing: calculatePricing(650000),
+    pricing: calculatePricing(280000),
     mandate: {
       mandate_ref: "HBA-KD-MAL-2026-044",
       manager_name: "HB&A Partners & Co.",
@@ -144,7 +146,7 @@ export const SEED_LISTINGS: Listing[] = [
   },
   {
     id: "prop_malali_02",
-    title: "Cozy Studio Mini-Flat along Isa Kaita Extension",
+    title: "Cozy Studio Mini-Flat for NYSC & Students (₦0 Caution)",
     neighborhood: "Malali",
     zone: "Malali GRA Ext.",
     full_address: "15 Isa Kaita Extension, near Golf Club, Malali, Kaduna",
@@ -157,21 +159,21 @@ export const SEED_LISTINGS: Listing[] = [
     commute_context:
       "Strategic central Malali location, 3 minutes from Kaduna Golf Club and recreational hubs.",
     description:
-      "Affordable, secure mini-flat suitable for NYSC corps members or single professionals. Features a private kitchenette, clean filtered borehole water, smart prepaid meter, and night security guard.",
+      "Ultra-affordable, secure mini-flat suitable for NYSC corps members or tertiary students. Features a private kitchenette, clean filtered borehole water, smart prepaid meter, and night security guard.",
     amenities: [
       "Dedicated Smart Prepaid Meter",
       "Clean Borehole Water with Filtration",
       "Night Watchman on Duty",
       "Private Balcony & Cross Ventilation",
       "Fully Tiled Interior",
-      "Zero Caution Fee (NYSC & Youth Concession)",
+      "Zero Caution Fee (NYSC & Student Concession)",
     ],
     images: [
       "/images/bedroom.jpg",
       "/images/living_room.jpg",
       "/images/exterior.jpg",
     ],
-    pricing: calculatePricing(420000, false),
+    pricing: calculatePricing(200000, false),
     mandate: {
       mandate_ref: "HBA-KD-MAL-2026-077",
       manager_name: "HB&A Partners & Co.",
@@ -186,7 +188,7 @@ export const SEED_LISTINGS: Listing[] = [
   },
   {
     id: "prop_barnawa_03",
-    title: "Modern 3-Bedroom Family Flat in Barnawa GRA",
+    title: "Executive 3-Bedroom Flat in Barnawa GRA",
     neighborhood: "Barnawa",
     zone: "Barnawa New GRA",
     full_address: "22 Queen Amina Way, Barnawa GRA, Kaduna",
@@ -212,7 +214,7 @@ export const SEED_LISTINGS: Listing[] = [
       "/images/living_room.jpg",
       "/images/bedroom.jpg",
     ],
-    pricing: calculatePricing(800000),
+    pricing: calculatePricing(360000),
     mandate: {
       mandate_ref: "HBA-KD-BNW-2026-156",
       manager_name: "HB&A Partners & Co.",
@@ -227,33 +229,33 @@ export const SEED_LISTINGS: Listing[] = [
   },
   {
     id: "prop_malali_03",
-    title: "Luxury 3-Bedroom Semi-Detached Duplex off Danmarna Road",
+    title: "Modern 3-Bedroom Apartment in Malali GRA (₦0 Caution)",
     neighborhood: "Malali",
     zone: "Malali GRA",
     full_address: "14 Danmarna Close, Malali GRA, Kaduna",
     title_reference:
       "KADGIS Certificate of Occupancy No. KDL-MAL-2019-0824 (Deed Reg. Vol. 22, Page 15, Kaduna Land Registry)",
-    property_type: "3-Bedroom Duplex",
+    property_type: "3-Bedroom Flat",
     bedrooms: 3,
-    bathrooms: 4,
+    bathrooms: 3,
     commute_badge: "4 mins to NDA Gate / Rabah Road",
     commute_context:
-      "Serene Malali diplomatic enclave with fast 4-minute connection to Rabah Road and central Kaduna.",
+      "Serene Malali enclave with fast 4-minute connection to Rabah Road and central Kaduna.",
     description:
-      "Exquisite modern duplex in Malali GRA featuring personal dedicated transformer connection, solar inverter backup pre-wiring, automated gate, boys' quarters, and manicured private compound.",
+      "Comfortable 3-bedroom apartment fitted with solar inverter backup wiring, motorized security gate, clean borehole system, and zero caution deposit under youth educational support mandate.",
     amenities: [
-      "Dedicated 33kVA Transformer Connection",
+      "Dedicated Prepaid Meter Connection",
       "Solar & Inverter Pre-Wired Infrastructure",
       "Motorized Security Gate & CCTV",
-      "Attached Self-Contained BQ (Boys Quarters)",
-      "Automated Water Treatment Plant",
+      "Continuous Borehole Water",
+      "Zero Caution Fee (Youth Housing Concession)",
     ],
     images: [
       "/images/exterior.jpg",
       "/images/living_room.jpg",
       "/images/bedroom.jpg",
     ],
-    pricing: calculatePricing(1200000),
+    pricing: calculatePricing(320000, false),
     mandate: {
       mandate_ref: "HBA-KD-MAL-2026-198",
       manager_name: "HB&A Partners & Co.",
@@ -304,7 +306,13 @@ export function filterSeedListings(
     if (quickFilter === "malali" && l.neighborhood.toLowerCase() !== "malali") {
       return false;
     }
+    if ((quickFilter === "under_300k" || quickFilter === "under-300k") && l.pricing.annual_rent > 300000) {
+      return false;
+    }
     if (quickFilter === "under_600k" && l.pricing.annual_rent > 600000) {
+      return false;
+    }
+    if ((quickFilter === "under-350k" || quickFilter === "under_350k") && l.pricing.total_move_in_cost > 350000) {
       return false;
     }
     if (quickFilter === "under-700k" && l.pricing.total_move_in_cost > 700000) {

@@ -638,15 +638,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <Phone className="h-3 w-3 text-blue-600" />
                     <span>Call Desk</span>
                   </a>
-                  <a
-                    href="https://wa.me/2348031234567"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition-colors"
+                  <Link
+                    href={isAuthenticated ? dashboardHref : "/login"}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 text-xs font-bold transition-colors"
                   >
-                    <MessageSquare className="h-3 w-3 text-emerald-600" />
-                    <span>WhatsApp</span>
-                  </a>
+                    <User className="h-3 w-3 text-blue-600" />
+                    <span>View Profile</span>
+                  </Link>
                 </div>
               </div>
 

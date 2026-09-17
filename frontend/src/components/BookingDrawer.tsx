@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import { Listing } from "@/types/listing";
 import { DaySchedule, TimeSlot, InspectionBookingResponse } from "@/types/booking";
 import {
@@ -19,6 +22,11 @@ import {
   ArrowRight,
   ArrowLeft,
   Zap,
+  UserCheck,
+  Lock,
+  Mail,
+  Phone,
+  User,
 } from "lucide-react";
 
 export interface BookingDrawerProps {
@@ -64,6 +72,42 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [confirmedBooking, setConfirmedBooking] = useState<InspectionBookingResponse | null>(null);
+
+  // Authentication prompt state for post-booking login/signup
+  const { currentUser, isAuthenticated, signIn, signUp } = useAuth();
+  const router = useRouter();
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  const [authMode, setAuthMode] = useState<"signup" | "signin">("signup");
+  const [authName, setAuthName] = useState("");
+  const [authPhone, setAuthPhone] = useState("");
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authLoading, setAuthLoading] = useState(false);
+
+  // Helper to persist booking to local storage and bind with current rental state
+  const saveBookingToStorage = (booking: InspectionBookingResponse) => {
+    try {
+      localStorage.setItem("settlla_tenant_booking", JSON.stringify(booking));
+      localStorage.setItem("settlla_last_booking_listing", JSON.stringify(listing));
+      const currentRentalRaw = localStorage.getItem("settlla_current_rental");
+      let currentRentalObj = currentRentalRaw ? JSON.parse(currentRentalRaw) : {};
+      currentRentalObj.listing = listing;
+      currentRentalObj.booking = booking;
+      localStorage.setItem("settlla_current_rental", JSON.stringify(currentRentalObj));
+    } catch (e) {
+      console.error("Failed to save booking to storage", e);
+    }
+  };
+
+  // Pre-fill tenant details if already logged in
+  useEffect(() => {
+    if (currentUser) {
+      if (!tenantName && currentUser.fullName) setTenantName(currentUser.fullName);
+      if (!tenantPhone && currentUser.phoneNumber) setTenantPhone(currentUser.phoneNumber);
+      if (!tenantEmail && currentUser.email) setTenantEmail(currentUser.email);
+    }
+  }, [currentUser]);
 
   // Reset or initialize when drawer opens
   useEffect(() => {
@@ -233,6 +277,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
       if (res.ok) {
         const data: InspectionBookingResponse = await res.json();
         setConfirmedBooking(data);
+        saveBookingToStorage(data);
         lockSlotLocally(selectedSlot.slot_id);
         setStep(3);
         return;
@@ -273,6 +318,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
       };
 
       setConfirmedBooking(fallbackBooking);
+      saveBookingToStorage(fallbackBooking);
       lockSlotLocally(selectedSlot.slot_id);
       setStep(3);
     } finally {
@@ -296,6 +342,75 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
         }))
       );
     } catch {}
+  }
+
+  function handleDone() {
+    if (confirmedBooking) {
+      saveBookingToStorage(confirmedBooking);
+    }
+
+    if (isAuthenticated) {
+      onClose();
+      router.push("/dashboard/tenant");
+    } else {
+      setAuthName(confirmedBooking?.tenant_name || tenantName);
+      setAuthPhone(confirmedBooking?.tenant_phone || tenantPhone);
+      setAuthEmail(confirmedBooking?.tenant_email || tenantEmail);
+      setAuthPassword("");
+      setAuthError(null);
+      setAuthMode("signup");
+      setShowAuthPrompt(true);
+    }
+  }
+
+  async function handleAuthSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setAuthError(null);
+    setAuthLoading(true);
+
+    try {
+      if (authMode === "signup") {
+        if (!authName.trim() || !authPhone.trim() || !authEmail.trim()) {
+          setAuthError("Please provide your full legal name, phone number, and email.");
+          setAuthLoading(false);
+          return;
+        }
+
+        signUp({
+          role: "tenant",
+          fullName: authName.trim(),
+          phoneNumber: authPhone.trim(),
+          email: authEmail.trim(),
+          password: authPassword.trim() || "password123",
+          relocationContext,
+        });
+      } else {
+        if (!authEmail.trim()) {
+          setAuthError("Please enter your email address.");
+          setAuthLoading(false);
+          return;
+        }
+
+        signIn(authEmail.trim(), "tenant", authPassword.trim() || undefined);
+      }
+
+      if (confirmedBooking) {
+        saveBookingToStorage(confirmedBooking);
+      }
+
+      setShowAuthPrompt(false);
+      onClose();
+      router.push("/dashboard/tenant");
+    } catch (err: any) {
+      setAuthError(err?.message || "Authentication failed. Please try again.");
+    } finally {
+      setAuthLoading(false);
+    }
+  }
+
+  function handleSkipAuth() {
+    setShowAuthPrompt(false);
+    onClose();
   }
 
   if (!isOpen) return null;
@@ -712,15 +827,14 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                     <p className="font-bold text-slate-900">{confirmedBooking.manager_name}</p>
                     <p className="text-slate-500 text-[11px]">{confirmedBooking.manager_accreditation}</p>
                   </div>
-                  <a
-                    href={`https://wa.me/${confirmedBooking.manager_whatsapp}?text=Hello%20${encodeURIComponent(confirmedBooking.manager_name)},%20I%20have%20a%20confirmed%20inspection%20pass%20(${confirmedBooking.booking_id})%20for%20${encodeURIComponent(confirmedBooking.property_title)}%20on%20${encodeURIComponent(confirmedBooking.formatted_date)}%20at%20${encodeURIComponent(confirmedBooking.slot_time)}.`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-3 py-1.5 font-bold text-xs flex items-center gap-1.5 transition-colors shadow-2xs"
+                  <Link
+                    href="/dashboard/agent"
+                    onClick={onClose}
+                    className="rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-3 py-1.5 font-bold text-xs flex items-center gap-1.5 transition-colors shadow-2xs"
                   >
-                    <MessageSquare className="h-3.5 w-3.5 text-emerald-600" />
-                    <span>WhatsApp Manager</span>
-                  </a>
+                    <UserCheck className="h-3.5 w-3.5 text-blue-600" />
+                    <span>View Agent Profile</span>
+                  </Link>
                 </div>
               </div>
 
@@ -755,8 +869,8 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={onClose}
-                  className="w-full sm:w-auto rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-semibold px-4 py-3 text-xs transition-colors"
+                  onClick={handleDone}
+                  className="w-full sm:w-auto rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-bold px-5 py-3 text-xs transition-colors cursor-pointer shadow-xs"
                 >
                   Done
                 </button>
@@ -784,6 +898,192 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
           </div>
         )}
       </div>
+
+      {/* Post-Booking Auth Prompt Modal */}
+      {showAuthPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
+          <div
+            className="relative w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 sm:p-7 shadow-2xl overflow-hidden text-slate-900"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close / Dismiss button */}
+            <button
+              type="button"
+              onClick={handleSkipAuth}
+              className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors cursor-pointer"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            {/* Modal Header */}
+            <div className="text-center mb-5">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 border border-blue-200 text-blue-600 mb-3 shadow-xs">
+                <ShieldCheck className="h-6 w-6 text-blue-600" />
+              </div>
+              <h3 className="text-lg font-black text-slate-900">
+                Save Your Inspection Pass
+              </h3>
+              <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                Create a free account or sign in to save pass{" "}
+                <strong className="text-blue-600 font-mono font-bold">
+                  {confirmedBooking?.booking_id}
+                </strong>
+                , view walkthrough details later at the gate, and proceed with your tenancy agreement at any time.
+              </p>
+            </div>
+
+            {/* Mode Switcher */}
+            <div className="grid grid-cols-2 gap-1 rounded-2xl bg-slate-100 p-1 mb-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode("signup");
+                  setAuthError(null);
+                }}
+                className={`rounded-xl py-2 text-xs font-bold transition-all cursor-pointer ${
+                  authMode === "signup"
+                    ? "bg-white text-slate-900 shadow-xs"
+                    : "text-slate-500 hover:text-slate-900"
+                }`}
+              >
+                Create Account
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode("signin");
+                  setAuthError(null);
+                }}
+                className={`rounded-xl py-2 text-xs font-bold transition-all cursor-pointer ${
+                  authMode === "signin"
+                    ? "bg-white text-slate-900 shadow-xs"
+                    : "text-slate-500 hover:text-slate-900"
+                }`}
+              >
+                Sign In
+              </button>
+            </div>
+
+            {authError && (
+              <div className="mb-4 rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
+                <span>{authError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleAuthSubmit} className="space-y-3.5 text-left">
+              {authMode === "signup" && (
+                <>
+                  <div>
+                    <label className="text-[11px] uppercase font-bold text-slate-500 block mb-1">
+                      Full Legal Name
+                    </label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <input
+                        type="text"
+                        required
+                        value={authName}
+                        onChange={(e) => setAuthName(e.target.value)}
+                        placeholder="e.g. Aminu Bello"
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 py-2.5 text-xs font-semibold text-slate-900 focus:bg-white focus:border-blue-500 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] uppercase font-bold text-slate-500 block mb-1">
+                      WhatsApp Phone Number
+                    </label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <input
+                        type="tel"
+                        required
+                        value={authPhone}
+                        onChange={(e) => setAuthPhone(e.target.value)}
+                        placeholder="e.g. 0803 123 4567"
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 py-2.5 text-xs font-semibold text-slate-900 focus:bg-white focus:border-blue-500 outline-none"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <div>
+                <label className="text-[11px] uppercase font-bold text-slate-500 block mb-1">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <input
+                    type="email"
+                    required
+                    value={authEmail}
+                    onChange={(e) => setAuthEmail(e.target.value)}
+                    placeholder="e.g. tenant@example.com"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 py-2.5 text-xs font-semibold text-slate-900 focus:bg-white focus:border-blue-500 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[11px] uppercase font-bold text-slate-500 block mb-1">
+                  {authMode === "signup" ? "Create Password" : "Password"}
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <input
+                    type="password"
+                    required
+                    value={authPassword}
+                    onChange={(e) => setAuthPassword(e.target.value)}
+                    placeholder={
+                      authMode === "signup"
+                        ? "Choose a secure password"
+                        : "Enter your password"
+                    }
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 py-2.5 text-xs font-semibold text-slate-900 focus:bg-white focus:border-blue-500 outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Value prop pills */}
+              <div className="rounded-2xl bg-blue-50/70 border border-blue-100 p-3 space-y-1.5 text-[11px] text-slate-700">
+                <div className="flex items-center gap-1.5 font-bold text-blue-900">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                  <span>Access gate pass &amp; location anytime</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-slate-600">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                  <span>Start legal tenancy agreement with 1 click</span>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={authLoading}
+                className="w-full rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 text-xs sm:text-sm shadow-lg shadow-blue-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                <span>
+                  {authMode === "signup"
+                    ? "Save Pass & Create Tenant Account"
+                    : "Sign In & Access Pass"}
+                </span>
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </form>
+
+            <button
+              type="button"
+              onClick={handleSkipAuth}
+              className="mt-3 w-full text-center text-[11px] font-semibold text-slate-400 hover:text-slate-600 py-1 transition-colors cursor-pointer"
+            >
+              Skip for now &amp; exit as guest
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

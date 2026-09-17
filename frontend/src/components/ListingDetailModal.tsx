@@ -240,21 +240,12 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
                     </td>
                   </tr>
                   <tr>
-                    <td className="py-3.5 px-4 font-semibold text-slate-800">Legal Documentation Fee</td>
+                    <td className="py-3.5 px-4 font-semibold text-slate-800">Legal &amp; Agency Fee</td>
                     <td className="py-3.5 px-4 text-slate-500">
-                      5% Statutory Tenancy Agreement drafting &amp; stamp duty
+                      15% Statutory tenancy drafting, stamp duty &amp; professional management under HB&amp;A mandate
                     </td>
                     <td className="py-3.5 px-4 text-right font-bold text-slate-800">
-                      {formatNaira(listing.pricing.legal_fee)}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="py-3.5 px-4 font-semibold text-slate-800">Property Management / Agency</td>
-                    <td className="py-3.5 px-4 text-slate-500">
-                      10% Professional management under HB&amp;A mandate
-                    </td>
-                    <td className="py-3.5 px-4 text-right font-bold text-slate-800">
-                      {formatNaira(listing.pricing.agency_fee)}
+                      {formatNaira(listing.pricing.legal_and_agency_fee || (listing.pricing.legal_fee + listing.pricing.agency_fee))}
                     </td>
                   </tr>
                   <tr className="bg-emerald-50 text-emerald-900">
@@ -320,29 +311,29 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
             </div>
           </div>
 
-          {/* Direct Renting vs Optional Visiting Windows */}
+          {/* Bottom Banner: Direct Rent & Optional Inspection */}
           <div className="rounded-3xl border border-blue-200 bg-gradient-to-br from-blue-50/70 via-slate-50 to-white p-6 shadow-xs">
-            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
+            <div className="flex flex-col gap-4">
+              <div className="w-full">
+                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                   <span className="text-xs font-bold text-blue-700 uppercase tracking-wider">
                     Flexible Move-In Options
                   </span>
-                  <span className="rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.2">
+                  <span className="rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2.5 py-0.5">
                     Inspection Not Compulsory
                   </span>
                 </div>
-                <h4 className="text-base font-bold text-slate-900">
+                <h4 className="text-base sm:text-lg font-bold text-slate-900">
                   Ready to Rent? Apply Directly or Book an Optional Tour
                 </h4>
-                <p className="text-xs text-slate-600 mt-1 max-w-xl leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
                   You can lease online right now with full 24-hr Key-In-Door Escrow protection. Or, if you prefer an in-person walkthrough, book an official ₦0 visiting window.
                 </p>
-                <div className="mt-2 flex flex-wrap gap-2">
+                <div className="mt-3 flex flex-wrap gap-2">
                   {listing.visiting_windows.map((win, idx) => (
                     <span
                       key={idx}
-                      className="flex items-center gap-1 rounded-lg bg-white px-2.5 py-1 text-[11px] text-slate-700 border border-slate-200 font-medium"
+                      className="flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs text-slate-700 border border-slate-200 font-medium shadow-2xs"
                     >
                       <Calendar className="h-3.5 w-3.5 text-slate-500" />
                       <span><strong>{win.day}:</strong> {win.hours}</span>
@@ -351,12 +342,13 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full lg:w-auto flex-shrink-0">
+              {/* Action buttons placed underneath */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2 w-full">
                 {onDraftAgreement && (
                   <button
                     type="button"
                     onClick={() => onDraftAgreement(listing)}
-                    className="rounded-xl bg-blue-600 hover:bg-blue-700 px-5 py-3.5 text-xs sm:text-sm font-bold text-white transition-all shadow-md shadow-blue-500/25 hover:shadow-blue-500/35 cursor-pointer text-center flex items-center justify-center gap-2"
+                    className="flex-1 rounded-xl bg-blue-600 hover:bg-blue-700 px-5 py-3.5 text-xs sm:text-sm font-bold text-white transition-all shadow-md shadow-blue-500/25 hover:shadow-blue-500/35 cursor-pointer text-center flex items-center justify-center gap-2"
                   >
                     <Zap className="h-4 w-4 text-amber-300" />
                     <span>Instant Rent (Skip Inspection)</span>
@@ -366,9 +358,10 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
                 <button
                   type="button"
                   onClick={() => onBookInspection(listing)}
-                  className="rounded-xl border border-slate-300 bg-white hover:bg-slate-50 px-4 py-3.5 text-xs sm:text-sm font-bold text-slate-800 transition-colors cursor-pointer text-center"
+                  className="flex-1 sm:flex-initial rounded-xl border border-slate-300 bg-white hover:bg-slate-50 px-5 py-3.5 text-xs sm:text-sm font-bold text-slate-800 transition-colors cursor-pointer text-center flex items-center justify-center gap-2"
                 >
-                  Book Free Tour (Optional)
+                  <Calendar className="h-4 w-4 text-slate-500" />
+                  <span>Book Free Tour</span>
                 </button>
               </div>
             </div>

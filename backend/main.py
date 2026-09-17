@@ -53,6 +53,7 @@ class PricingBreakdownModel(BaseModel):
     annual_rent: int
     caution_fee: int
     has_caution_fee: bool = True
+    legal_and_agency_fee: int = 0
     legal_fee: int
     agency_fee: int
     total_move_in_cost: int
@@ -84,14 +85,16 @@ def build_listing_model(raw: dict) -> ListingModel:
     rent = int(raw["annual_rent"])
     has_caution = raw.get("has_caution_fee", True)
     caution = int(round(rent * 0.10)) if has_caution else 0
+    legal_and_agency = int(round(rent * 0.15))
     legal = int(round(rent * 0.05))
-    agency = int(round(rent * 0.10))
-    total = rent + caution + legal + agency
+    agency = legal_and_agency - legal
+    total = rent + caution + legal_and_agency
 
     pricing = PricingBreakdownModel(
         annual_rent=rent,
         caution_fee=caution,
         has_caution_fee=has_caution,
+        legal_and_agency_fee=legal_and_agency,
         legal_fee=legal,
         agency_fee=agency,
         total_move_in_cost=total,
@@ -163,8 +166,9 @@ def get_listings(
             if qf == "near-gtbank":
                 if "gtbank" not in item.commute_badge.lower():
                     continue
-            elif qf == "under-700k":
-                if item.pricing.total_move_in_cost > 700000:
+            elif qf in ("under-300k", "under_300k", "under-350k", "under_350k", "under-700k"):
+                limit = 350000 if "350" in qf else (300000 if "300" in qf else 700000)
+                if item.pricing.total_move_in_cost > limit:
                     continue
             elif qf == "borehole":
                 if not any("borehole" in a.lower() for a in item.amenities):
@@ -1770,12 +1774,13 @@ def seed_initial_agreements():
         "lease_end_date": "2027-09-30",
         "tenure_months": 12,
         "pricing": {
-            "annual_rent": 500000,
-            "caution_fee": 50000,
-            "legal_fee": 25000,
-            "agency_fee": 50000,
-            "total_move_in_cost": 625000,
-            "service_charge": 45000
+            "annual_rent": 240000,
+            "caution_fee": 24000,
+            "legal_and_agency_fee": 36000,
+            "legal_fee": 12000,
+            "agency_fee": 24000,
+            "total_move_in_cost": 300000,
+            "service_charge": 20000
         },
         "covenants": [
             {
@@ -1789,8 +1794,8 @@ def seed_initial_agreements():
             }
         ],
         "manager_mandate_clause": "Executed by HB&A Partners under Registered Mandate Ref: MANDATE-HBA-2026-KD01.",
-        "escrow_clause": "Net rent of ₦500,000 is locked in Settlla Escrow until key handover confirmation.",
-        "caution_ringfencing_clause": "Caution deposit of ₦50,000 is ringfenced in Settlla Merchant Reserve.",
+        "escrow_clause": "Net rent of ₦240,000 is locked in Settlla Escrow until key handover confirmation.",
+        "caution_ringfencing_clause": "Caution deposit of ₦24,000 is ringfenced in Settlla Merchant Reserve.",
         "full_legal_text": "THIS RESIDENTIAL TENANCY INDENTURE is made this 1st day of October 2026...",
         "status": "fully_executed",
         "created_at": "2026-09-16 09:00:00",
@@ -1883,7 +1888,7 @@ def ai_search_endpoint(q: str = Query(..., description="Natural language search 
             val *= 1000000
         elif 100 < val < 2000:
             val *= 1000
-        if 200000 <= val <= 10000000:
+        if 100000 <= val <= 10000000:
             budget = int(val)
 
     # 4. Amenities

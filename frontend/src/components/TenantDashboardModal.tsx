@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { Listing } from "@/types/listing";
 import { TenancyAgreement } from "@/types/agreement";
@@ -21,6 +22,10 @@ import {
   MessageSquare,
   ArrowRight,
   Info,
+  UserCheck,
+  Zap,
+  Timer,
+  Key,
 } from "lucide-react";
 
 interface TenantDashboardModalProps {
@@ -54,7 +59,7 @@ export const TenantDashboardModal: React.FC<TenantDashboardModalProps> = ({
   const [activeTab, setActiveTab] = useState<"overview" | "agreements" | "escrow" | "bookings" | "payments">("overview");
 
   // Local state for mock inspections if any created
-  const [mockBookings] = useState<InspectionBookingResponse[]>([
+  const [mockBookings, setMockBookings] = useState<InspectionBookingResponse[]>([
     {
       booking_id: "SETT-BK-7824",
       listing_id: listings[0]?.id || "prop_barnawa_01",
@@ -79,6 +84,56 @@ export const TenantDashboardModal: React.FC<TenantDashboardModalProps> = ({
       created_at: new Date().toISOString(),
     },
   ]);
+  const [isInspectionCancelled, setIsInspectionCancelled] = useState(false);
+  const [keyConfirmed, setKeyConfirmed] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("settlla_key_confirmed") === "true";
+    }
+    return false;
+  });
+
+  const [stayTimeRemaining, setStayTimeRemaining] = useState({
+    days: 364,
+    hours: 23,
+    minutes: 59,
+    seconds: 59,
+  });
+
+  React.useEffect(() => {
+    if (!keyConfirmed) return;
+    let confirmedAt = Date.now();
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("settlla_key_confirmed_at");
+      if (stored) {
+        confirmedAt = parseInt(stored, 10) || Date.now();
+      }
+    }
+    const leaseEndTimestamp = confirmedAt + 365 * 24 * 60 * 60 * 1000;
+    const tick = () => {
+      const now = Date.now();
+      const diff = Math.max(0, leaseEndTimestamp - now);
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+      setStayTimeRemaining({ days, hours, minutes, seconds });
+    };
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [keyConfirmed]);
+
+  const handleCancelInspection = (bookingId?: string) => {
+    if (bookingId) {
+      setMockBookings((prev) => prev.filter((b) => b.booking_id !== bookingId));
+    } else {
+      setMockBookings([]);
+    }
+    setIsInspectionCancelled(true);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("settlla_tenant_booking");
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -491,23 +546,71 @@ export const TenantDashboardModal: React.FC<TenantDashboardModalProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-3 border-t border-slate-100 text-xs">
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100 text-xs">
                     <div>
                       <span className="text-slate-400 block text-[10px] uppercase font-bold">Host / Manager</span>
                       <span className="font-bold text-slate-800">{b.manager_name}</span>
                     </div>
-                    <a
-                      href={`https://wa.me/${b.manager_whatsapp}?text=Hello%20${encodeURIComponent(b.manager_name)},%20I%20have%20an%20inspection%20pass%20(${b.booking_id})%20for%20${encodeURIComponent(b.property_title)}.`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 px-3 py-1.5 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
-                    >
-                      <MessageSquare className="w-3.5 h-3.5" />
-                      <span>WhatsApp Host</span>
-                    </a>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onClose();
+                          if (onOpenAgreementViewer) {
+                            onOpenAgreementViewer(currentHome);
+                          }
+                        }}
+                        className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                      >
+                        <Zap className="w-3.5 h-3.5 text-amber-300" />
+                        <span>Proceed to Rent</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleCancelInspection(b.booking_id)}
+                        className="rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 px-3 py-1.5 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                        <span>Cancel Inspection</span>
+                      </button>
+                      <Link
+                        href="/dashboard/agent"
+                        onClick={onClose}
+                        className="rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 px-3 py-1.5 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                      >
+                        <UserCheck className="w-3.5 h-3.5 text-blue-600" />
+                        <span>View Agent Profile</span>
+                      </Link>
+                    </div>
                   </div>
                 </div>
               ))}
+
+              {mockBookings.length === 0 && (
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center space-y-2">
+                  <h4 className="text-sm font-bold text-slate-900">
+                    {isInspectionCancelled ? "Walkthrough Tour Cancelled" : "No Active Inspections"}
+                  </h4>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                    {isInspectionCancelled
+                      ? "Inspection cancelled. You are protected by Settlla's 24-hr Key-In-Door Escrow custody and can proceed directly to rent."
+                      : "No scheduled walkthroughs on file. You can lease directly online with escrow custody."}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      if (onOpenAgreementViewer) {
+                        onOpenAgreementViewer(currentHome);
+                      }
+                    }}
+                    className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 font-bold text-xs inline-flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs mt-1"
+                  >
+                    <Zap className="w-3.5 h-3.5 text-amber-300" />
+                    <span>Proceed to Rent ({currentHome.title})</span>
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

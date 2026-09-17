@@ -25,6 +25,7 @@ import {
   MessageSquare,
   Scale,
   Sparkles,
+  UserCheck,
 } from "lucide-react";
 
 export default function AgentDashboardPage() {
@@ -546,22 +547,18 @@ export default function AgentDashboardPage() {
                     Total Move-In: ₦{calculatedPricing.total_move_in_cost.toLocaleString("en-NG")}
                   </span>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
                   <div className="bg-white p-2.5 rounded-xl border border-slate-200">
                     <span className="text-slate-500 block text-[10px]">Net Rent:</span>
                     <strong>₦{calculatedPricing.annual_rent.toLocaleString("en-NG")}</strong>
                   </div>
                   <div className="bg-white p-2.5 rounded-xl border border-slate-200">
-                    <span className="text-slate-500 block text-[10px]">Caution (10%):</span>
-                    <strong>₦{calculatedPricing.caution_fee.toLocaleString("en-NG")}</strong>
+                    <span className="text-slate-500 block text-[10px]">Caution ({calculatedPricing.caution_fee > 0 ? "10%" : "₦0 Waived"}):</span>
+                    <strong>{calculatedPricing.caution_fee > 0 ? `₦${calculatedPricing.caution_fee.toLocaleString("en-NG")}` : "₦0 (Waived)"}</strong>
                   </div>
                   <div className="bg-white p-2.5 rounded-xl border border-slate-200">
-                    <span className="text-slate-500 block text-[10px]">Legal (5%):</span>
-                    <strong>₦{calculatedPricing.legal_fee.toLocaleString("en-NG")}</strong>
-                  </div>
-                  <div className="bg-white p-2.5 rounded-xl border border-slate-200">
-                    <span className="text-slate-500 block text-[10px]">Agency (10%):</span>
-                    <strong>₦{calculatedPricing.agency_fee.toLocaleString("en-NG")}</strong>
+                    <span className="text-slate-500 block text-[10px]">Legal &amp; Agency Fee (15%):</span>
+                    <strong>₦{(calculatedPricing.legal_and_agency_fee || (calculatedPricing.legal_fee + calculatedPricing.agency_fee)).toLocaleString("en-NG")}</strong>
                   </div>
                 </div>
               </div>
@@ -769,15 +766,13 @@ export default function AgentDashboardPage() {
                   Meeting at gate. Remember: 100% Free Walkthrough (₦0). Zero roadside fee allowed.
                 </span>
 
-                <a
-                  href="https://wa.me/2348031234567"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 px-3.5 py-2 font-bold text-xs transition-colors"
+                <Link
+                  href="/dashboard/tenant"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 px-3.5 py-2 font-bold text-xs transition-colors"
                 >
-                  <MessageSquare className="h-3.5 w-3.5" />
-                  <span>WhatsApp Prospective Tenant</span>
-                </a>
+                  <UserCheck className="h-3.5 w-3.5 text-blue-600" />
+                  <span>View Tenant Profile</span>
+                </Link>
               </div>
             </div>
           </div>

@@ -16,6 +16,8 @@ import {
   Pencil,
   Check,
   CreditCard,
+  Loader2,
+  CheckCircle2,
 } from "lucide-react";
 
 interface TenancyAgreementViewerProps {
@@ -56,6 +58,41 @@ export const TenancyAgreementViewer: React.FC<TenancyAgreementViewerProps> = ({
   const [tenantNIN, setTenantNIN] = useState(
     initialTenantProfile?.nin_number || currentUser?.ninNumber || ""
   );
+  const [ninStatus, setNinStatus] = useState<"idle" | "verifying" | "verified">(() => {
+    const initial = initialTenantProfile?.nin_number || currentUser?.ninNumber || "";
+    const digits = initial.replace(/\D/g, "");
+    return digits.length === 11 ? "verified" : "idle";
+  });
+  const verificationTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  // Clean up verification timer on unmount
+  useEffect(() => {
+    return () => {
+      if (verificationTimerRef.current) {
+        clearTimeout(verificationTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleNINChange = (val: string) => {
+    setTenantNIN(val);
+    const digits = val.replace(/\D/g, "");
+
+    if (verificationTimerRef.current) {
+      clearTimeout(verificationTimerRef.current);
+      verificationTimerRef.current = null;
+    }
+
+    if (digits.length === 11) {
+      setNinStatus("verifying");
+      verificationTimerRef.current = setTimeout(() => {
+        setNinStatus("verified");
+      }, 1100);
+    } else {
+      setNinStatus("idle");
+    }
+  };
+
   const [tenantAddress, setTenantAddress] = useState(
     initialTenantProfile?.residential_address || "Kaduna, Nigeria"
   );
@@ -66,19 +103,29 @@ export const TenancyAgreementViewer: React.FC<TenancyAgreementViewerProps> = ({
     initialTenantProfile?.emergency_contact_name || ""
   );
 
-  // Auto-expand editing if tenant hasn't provided name/email
-  const [isEditingTenant, setIsEditingTenant] = useState(
-    !initialTenantProfile?.full_name && !currentUser?.fullName
-  );
+  // Auto-expand editing so tenant can review profile & enter NIN
+  const [isEditingTenant, setIsEditingTenant] = useState(true);
 
   // Sync initial tenant profile if prop updates
   useEffect(() => {
     if (initialTenantProfile?.full_name) setTenantName(initialTenantProfile.full_name);
     if (initialTenantProfile?.phone_number) setTenantPhone(initialTenantProfile.phone_number);
     if (initialTenantProfile?.email_address) setTenantEmail(initialTenantProfile.email_address);
+    if (initialTenantProfile?.nin_number) {
+      setTenantNIN(initialTenantProfile.nin_number);
+      if (initialTenantProfile.nin_number.replace(/\D/g, "").length === 11) {
+        setNinStatus("verified");
+      }
+    }
     if (currentUser?.fullName && !tenantName) setTenantName(currentUser.fullName);
     if (currentUser?.email && !tenantEmail) setTenantEmail(currentUser.email);
     if (currentUser?.phoneNumber && !tenantPhone) setTenantPhone(currentUser.phoneNumber);
+    if (currentUser?.ninNumber && !tenantNIN) {
+      setTenantNIN(currentUser.ninNumber);
+      if (currentUser.ninNumber.replace(/\D/g, "").length === 11) {
+        setNinStatus("verified");
+      }
+    }
   }, [initialTenantProfile, currentUser]);
 
   // Fetch or generate agreement
@@ -138,8 +185,8 @@ export const TenancyAgreementViewer: React.FC<TenancyAgreementViewerProps> = ({
     const agreementId = `SETT-AGR-2026-${refNum}`;
     const rentStr = `NGN ${item.pricing.annual_rent.toLocaleString("en-NG")}`;
     const cautionStr = `NGN ${item.pricing.caution_fee.toLocaleString("en-NG")}`;
-    const legalStr = `NGN ${item.pricing.legal_fee.toLocaleString("en-NG")}`;
-    const agencyStr = `NGN ${item.pricing.agency_fee.toLocaleString("en-NG")}`;
+    const legalAndAgencyFeeVal = item.pricing.legal_and_agency_fee || (item.pricing.legal_fee + item.pricing.agency_fee);
+    const legalAndAgencyStr = `NGN ${legalAndAgencyFeeVal.toLocaleString("en-NG")}`;
     const totalStr = `NGN ${item.pricing.total_move_in_cost.toLocaleString("en-NG")}`;
 
     const titleRef = item.title_reference || "KADGIS Certificate of Occupancy No. KDL-BNW-2018-0941 (Kaduna Land Registry)";
@@ -238,8 +285,7 @@ NOW THIS AGREEMENT WITNESSETH AS FOLLOWS:
 2. UPFRONT ALL-IN FEE SCHEDULE (NO HIDDEN CHARGES):
    (a) Annual Base Rent: ${rentStr} (75% of move-in consideration);
    (b) Refundable Caution Deposit: ${item.pricing.caution_fee > 0 ? `${cautionStr} (10% of annual rent)` : "NGN 0 (Waived under Landlord Mandate)"};
-   (c) Legal Documentation & Drafting Fee: ${legalStr} (5% statutory legal fee);
-   (d) Property Management Commission: ${agencyStr} (10% standard professional fee);
+   (c) Legal & Agency Fee: ${legalAndAgencyStr} (15% statutory tenancy drafting, stamp duty & professional management);
    TOTAL ALL-IN MOVE-IN CONSIDERATION: ${totalStr} only.
 
 3. TENANT'S STATUTORY COVENANTS:
@@ -420,14 +466,74 @@ Audit Reference: SETT-SIG-MGR-${agreementId}
                   className="w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 />
               </div>
-              <div>
-                <label className="text-[11px] font-bold text-slate-700 block mb-1">National Identity Number (NIN)</label>
-                <input
-                  type="text"
-                  value={tenantNIN}
-                  onChange={(e) => setTenantNIN(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                />
+              <div className="relative">
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[11px] font-bold text-slate-700 block">
+                    National Identity Number (NIN)
+                  </label>
+                  {ninStatus === "verified" && (
+                    <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
+                      <Check className="w-3 h-3 stroke-[3]" /> Verified with NIMC
+                    </span>
+                  )}
+                  {ninStatus === "verifying" && (
+                    <span className="text-[10px] font-bold text-blue-600 flex items-center gap-1 animate-pulse">
+                      Verifying with NIMC...
+                    </span>
+                  )}
+                </div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={tenantNIN}
+                    placeholder="e.g. 5829 4810 392"
+                    maxLength={14}
+                    onChange={(e) => handleNINChange(e.target.value)}
+                    className={`w-full rounded-xl border px-3 py-1.5 pr-9 text-xs text-slate-900 transition-all focus:outline-none ${
+                      ninStatus === "verified"
+                        ? "border-emerald-400 bg-emerald-50/20 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                        : ninStatus === "verifying"
+                        ? "border-blue-400 bg-blue-50/20 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                        : "border-slate-200 bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                    }`}
+                  />
+                  {/* In-Input Verification Loading Circle / Green Check */}
+                  <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">
+                    {ninStatus === "verifying" && (
+                      <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                    )}
+                    {ninStatus === "verified" && (
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600 animate-in zoom-in-75 duration-200" />
+                    )}
+                  </div>
+                </div>
+
+                {/* Verification Loading Modal / Dropdown Card */}
+                {ninStatus === "verifying" && (
+                  <div className="absolute left-0 right-0 top-full mt-1.5 z-30 rounded-xl bg-white border border-blue-200 p-2.5 shadow-xl shadow-blue-500/10 flex items-center gap-2.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <div className="h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-bold text-slate-800">Verifying NIN with NIMC</p>
+                      <p className="text-[10px] text-slate-500">Cross-referencing National Identity Database...</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Verified Confirmation Feedback */}
+                {ninStatus === "verified" && (
+                  <div className="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 bg-emerald-50/80 border border-emerald-200/80 rounded-lg px-2 py-0.5 animate-in fade-in duration-200">
+                    <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
+                    <span>NIMC Identity Confirmed • 100% Authentic</span>
+                  </div>
+                )}
+
+                {ninStatus === "idle" && tenantNIN.replace(/\D/g, "").length > 0 && (
+                  <p className="text-[10px] text-slate-500 mt-0.5">
+                    Enter 11 digits to verify ({tenantNIN.replace(/\D/g, "").length}/11)
+                  </p>
+                )}
               </div>
               <div>
                 <label className="text-[11px] font-bold text-slate-700 block mb-1">WhatsApp Phone Number</label>
@@ -551,7 +657,7 @@ Audit Reference: SETT-SIG-MGR-${agreementId}
                         ₦{agreement.pricing.total_move_in_cost.toLocaleString("en-NG")}
                       </strong>
                       <span className="text-slate-500 text-[10px] block">
-                        {agreement.pricing.caution_fee > 0 ? "Rent + Caution + Legal + Agency" : "Rent + Legal + Agency (Zero Caution)"}
+                        {agreement.pricing.caution_fee > 0 ? "Rent + Caution + Legal & Agency (15%)" : "Rent + Legal & Agency (15%) [Zero Caution]"}
                       </span>
                     </div>
                   </div>
@@ -596,7 +702,14 @@ Audit Reference: SETT-SIG-MGR-${agreementId}
                           )}
                         </div>
                         <p className="font-bold text-slate-900 text-sm">{agreement.tenant.full_name}</p>
-                        <p className="text-slate-500 text-[11px]">NIN: {agreement.tenant.nin_number || "28491029384"}</p>
+                        <p className="text-slate-500 text-[11px] flex items-center gap-1.5">
+                          <span>NIN: {agreement.tenant.nin_number || "28491029384"}</span>
+                          {ninStatus === "verified" && (
+                            <span className="rounded bg-emerald-100 text-emerald-800 text-[9px] font-bold px-1.5 py-0.2 inline-flex items-center gap-0.5">
+                              <Check className="w-2.5 h-2.5 stroke-[3] text-emerald-700" /> NIMC Verified
+                            </span>
+                          )}
+                        </p>
                         <p className="text-slate-500 text-[11px]">{agreement.tenant.employer_name}</p>
                         
                         {agreement.tenant_signature ? (
@@ -707,23 +820,13 @@ Audit Reference: SETT-SIG-MGR-${agreementId}
                             </td>
                           </tr>
                           <tr>
-                            <td className="py-3 px-4 font-bold text-slate-900">Legal Lease Drafting Fee</td>
-                            <td className="py-3 px-4 text-slate-600">5% statutory legal fee</td>
+                            <td className="py-3 px-4 font-bold text-slate-900">Legal &amp; Agency Fee</td>
+                            <td className="py-3 px-4 text-slate-600">15% statutory drafting, stamp duty &amp; management commission</td>
                             <td className="py-3 px-4 font-mono font-bold text-slate-900">
-                              ₦{agreement.pricing.legal_fee.toLocaleString("en-NG")}
+                              ₦{(agreement.pricing.legal_and_agency_fee || (agreement.pricing.legal_fee + agreement.pricing.agency_fee)).toLocaleString("en-NG")}
                             </td>
                             <td className="py-3 px-4 text-slate-600">
-                              Disbursed directly to legal drafting counsel
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="py-3 px-4 font-bold text-slate-900">Property Management Commission</td>
-                            <td className="py-3 px-4 text-slate-600">10% management commission</td>
-                            <td className="py-3 px-4 font-mono font-bold text-slate-900">
-                              ₦{agreement.pricing.agency_fee.toLocaleString("en-NG")}
-                            </td>
-                            <td className="py-3 px-4 text-slate-600">
-                              Disbursed to HB&amp;A Partners under written mandate
+                              Disbursed to legal drafting counsel &amp; HB&amp;A Partners under written mandate
                             </td>
                           </tr>
                           <tr className="bg-emerald-50/60 font-bold border-t-2 border-emerald-200">

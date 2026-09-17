@@ -417,7 +417,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                     {/* 1. Rent in Escrow (75%) */}
                     <div className="rounded-2xl border-2 border-emerald-200 bg-emerald-50/50 p-4 space-y-2">
                       <div className="flex items-center justify-between">
@@ -470,41 +470,22 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                       </span>
                     </div>
 
-                    {/* 3. Agency Commission (10%) */}
+                    {/* 3. Legal & Agency Fee (15%) */}
                     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-slate-600 uppercase">3. Agency Fee (10%)</span>
+                        <span className="text-[10px] font-bold text-slate-600 uppercase">3. Legal &amp; Agency Fee (15%)</span>
                         <span className="rounded bg-slate-200 text-slate-800 text-[10px] font-black px-1.5 py-0.5">
                           Disbursed
                         </span>
                       </div>
                       <strong className="text-lg font-black text-slate-900 block">
-                        ₦{transaction.split_breakdown.property_agency_fee.toLocaleString("en-NG")}
+                        ₦{(transaction.split_breakdown.property_agency_fee + transaction.split_breakdown.legal_drafting_fee).toLocaleString("en-NG")}
                       </strong>
                       <p className="text-slate-600 text-[11px] leading-relaxed">
-                        Remitted directly to HB&amp;A Partners sub-account (Stanbic IBTC).
+                        Remitted directly to HB&amp;A Partners &amp; drafting counsel for Kaduna tenancy indenture execution.
                       </p>
                       <span className="text-[10px] text-slate-500 font-mono block">
-                        Subaccount: ACCT_mp72kd90
-                      </span>
-                    </div>
-
-                    {/* 4. Legal Drafting Fee (5%) */}
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-slate-600 uppercase">4. Legal Fee (5%)</span>
-                        <span className="rounded bg-slate-200 text-slate-800 text-[10px] font-black px-1.5 py-0.5">
-                          Disbursed
-                        </span>
-                      </div>
-                      <strong className="text-lg font-black text-slate-900 block">
-                        ₦{transaction.split_breakdown.legal_drafting_fee.toLocaleString("en-NG")}
-                      </strong>
-                      <p className="text-slate-600 text-[11px] leading-relaxed">
-                        Remitted to drafting counsel for Kaduna tenancy indenture execution.
-                      </p>
-                      <span className="text-[10px] text-slate-500 font-mono block">
-                        Subaccount: ACCT_leg9482
+                        Subaccounts: Stanbic (Agency) &bull; Zenith (Legal)
                       </span>
                     </div>
                   </div>
@@ -604,23 +585,13 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                           </td>
                         </tr>
                         <tr>
-                          <td className="py-3 px-3 font-bold text-slate-900">Property Management Commission</td>
-                          <td className="py-3 px-3 text-slate-600 font-bold">10%</td>
+                          <td className="py-3 px-3 font-bold text-slate-900">Legal &amp; Agency Fee</td>
+                          <td className="py-3 px-3 text-slate-600 font-bold">15%</td>
                           <td className="py-3 px-3 font-mono font-bold text-slate-900">
-                            ₦{agency.toLocaleString("en-NG")}
+                            ₦{(listing.pricing.legal_and_agency_fee || (legal + agency)).toLocaleString("en-NG")}
                           </td>
                           <td className="py-3 px-3 text-slate-600">
-                            Disbursed directly to HB&amp;A Partners under written mandate
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="py-3 px-3 font-bold text-slate-900">Legal Lease Drafting Fee</td>
-                          <td className="py-3 px-3 text-slate-600 font-bold">5%</td>
-                          <td className="py-3 px-3 font-mono font-bold text-slate-900">
-                            ₦{legal.toLocaleString("en-NG")}
-                          </td>
-                          <td className="py-3 px-3 text-slate-600">
-                            Disbursed directly to legal drafting counsel (NBA Kaduna)
+                            Disbursed directly to HB&amp;A Partners &amp; legal drafting counsel under statutory mandate
                           </td>
                         </tr>
                         <tr className="bg-emerald-50/70 border-t-2 border-emerald-200">

@@ -7,7 +7,7 @@ Verified Direct Landlord Mandates with HB&A Partners & Co.
 RAW_LISTINGS = [
     {
         "id": "prop_barnawa_01",
-        "title": "Executive 1-Bedroom Flat at Barnawa Terraces",
+        "title": "Affordable 1-Bedroom Flat at Barnawa Terraces",
         "neighborhood": "Barnawa",
         "zone": "Barnawa GRA",
         "full_address": "Plot 12 Coronation Crescent, Barnawa, Kaduna",
@@ -15,10 +15,10 @@ RAW_LISTINGS = [
         "property_type": "1-Bedroom Flat",
         "bedrooms": 1,
         "bathrooms": 1,
-        "annual_rent": 500000,
+        "annual_rent": 240000,
         "commute_badge": "4 mins to Barnawa Complex / GTBank",
         "commute_context": "Direct 4-minute drive or keke ride to GTBank Barnawa and Barnawa Shopping Complex.",
-        "description": "Tastefully finished modern 1-bedroom flat in a calm, secured residential cul-de-sac. Features dedicated self-billed prepaid electricity, uninterrupted borehole water supply, POP ceilings, fully tiled floors, and perimeter security fencing.",
+        "description": "Tastefully finished 1-bedroom flat ideal for students, NYSC corps members, or young professionals. Features dedicated self-billed prepaid electricity, uninterrupted borehole water supply, POP ceilings, fully tiled floors, and perimeter security fencing.",
         "amenities": [
             "Dedicated Prepaid Meter (Self-Billed)",
             "Borehole Water + 5,000L Overhead Tank",
@@ -45,7 +45,7 @@ RAW_LISTINGS = [
     },
     {
         "id": "prop_barnawa_02",
-        "title": "Serviced 2-Bedroom Apartment off Barnawa Close",
+        "title": "Serviced 2-Bedroom Flat off Barnawa Close (₦0 Caution)",
         "neighborhood": "Barnawa",
         "zone": "Barnawa Phase 1",
         "full_address": "8 Barnawa Close, near GTBank Branch, Kaduna",
@@ -53,18 +53,18 @@ RAW_LISTINGS = [
         "property_type": "2-Bedroom Flat",
         "bedrooms": 2,
         "bathrooms": 2,
-        "annual_rent": 750000,
+        "annual_rent": 300000,
         "has_caution_fee": False,
         "commute_badge": "2 mins walk to GTBank Barnawa Branch",
         "commute_context": "Walking distance (approx 200m) to GTBank Barnawa branch and commercial axis.",
-        "description": "Spacious serviced 2-bedroom flat with both rooms ensuite. Complete with fitted kitchen, automated borehole water system, dedicated prepaid meter, and private security guard on site.",
+        "description": "Spacious serviced 2-bedroom flat with both bedrooms ensuite. Complete with fitted kitchen, automated borehole water system, dedicated prepaid meter, and zero caution deposit concession.",
         "amenities": [
             "Independent Prepaid Electric Meter",
             "Automated Borehole Pumping System",
             "Dedicated Security Guardhouse",
             "Fenced & Gated Perimeter",
             "Ensuite Bedrooms with Water Heaters",
-            "Zero Caution Deposit (Landlord Mandate)"
+            "Zero Caution Deposit (Student & Youth Mandate)"
         ],
         "images": [
             "/images/living_room.jpg",
@@ -85,7 +85,7 @@ RAW_LISTINGS = [
     },
     {
         "id": "prop_malali_01",
-        "title": "Contemporary 2-Bedroom Flat in Malali Low Cost",
+        "title": "Student & Corper 2-Bedroom Flat in Malali Low Cost",
         "neighborhood": "Malali",
         "zone": "Malali Low Cost",
         "full_address": "Block 4, Gwari Crescent, Malali Low Cost, Kaduna",
@@ -93,10 +93,10 @@ RAW_LISTINGS = [
         "property_type": "2-Bedroom Flat",
         "bedrooms": 2,
         "bathrooms": 2,
-        "annual_rent": 650000,
+        "annual_rent": 280000,
         "commute_badge": "6 mins to Malali Roundabout / NDA Road",
         "commute_context": "Fast access to Malali Roundabout, NDA Road, and Kaduna metropolis transit points.",
-        "description": "Well-maintained 2-bedroom flat in a quiet residential neighborhood of Malali Low Cost. Constant water from industrial borehole, personal prepaid meter, cross-ventilation, and dedicated generator changeover switch.",
+        "description": "Well-maintained 2-bedroom flat in a calm, student-friendly residential area of Malali Low Cost. Constant water from industrial borehole, personal prepaid meter, cross-ventilation, and dedicated generator changeover switch.",
         "amenities": [
             "Personal Prepaid Meter",
             "Heavy-Duty Industrial Borehole",
@@ -123,7 +123,7 @@ RAW_LISTINGS = [
     },
     {
         "id": "prop_malali_02",
-        "title": "Cozy Studio Mini-Flat along Isa Kaita Extension",
+        "title": "Cozy Studio Mini-Flat for NYSC & Students (₦0 Caution)",
         "neighborhood": "Malali",
         "zone": "Malali GRA Ext.",
         "full_address": "15 Isa Kaita Extension, near Golf Club, Malali, Kaduna",
@@ -131,18 +131,18 @@ RAW_LISTINGS = [
         "property_type": "Mini-flat",
         "bedrooms": 1,
         "bathrooms": 1,
-        "annual_rent": 420000,
+        "annual_rent": 200000,
         "has_caution_fee": False,
         "commute_badge": "3 mins to Kaduna Golf Club / Isa Kaita Road",
         "commute_context": "Strategic central Malali location, 3 minutes from Kaduna Golf Club and recreational hubs.",
-        "description": "Affordable, secure mini-flat suitable for NYSC corps members or single professionals. Features a private kitchenette, clean filtered borehole water, smart prepaid meter, and night security guard.",
+        "description": "Ultra-affordable, secure mini-flat suitable for NYSC corps members or tertiary students. Features a private kitchenette, clean filtered borehole water, smart prepaid meter, and night security guard.",
         "amenities": [
             "Dedicated Smart Prepaid Meter",
             "Clean Borehole Water with Filtration",
             "Night Watchman on Duty",
             "Private Balcony & Cross Ventilation",
             "Fully Tiled Interior",
-            "Zero Caution Fee (NYSC & Youth Concession)"
+            "Zero Caution Fee (NYSC & Student Concession)"
         ],
         "images": [
             "/images/bedroom.jpg",
@@ -163,7 +163,7 @@ RAW_LISTINGS = [
     },
     {
         "id": "prop_barnawa_03",
-        "title": "Modern 3-Bedroom Family Flat in Barnawa GRA",
+        "title": "Executive 3-Bedroom Flat in Barnawa GRA",
         "neighborhood": "Barnawa",
         "zone": "Barnawa New GRA",
         "full_address": "22 Queen Amina Way, Barnawa GRA, Kaduna",
@@ -171,7 +171,7 @@ RAW_LISTINGS = [
         "property_type": "3-Bedroom Flat",
         "bedrooms": 3,
         "bathrooms": 3,
-        "annual_rent": 800000,
+        "annual_rent": 360000,
         "commute_badge": "5 mins to GTBank Barnawa / Market",
         "commute_context": "Prime Barnawa GRA address with immediate access to Queen Amina corridor and commercial stores.",
         "description": "Generously proportioned 3-bedroom apartment with 3 ensuite bathrooms. Features continuous pressurized borehole system, dual-source prepaid electricity, electrified perimeter fence, and dedicated visitor parking bays.",
@@ -201,24 +201,25 @@ RAW_LISTINGS = [
     },
     {
         "id": "prop_malali_03",
-        "title": "Luxury 3-Bedroom Semi-Detached Duplex off Danmarna Road",
+        "title": "Modern 3-Bedroom Apartment in Malali GRA (₦0 Caution)",
         "neighborhood": "Malali",
         "zone": "Malali GRA",
         "full_address": "14 Danmarna Close, Malali GRA, Kaduna",
         "title_reference": "KADGIS Certificate of Occupancy No. KDL-MAL-2019-0824 (Deed Reg. Vol. 22, Page 15, Kaduna Land Registry)",
-        "property_type": "3-Bedroom Duplex",
+        "property_type": "3-Bedroom Flat",
         "bedrooms": 3,
-        "bathrooms": 4,
-        "annual_rent": 1200000,
+        "bathrooms": 3,
+        "annual_rent": 320000,
+        "has_caution_fee": False,
         "commute_badge": "4 mins to NDA Gate / Rabah Road",
-        "commute_context": "Serene Malali diplomatic enclave with fast 4-minute connection to Rabah Road and central Kaduna.",
-        "description": "Exquisite modern duplex in Malali GRA featuring personal dedicated transformer connection, solar inverter backup pre-wiring, automated gate, boys' quarters, and manicured private compound.",
+        "commute_context": "Serene Malali enclave with fast 4-minute connection to Rabah Road and central Kaduna.",
+        "description": "Comfortable 3-bedroom apartment fitted with solar inverter backup wiring, motorized security gate, clean borehole system, and zero caution deposit under youth educational support mandate.",
         "amenities": [
-            "Dedicated 33kVA Transformer Connection",
+            "Dedicated Prepaid Meter Connection",
             "Solar & Inverter Pre-Wired Infrastructure",
             "Motorized Security Gate & CCTV",
-            "Attached Self-Contained BQ (Boys Quarters)",
-            "Automated Water Treatment Plant"
+            "Continuous Borehole Water",
+            "Zero Caution Fee (Youth Housing Concession)"
         ],
         "images": [
             "/images/exterior.jpg",

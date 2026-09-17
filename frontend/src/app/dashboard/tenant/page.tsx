@@ -25,6 +25,10 @@ import {
   ArrowRight,
   ShieldAlert,
   ChevronRight,
+  UserCheck,
+  Zap,
+  X,
+  Timer,
 } from "lucide-react";
 
 export default function TenantDashboardPage() {
@@ -33,42 +37,116 @@ export default function TenantDashboardPage() {
 
   // Dynamic Rental State from localStorage
   const [currentRental, setCurrentRental] = useState<any>(null);
+  const [savedBooking, setSavedBooking] = useState<any>(null);
   const [escrowFrozen, setEscrowFrozen] = useState(false);
   const [keyConfirmed, setKeyConfirmed] = useState(false);
+  const [isInspectionCancelled, setIsInspectionCancelled] = useState(false);
+
+  // Real-Time Stay Countdown Timer State (365 days / 12 months)
+  const [stayTimeRemaining, setStayTimeRemaining] = useState({
+    days: 364,
+    hours: 23,
+    minutes: 59,
+    seconds: 59,
+  });
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       try {
         const saved = localStorage.getItem("settlla_current_rental");
+        const keyConfirmedLocal = localStorage.getItem("settlla_key_confirmed") === "true";
         if (saved) {
           const parsed = JSON.parse(saved);
           setCurrentRental(parsed);
           if (parsed.escrow_hold) {
-            setKeyConfirmed(parsed.escrow_hold.confirmed_by_tenant || false);
+            setKeyConfirmed(parsed.escrow_hold.confirmed_by_tenant || keyConfirmedLocal || false);
             setEscrowFrozen(parsed.escrow_hold.dispute_active || false);
+          } else if (keyConfirmedLocal) {
+            setKeyConfirmed(true);
           }
+        } else if (keyConfirmedLocal) {
+          setKeyConfirmed(true);
+        }
+
+        const rawBooking = localStorage.getItem("settlla_tenant_booking");
+        if (rawBooking) {
+          setSavedBooking(JSON.parse(rawBooking));
         }
       } catch (e) {
-        console.error("Failed to load rental from localStorage", e);
+        console.error("Failed to load rental or booking from localStorage", e);
       }
     }
   }, []);
 
+  // Stay Countdown Live Tick
+  useEffect(() => {
+    if (!keyConfirmed) return;
+
+    let confirmedAt = Date.now();
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("settlla_key_confirmed_at");
+      if (stored) {
+        confirmedAt = parseInt(stored, 10) || Date.now();
+      } else {
+        localStorage.setItem("settlla_key_confirmed_at", confirmedAt.toString());
+      }
+    }
+
+    // 365 Days Tenancy Duration
+    const leaseEndTimestamp = confirmedAt + 365 * 24 * 60 * 60 * 1000;
+
+    const tick = () => {
+      const now = Date.now();
+      const diff = Math.max(0, leaseEndTimestamp - now);
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+
+      setStayTimeRemaining({ days, hours, minutes, seconds });
+    };
+
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [keyConfirmed]);
+
   const handleConfirmKeyHandover = () => {
+    const now = Date.now();
     setKeyConfirmed(true);
     setEscrowFrozen(false);
-    if (typeof window !== "undefined" && currentRental) {
-      const updated = {
-        ...currentRental,
-        escrow_hold: {
-          ...(currentRental.escrow_hold || {}),
-          confirmed_by_tenant: true,
-          escrow_status: "released_to_landlord",
-          confirmed_at: new Date().toISOString(),
-        },
-      };
-      setCurrentRental(updated);
-      localStorage.setItem("settlla_current_rental", JSON.stringify(updated));
+    if (typeof window !== "undefined") {
+      localStorage.setItem("settlla_key_confirmed", "true");
+      if (!localStorage.getItem("settlla_key_confirmed_at")) {
+        localStorage.setItem("settlla_key_confirmed_at", now.toString());
+      }
+      if (currentRental) {
+        const updated = {
+          ...currentRental,
+          escrow_hold: {
+            ...(currentRental.escrow_hold || {}),
+            confirmed_by_tenant: true,
+            escrow_status: "released_to_landlord",
+            confirmed_at: new Date(now).toISOString(),
+          },
+        };
+        setCurrentRental(updated);
+        localStorage.setItem("settlla_current_rental", JSON.stringify(updated));
+      }
+    }
+  };
+
+  const handleCancelInspection = () => {
+    setIsInspectionCancelled(true);
+    setSavedBooking(null);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("settlla_tenant_booking");
+      if (currentRental && currentRental.booking) {
+        const updated = { ...currentRental };
+        delete updated.booking;
+        setCurrentRental(updated);
+        localStorage.setItem("settlla_current_rental", JSON.stringify(updated));
+      }
     }
   };
 
@@ -89,6 +167,7 @@ export default function TenantDashboardPage() {
   };
 
   const home = currentRental?.listing || SEED_LISTINGS[0];
+  const activeBooking = !isInspectionCancelled ? (currentRental?.booking || savedBooking) : null;
   const agreement = currentRental?.agreement;
   const transaction = currentRental?.transaction;
   const moveInPass = currentRental?.move_in_pass;
@@ -299,6 +378,193 @@ export default function TenantDashboardPage() {
         {/* TAB 1: OVERVIEW */}
         {activeTab === "overview" && (
           <div className="space-y-6">
+            {/* Stay Countdown Widget (Active immediately after key confirmation) */}
+            {keyConfirmed && (
+              <div className="rounded-3xl border border-emerald-300 bg-gradient-to-br from-emerald-500/10 via-white to-emerald-50/50 p-6 sm:p-7 shadow-lg shadow-emerald-500/10 animate-fade-in">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 pb-5 border-b border-emerald-100">
+                  <div className="flex items-start gap-4">
+                    <div className="h-12 w-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-600/25">
+                      <Key className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 border border-emerald-300">
+                          ● Active Tenancy in Good Standing
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-500">
+                          Key Handover Confirmed ✓
+                        </span>
+                      </div>
+                      <h3 className="text-xl font-black text-slate-900 mt-1">
+                        Tenancy Stay Countdown: 12-Month Living Period
+                      </h3>
+                      <p className="text-xs text-slate-600 mt-0.5">
+                        Your keys are verified and you are in peaceful, quiet possession of <strong className="text-slate-800">{home.title}</strong>.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-emerald-200 text-xs font-bold text-emerald-800 shadow-2xs">
+                      <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                      <span>Caution Fee Ringfenced: ₦{(home.pricing.caution_fee || 50000).toLocaleString("en-NG")}</span>
+                    </span>
+                  </div>
+                </div>
+
+                {/* Countdown Number Cards */}
+                <div className="pt-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                      <Timer className="h-3.5 w-3.5 text-emerald-600" />
+                      <span>Active Lease Tenure Remaining (Real-Time Live Countdown)</span>
+                    </span>
+                    <span className="text-xs font-bold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-md">
+                      Valid through Sep 2027
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                    <div className="rounded-2xl bg-white border border-emerald-200/80 p-4 text-center shadow-xs">
+                      <span className="text-3xl sm:text-4xl font-black text-slate-900 font-mono tracking-tight block">
+                        {stayTimeRemaining.days}
+                      </span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mt-1 block">
+                        Days Remaining
+                      </span>
+                    </div>
+
+                    <div className="rounded-2xl bg-white border border-emerald-200/80 p-4 text-center shadow-xs">
+                      <span className="text-3xl sm:text-4xl font-black text-slate-900 font-mono tracking-tight block">
+                        {String(stayTimeRemaining.hours).padStart(2, "0")}
+                      </span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mt-1 block">
+                        Hours
+                      </span>
+                    </div>
+
+                    <div className="rounded-2xl bg-white border border-emerald-200/80 p-4 text-center shadow-xs">
+                      <span className="text-3xl sm:text-4xl font-black text-slate-900 font-mono tracking-tight block">
+                        {String(stayTimeRemaining.minutes).padStart(2, "0")}
+                      </span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mt-1 block">
+                        Minutes
+                      </span>
+                    </div>
+
+                    <div className="rounded-2xl bg-white border border-emerald-200/80 p-4 text-center shadow-xs">
+                      <span className="text-3xl sm:text-4xl font-black text-emerald-600 font-mono tracking-tight block animate-pulse">
+                        {String(stayTimeRemaining.seconds).padStart(2, "0")}
+                      </span>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 mt-1 block">
+                        Seconds
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Progress & Milestone Meta */}
+                  <div className="mt-4 pt-3 border-t border-emerald-100/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-slate-600">
+                    <div className="flex items-center gap-2">
+                      <div className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+                      <span>Statutory 12-Month Tenancy Period (Kaduna State Tenancy Law)</span>
+                    </div>
+                    <div className="text-[11px] font-medium text-slate-500">
+                      Renewal window opens at <strong>60 days remaining</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Active Walkthrough Pass Alert Banner */}
+            {activeBooking && (
+              <div className="rounded-3xl border border-blue-200 bg-gradient-to-r from-blue-50/90 via-indigo-50/50 to-blue-50/90 p-5 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-start gap-3.5">
+                  <div className="h-11 w-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-600/25">
+                    <Calendar className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 bg-blue-100 px-2.5 py-0.5 rounded-full">
+                        Walkthrough Pass #{activeBooking.booking_id || "SETT-BK-7824"}
+                      </span>
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                        ₦0 Free Tour
+                      </span>
+                    </div>
+                    <h4 className="text-base font-bold text-slate-900 mt-1">
+                      {activeBooking.property_title || home.title}
+                    </h4>
+                    <p className="text-xs text-slate-600 mt-0.5 flex flex-wrap items-center gap-2">
+                      <span>📅 {activeBooking.formatted_date || "Upcoming Tour"} at {activeBooking.slot_time || "2:30 PM"}</span>
+                      <span className="text-slate-300 hidden sm:inline">•</span>
+                      <span>📍 {activeBooking.property_address || home.full_address}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
+                  <Link
+                    href={`/listing/${activeBooking.listing_id || home.id}?start_agreement=true`}
+                    className="flex items-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 text-xs font-bold transition-all shadow-md shadow-blue-600/20"
+                  >
+                    <Zap className="h-3.5 w-3.5 text-amber-300" />
+                    <span>Proceed to Rent</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleCancelInspection}
+                    className="flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 px-3.5 py-2.5 text-xs font-bold transition-colors cursor-pointer"
+                    title="Cancel inspection walkthrough"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                    <span>Cancel Inspection</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("bookings")}
+                    className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 px-3.5 py-2.5 text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    <span>View Pass Details</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Cancelled Inspection Alert Banner */}
+            {isInspectionCancelled && (
+              <div className="rounded-3xl border border-amber-200 bg-amber-50/80 p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-fade-in">
+                <div className="flex items-start gap-3.5">
+                  <div className="h-11 w-11 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 border border-amber-200">
+                    <X className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 bg-amber-200/80 px-2.5 py-0.5 rounded-full">
+                        Inspection Cancelled
+                      </span>
+                      <span className="text-xs text-slate-600">Walkthrough slot released</span>
+                    </div>
+                    <h4 className="text-base font-bold text-slate-900 mt-1">
+                      Ready to secure {home.title} directly?
+                    </h4>
+                    <p className="text-xs text-slate-600 mt-0.5">
+                      You don't need physical inspection to rent. You are protected with 24-hr Key-In-Door Escrow custody.
+                    </p>
+                  </div>
+                </div>
+
+                <Link
+                  href={`/listing/${home.id}?start_agreement=true`}
+                  className="flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 text-xs font-bold transition-all shadow-md shadow-blue-600/20 shrink-0 cursor-pointer"
+                >
+                  <Zap className="h-3.5 w-3.5 text-amber-300" />
+                  <span>Proceed to Rent</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+            )}
+
             {/* Stat Row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs">
@@ -416,21 +682,19 @@ export default function TenantDashboardPage() {
                 </div>
 
                 <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-start gap-3">
-                  <MessageSquare className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                  <UserCheck className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
                   <div>
                     <span className="text-[10px] uppercase font-bold text-slate-400 block">
-                      Direct Concierge &amp; Host WhatsApp
+                      Licensed Property Manager
                     </span>
-                    <strong className="text-slate-900 text-sm">0803 555 1289</strong>
-                    <a
-                      href="https://wa.me/2348035551289"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-emerald-700 hover:text-emerald-800 font-bold flex items-center gap-1 mt-0.5"
+                    <strong className="text-slate-900 text-sm">{home.mandate.manager_name}</strong>
+                    <Link
+                      href="/dashboard/agent"
+                      className="text-blue-600 hover:text-blue-700 font-bold flex items-center gap-1 mt-0.5"
                     >
-                      <span>Open WhatsApp Chat</span>
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
+                      <span>View Agent Profile</span>
+                      <ArrowRight className="h-3 w-3" />
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -580,11 +844,69 @@ export default function TenantDashboardPage() {
               )}
 
               {keyConfirmed && (
-                <div className="rounded-2xl border border-emerald-300 bg-emerald-100/80 p-4 text-xs text-emerald-900 flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-700 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-sm font-bold block mb-0.5">Key Handover Confirmed!</strong>
-                    <span>Thank you for verifying your keys! Your tenancy is active and caution fee remains ringfenced.</span>
+                <div className="space-y-4 animate-fade-in">
+                  <div className="rounded-2xl border border-emerald-300 bg-emerald-100/80 p-4 text-xs text-emerald-900 flex items-start gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-700 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="text-sm font-bold block mb-0.5">Key Handover Confirmed!</strong>
+                      <span>Thank you for verifying your keys! Your tenancy is active and caution fee remains ringfenced.</span>
+                    </div>
+                  </div>
+
+                  {/* Real-time Tenancy Stay Countdown */}
+                  <div className="rounded-2xl border border-emerald-300 bg-gradient-to-br from-emerald-500/10 via-white to-emerald-50/50 p-5 sm:p-6 shadow-sm">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-4 border-b border-emerald-100">
+                      <div>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full">
+                          ● Tenancy Active • Live Stay Countdown
+                        </span>
+                        <h4 className="text-base font-bold text-slate-900 mt-1">
+                          12-Month Tenancy Stay Countdown
+                        </h4>
+                        <p className="text-xs text-slate-500">
+                          {home.title} • Valid through September 2027
+                        </p>
+                      </div>
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-white border border-emerald-200 px-3 py-1.5 rounded-xl shadow-2xs">
+                        <Timer className="h-3.5 w-3.5 text-emerald-600" />
+                        <span>Lease in Good Standing</span>
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4">
+                      <div className="rounded-xl bg-white border border-emerald-200/80 p-3 text-center shadow-2xs">
+                        <span className="text-2xl sm:text-3xl font-black text-slate-900 font-mono block">
+                          {stayTimeRemaining.days}
+                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-0.5 block">
+                          Days Left
+                        </span>
+                      </div>
+                      <div className="rounded-xl bg-white border border-emerald-200/80 p-3 text-center shadow-2xs">
+                        <span className="text-2xl sm:text-3xl font-black text-slate-900 font-mono block">
+                          {String(stayTimeRemaining.hours).padStart(2, "0")}
+                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-0.5 block">
+                          Hours
+                        </span>
+                      </div>
+                      <div className="rounded-xl bg-white border border-emerald-200/80 p-3 text-center shadow-2xs">
+                        <span className="text-2xl sm:text-3xl font-black text-slate-900 font-mono block">
+                          {String(stayTimeRemaining.minutes).padStart(2, "0")}
+                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-0.5 block">
+                          Minutes
+                        </span>
+                      </div>
+                      <div className="rounded-xl bg-white border border-emerald-200/80 p-3 text-center shadow-2xs">
+                        <span className="text-2xl sm:text-3xl font-black text-emerald-600 font-mono block animate-pulse">
+                          {String(stayTimeRemaining.seconds).padStart(2, "0")}
+                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 mt-0.5 block">
+                          Seconds
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -622,52 +944,104 @@ export default function TenantDashboardPage() {
         )}
 
         {/* TAB 4: OPTIONAL TOURS */}
+        {/* TAB 4: INSPECTIONS */}
         {activeTab === "bookings" && (
           <div className="space-y-4">
-            <div className="rounded-2xl bg-blue-50/70 border border-blue-200 p-4 text-xs text-slate-700 flex items-start gap-3">
-              <ShieldCheck className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <strong className="text-slate-900 block mb-0.5">Physical Tours Are 100% Free &amp; Optional:</strong>
+            <div>
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-blue-600" />
+                <span>Scheduled Walkthrough Pass</span>
+              </h3>
+              <div className="mt-1 flex items-center gap-2 text-xs text-slate-500">
+                <span className="flex h-2 w-2 rounded-full bg-emerald-500" />
                 <span>All listings on Settlla are pre-vetted with certified mandates. You can tour in person for free or rent online directly.</span>
               </div>
             </div>
 
-            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-                <div>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2.5 py-0.5 border border-emerald-200">
-                    <CheckCircle2 className="h-3 w-3" />
-                    <span>Confirmed Walkthrough</span>
-                  </span>
-                  <h4 className="text-base font-bold text-slate-900 mt-1">{home.title}</h4>
-                  <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-                    <MapPin className="h-3.5 w-3.5 text-slate-400" />
-                    <span>{home.full_address}</span>
-                  </p>
-                </div>
-                <div className="text-right">
-                  <span className="text-sm font-bold text-blue-600 block">Fri, Sep 18, 2026</span>
-                  <span className="text-xs text-slate-500">2:30 PM - 3:00 PM</span>
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs pt-2">
-                <div>
-                  <span className="text-slate-400 block text-[10px] uppercase font-bold">Host / Manager</span>
-                  <span className="font-bold text-slate-800">{home.mandate.manager_name}</span>
+            {activeBooking ? (
+              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+                  <div>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2.5 py-0.5 border border-emerald-200">
+                      <CheckCircle2 className="h-3 w-3" />
+                      <span>Confirmed Walkthrough Pass</span>
+                    </span>
+                    <h4 className="text-base font-bold text-slate-900 mt-1">{activeBooking?.property_title || home.title}</h4>
+                    <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                      <MapPin className="h-3.5 w-3.5 text-slate-400" />
+                      <span>{activeBooking?.property_address || home.full_address}</span>
+                    </p>
+                    <span className="text-[11px] font-mono text-blue-600 font-bold block mt-1">
+                      Pass Reference: {activeBooking?.booking_id || "SETT-BK-7824"} (Present at Gate)
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-sm font-bold text-blue-600 block">{activeBooking?.formatted_date || "Fri, Sep 18, 2026"}</span>
+                    <span className="text-xs text-slate-500">{activeBooking?.slot_time || "2:30 PM - 3:00 PM"}</span>
+                  </div>
                 </div>
 
-                <a
-                  href="https://wa.me/2348035551289?text=Hello,%20I%20have%20an%20inspection%20pass%20(SETT-BK-7824)%20for%20Barnawa%20Terraces."
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 px-3.5 py-2 font-bold text-xs transition-colors"
-                >
-                  <MessageSquare className="h-3.5 w-3.5" />
-                  <span>WhatsApp Host</span>
-                </a>
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs pt-2">
+                  <div>
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Host / Property Manager</span>
+                    <span className="font-bold text-slate-800">{activeBooking?.manager_name || home.mandate.manager_name}</span>
+                    <span className="text-slate-500 text-[11px] block">{activeBooking?.manager_accreditation || home.mandate.accreditation}</span>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link
+                      href={`/listing/${activeBooking?.listing_id || home.id}?start_agreement=true`}
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 font-bold text-xs transition-colors shadow-xs"
+                    >
+                      <Zap className="h-3.5 w-3.5 text-amber-300" />
+                      <span>Proceed to Rent</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+
+                    <button
+                      type="button"
+                      onClick={handleCancelInspection}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 px-3.5 py-2.5 font-bold text-xs transition-colors cursor-pointer"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                      <span>Cancel Inspection</span>
+                    </button>
+
+                    <Link
+                      href="/dashboard/agent"
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 px-3.5 py-2 font-bold text-xs transition-colors"
+                    >
+                      <UserCheck className="h-3.5 w-3.5 text-blue-600" />
+                      <span>View Agent Profile</span>
+                    </Link>
+                  </div>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="rounded-3xl border border-slate-200 bg-white p-8 text-center space-y-3">
+                <div className="mx-auto h-12 w-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                  <Calendar className="h-6 w-6" />
+                </div>
+                <h4 className="text-base font-bold text-slate-900">
+                  {isInspectionCancelled ? "Walkthrough Tour Cancelled" : "No Scheduled Walkthrough Pass"}
+                </h4>
+                <p className="text-xs text-slate-500 max-w-md mx-auto">
+                  {isInspectionCancelled
+                    ? "Your physical inspection slot was successfully cancelled. You can proceed directly to execute your tenancy agreement online with full 24-hr escrow protection."
+                    : "You can book optional free walkthroughs across Kaduna properties or proceed directly to rent online with 24-hr Key-In-Door escrow protection."}
+                </p>
+                <div className="pt-2">
+                  <Link
+                    href={`/listing/${home.id}?start_agreement=true`}
+                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 text-xs font-bold transition-all shadow-md shadow-blue-600/20"
+                  >
+                    <Zap className="h-3.5 w-3.5 text-amber-300" />
+                    <span>Proceed to Rent ({home.title})</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -702,7 +1076,7 @@ export default function TenantDashboardPage() {
                     </td>
                     <td className="py-4 px-4 font-semibold text-slate-800">{home.title}</td>
                     <td className="py-4 px-4 text-slate-500 text-[11px]">
-                      Rent (₦{Math.round(home.pricing.annual_rent * 0.75).toLocaleString("en-NG")}) + Caution (₦{home.pricing.caution_fee.toLocaleString("en-NG")}) + Legal (₦{home.pricing.legal_fee.toLocaleString("en-NG")}) + Agency (₦{home.pricing.agency_fee.toLocaleString("en-NG")})
+                      Rent (₦{home.pricing.annual_rent.toLocaleString("en-NG")}) + Caution ({home.pricing.caution_fee > 0 ? `₦${home.pricing.caution_fee.toLocaleString("en-NG")}` : "₦0 Waived"}) + Legal &amp; Agency 15% (₦{(home.pricing.legal_and_agency_fee || (home.pricing.legal_fee + home.pricing.agency_fee)).toLocaleString("en-NG")})
                     </td>
                     <td className="py-4 px-4 text-right font-black text-blue-600 text-sm">
                       ₦{home.pricing.total_move_in_cost.toLocaleString("en-NG")}
