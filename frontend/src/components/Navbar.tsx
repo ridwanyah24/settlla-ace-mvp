@@ -27,6 +27,7 @@ import {
   Shield,
   CreditCard,
   HelpCircle,
+  Sparkles,
 } from "lucide-react";
 
 interface NavbarProps {
@@ -35,6 +36,7 @@ interface NavbarProps {
   onOpenManagerDesk?: () => void;
   activeEscrowStatus?: string;
   onOpenEscrowDashboard?: () => void;
+  onOpenAISearch?: (initialQuery?: string) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -43,12 +45,27 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenManagerDesk,
   activeEscrowStatus,
   onOpenEscrowDashboard,
+  onOpenAISearch,
 }) => {
   const { currentUser, role, isAuthenticated, switchRole, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+
+  // Global Ctrl+K / Cmd+K keyboard shortcut to launch AI Search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        if (onOpenAISearch) {
+          onOpenAISearch();
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onOpenAISearch]);
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -195,6 +212,20 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* Right Action & Auth Navigation */}
             <div className="flex items-center gap-1.5 sm:gap-2.5">
+              {/* Settlla AI Search Trigger */}
+              <button
+                type="button"
+                onClick={() => onOpenAISearch && onOpenAISearch()}
+                className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border border-blue-200/90 px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-bold text-blue-900 transition-all cursor-pointer shadow-xs group"
+                title="Search with Settlla AI (Ctrl+K)"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-blue-600 group-hover:rotate-12 transition-transform" />
+                <span className="hidden sm:inline">AI Search</span>
+                <span className="hidden md:inline-block rounded-md bg-white px-1.5 py-0.2 text-[10px] font-bold text-slate-500 border border-slate-200">
+                  Ctrl+K
+                </span>
+              </button>
+
               {/* Manager Desk Shortcut (if agent) */}
               {role === "agent" && (
                 <Link
@@ -451,6 +482,36 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </div>
                 </div>
               )}
+
+              {/* Mobile Drawer Settlla AI Search Button */}
+              <div className="p-4 pb-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    if (onOpenAISearch) onOpenAISearch();
+                  }}
+                  className="w-full flex items-center justify-between rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 p-3.5 text-white shadow-md shadow-blue-600/25 hover:from-blue-700 hover:to-indigo-700 transition-all cursor-pointer"
+                >
+                  <div className="flex items-center gap-3 text-left">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 text-white">
+                      <Sparkles className="h-4 w-4 text-amber-300 animate-pulse" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold leading-tight flex items-center gap-1.5">
+                        <span>Settlla AI Search</span>
+                        <span className="rounded-full bg-white/20 px-1.5 py-0.2 text-[9px] font-black uppercase">
+                          Smart
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-blue-100 font-medium">
+                        Search in plain English or budget
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-blue-200" />
+                </button>
+              </div>
 
               {/* Navigation Links with Icons */}
               <div className="px-4 py-2 space-y-1">

@@ -18,6 +18,7 @@ import {
   Calendar,
   ArrowRight,
   ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 
 interface ListingCardProps {
@@ -25,6 +26,8 @@ interface ListingCardProps {
   onSelect: (listing: Listing) => void;
   onBookInspection?: (listing: Listing) => void;
   onDirectApply?: (listing: Listing) => void;
+  aiMatchScore?: number;
+  aiHighlightReason?: string;
 }
 
 export const ListingCard: React.FC<ListingCardProps> = ({
@@ -32,6 +35,8 @@ export const ListingCard: React.FC<ListingCardProps> = ({
   onSelect,
   onBookInspection,
   onDirectApply,
+  aiMatchScore,
+  aiHighlightReason,
 }) => {
   const [activeImageIdx, setActiveImageIdx] = useState(0);
 
@@ -64,11 +69,17 @@ export const ListingCard: React.FC<ListingCardProps> = ({
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-black/20"></div>
 
           {/* Top Badges */}
-          <div className="absolute top-3 left-3 flex items-center gap-2">
+          <div className="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap">
             <span className="flex items-center gap-1.5 rounded-full bg-blue-600/95 px-3 py-1 text-[11px] font-bold text-white shadow-md backdrop-blur-xs">
               <BadgeCheck className="h-3.5 w-3.5 text-white" />
               <span>Verified Mandate</span>
             </span>
+            {aiMatchScore !== undefined && (
+              <span className="flex items-center gap-1 rounded-full bg-slate-900/90 text-amber-300 border border-amber-400/40 px-2.5 py-1 text-[11px] font-black shadow-md backdrop-blur-xs">
+                <Sparkles className="h-3 w-3 text-amber-400 animate-pulse" />
+                <span className="text-emerald-400">{aiMatchScore}% Match</span>
+              </span>
+            )}
           </div>
 
           <div className="absolute top-3 right-3 flex items-center gap-1.5">
@@ -117,8 +128,14 @@ export const ListingCard: React.FC<ListingCardProps> = ({
 
         {/* 2. Content Body */}
         <div className="p-5">
-          {/* Commute Badge */}
-          <div className="mb-2">
+          {/* Commute Badge & AI Match Reason */}
+          <div className="mb-2 space-y-1.5">
+            {aiHighlightReason && (
+              <div className="flex items-center gap-1.5 rounded-lg bg-amber-50/90 border border-amber-200/80 px-2.5 py-1 text-[11px] font-semibold text-amber-900">
+                <Sparkles className="h-3 w-3 text-amber-600 shrink-0" />
+                <span className="truncate">{aiHighlightReason}</span>
+              </div>
+            )}
             <span className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-800 border border-blue-100">
               <MapPin className="h-3.5 w-3.5 text-blue-600 flex-shrink-0" />
               <span className="truncate">{listing.commute_badge}</span>

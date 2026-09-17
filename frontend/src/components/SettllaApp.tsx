@@ -14,12 +14,15 @@ import { ManagerQueueModal } from "./ManagerQueueModal";
 import { CheckoutPaymentModal } from "./CheckoutPaymentModal";
 import { MoveInPassViewer } from "./MoveInPassViewer";
 import { MoveInEscrowDashboardModal } from "./MoveInEscrowDashboardModal";
+import { AISearchModal } from "./AISearchModal";
 import { LandingSections } from "./LandingSections";
 import { Listing } from "@/types/listing";
 import { filterSeedListings, SEED_LISTINGS } from "@/data/seedListings";
 import { TenantProfile, TenancyAgreement } from "@/types/agreement";
 import { MoveInPass, PaymentTransaction, EscrowHoldRecord } from "@/types/payment";
-import { AlertCircle, Search, ShieldCheck, Ticket } from "lucide-react";
+import { AIMatchResult } from "@/types/aiSearch";
+import { runAISearch } from "@/utils/aiSearch";
+import { AlertCircle, Search, ShieldCheck, Ticket, Sparkles } from "lucide-react";
 
 interface SettllaAppProps {
   initialListings?: Listing[];
@@ -39,6 +42,12 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
   const [maxBudget, setMaxBudget] = useState("all");
   const [propertyType, setPropertyType] = useState("all");
   const [quickFilter, setQuickFilter] = useState("all");
+
+  // Settlla AI Search States
+  const [aiSearchOpen, setAiSearchOpen] = useState(false);
+  const [aiSearchInitialQuery, setAiSearchInitialQuery] = useState("");
+  const [activeAIQuery, setActiveAIQuery] = useState<string | null>(null);
+  const [aiMatchesMap, setAiMatchesMap] = useState<Record<string, AIMatchResult>>({});
 
   // Separate Modal, Drawer, and Agreement States
   const [listingForDetail, setListingForDetail] = useState<Listing | null>(null);
@@ -108,6 +117,20 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
 
   useEffect(() => {
     async function loadFiltered() {
+      // If an active AI search query is present, prioritize AI match ranking
+      if (activeAIQuery) {
+        const { results } = runAISearch(activeAIQuery, initialListings);
+        const map: Record<string, AIMatchResult> = {};
+        results.forEach((r) => {
+          map[r.listing.id] = r;
+        });
+        setAiMatchesMap(map);
+        setListings(results.map((r) => r.listing));
+        setError(null);
+        return;
+      }
+
+      setAiMatchesMap({});
       // 1. Instant client-side filtering from seed inventory
       const clientFiltered = filterSeedListings(neighborhood, maxBudget, propertyType, quickFilter);
       setListings(clientFiltered);
@@ -142,13 +165,39 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
     }
 
     loadFiltered();
-  }, [neighborhood, maxBudget, propertyType, quickFilter]);
+  }, [neighborhood, maxBudget, propertyType, quickFilter, activeAIQuery, initialListings]);
 
   const handleResetFilters = () => {
     setNeighborhood("all");
     setMaxBudget("all");
     setPropertyType("all");
     setQuickFilter("all");
+    setActiveAIQuery(null);
+    setAiMatchesMap({});
+  };
+
+  const handleOpenAISearch = (queryPrompt?: string) => {
+    if (queryPrompt !== undefined) {
+      setAiSearchInitialQuery(queryPrompt);
+    }
+    setAiSearchOpen(true);
+  };
+
+  const handleApplyAIToFeed = (query: string, filtered: Listing[]) => {
+    setActiveAIQuery(query);
+    const { results } = runAISearch(query, initialListings);
+    const map: Record<string, AIMatchResult> = {};
+    results.forEach((r) => {
+      map[r.listing.id] = r;
+    });
+    setAiMatchesMap(map);
+    setListings(filtered);
+    scrollToFeed();
+  };
+
+  const handleClearAISearch = () => {
+    setActiveAIQuery(null);
+    setAiMatchesMap({});
   };
 
   const scrollToFeed = () => {
@@ -222,6 +271,7 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
         pendingManagerSignatures={pendingCount}
         activeEscrowStatus={activeEscrow?.escrow_status || "holding"}
         onOpenEscrowDashboard={() => setEscrowDashboardOpen(true)}
+        onOpenAISearch={handleOpenAISearch}
       />
 
       {/* 2. Hero Section */}
@@ -233,6 +283,7 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
         propertyType={propertyType}
         setPropertyType={setPropertyType}
         onSearch={scrollToFeed}
+        onOpenAISearch={handleOpenAISearch}
       />
 
       {/* 3. Main Web Feed: Featured Vetted Apartments */}
@@ -250,6 +301,49 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
           onReset={handleResetFilters}
           totalFound={listings.length}
         />
+
+        {/* Active AI Query Banner (if filtered by AI) */}
+        {activeAIQuery && (
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 border border-blue-200 p-4 shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-xs shrink-0">
+                <Sparkles className="h-4 w-4 text-amber-300 animate-pulse" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-blue-800">
+                    Active Settlla AI Search
+                  </span>
+                  <span className="rounded-full bg-blue-200/80 px-2 py-0.2 text-[10px] font-bold text-blue-900">
+                    {listings.length} Match{listings.length !== 1 ? "es" : ""}
+                  </span>
+                </div>
+                <p className="text-xs font-bold text-slate-900 mt-0.5">
+                  &ldquo;{activeAIQuery}&rdquo;
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setAiSearchInitialQuery(activeAIQuery);
+                  setAiSearchOpen(true);
+                }}
+                className="rounded-xl border border-blue-300 bg-white hover:bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700 transition-colors cursor-pointer"
+              >
+                Refine AI Query
+              </button>
+              <button
+                type="button"
+                onClick={handleClearAISearch}
+                className="rounded-xl bg-slate-200 hover:bg-slate-300 px-3 py-1.5 text-xs font-bold text-slate-700 transition-colors cursor-pointer"
+              >
+                Clear AI Filter
+              </button>
+            </div>
+          </div>
+        )}
 
         {error && (
           <div className="mb-8 flex items-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-800 text-sm font-medium">
@@ -292,6 +386,8 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
                   onSelect={handleOpenDetail}
                   onBookInspection={handleOpenBooking}
                   onDirectApply={(item) => handleOpenAgreement(item)}
+                  aiMatchScore={aiMatchesMap[listing.id]?.relevanceScore}
+                  aiHighlightReason={aiMatchesMap[listing.id]?.matchHighlights[0]}
                 />
               ))}
             </div>
@@ -411,6 +507,18 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
         onClose={() => setManagerQueueOpen(false)}
         listings={listings}
         onOpenSigningWorkflow={handleOpenSigningWorkflowFromQueue}
+      />
+
+      {/* 13. Settlla AI Natural Language Search Modal */}
+      <AISearchModal
+        isOpen={aiSearchOpen}
+        onClose={() => setAiSearchOpen(false)}
+        listings={initialListings}
+        initialQuery={aiSearchInitialQuery}
+        onSelectListing={handleOpenDetail}
+        onBookInspection={handleOpenBooking}
+        onDirectApply={(item) => handleOpenAgreement(item)}
+        onApplyToFeed={handleApplyAIToFeed}
       />
 
       {/* Floating Active Pass / Escrow Quick-Access Notification */}

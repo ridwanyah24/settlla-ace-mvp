@@ -1819,5 +1819,136 @@ def seed_initial_agreements():
 seed_initial_agreements()
 
 
+# ---------------------------------------------------------------------------
+# Feature: Settlla AI Natural Language Search Endpoint
+# ---------------------------------------------------------------------------
+
+@app.get("/api/ai-search")
+def ai_search_endpoint(q: str = Query(..., description="Natural language search query")):
+    """
+    Parses natural-language user query into criteria, scores all listings,
+    and returns ranked listings with relevance score and AI reasoning highlights.
+    """
+    norm_q = q.lower().strip()
+
+    # 1. Location
+    neighborhood = "all"
+    if "barnawa" in norm_q or "coronation" in norm_q or "queen amina" in norm_q:
+        neighborhood = "Barnawa"
+    elif "malali" in norm_q or "isa kaita" in norm_q or "danmarna" in norm_q or "golf club" in norm_q:
+        neighborhood = "Malali"
+
+    # 2. Bedrooms
+    bedrooms = None
+    if "studio" in norm_q or "mini flat" in norm_q or "mini-flat" in norm_q or "self contain" in norm_q:
+        bedrooms = 1
+    elif "1 bedroom" in norm_q or "1 bed" in norm_q or "1bed" in norm_q or "1-bedroom" in norm_q:
+        bedrooms = 1
+    elif "2 bedroom" in norm_q or "2 bed" in norm_q or "2bed" in norm_q or "2-bedroom" in norm_q:
+        bedrooms = 2
+    elif "3 bedroom" in norm_q or "3 bed" in norm_q or "3bed" in norm_q or "3-bedroom" in norm_q:
+        bedrooms = 3
+
+    # 3. Budget (e.g. 500k, 800k, 600000)
+    import re
+    budget = None
+    b_match = re.search(r'(\d+(?:\.\d+)?)\s*(k|m|thousand|million)?\b', norm_q)
+    if b_match:
+        val = float(b_match.group(1))
+        unit = b_match.group(2)
+        if unit in ["k", "thousand"]:
+            val *= 1000
+        elif unit in ["m", "million"]:
+            val *= 1000000
+        elif 100 < val < 2000:
+            val *= 1000
+        if 200000 <= val <= 10000000:
+            budget = int(val)
+
+    # 4. Amenities
+    req_meter = any(w in norm_q for w in ["prepaid", "meter", "self-billed", "self billed", "kedco", "light"])
+    req_water = any(w in norm_q for w in ["water", "borehole", "tank"])
+    req_sec = any(w in norm_q for w in ["security", "guard", "fence", "cctv"])
+    req_solar = any(w in norm_q for w in ["solar", "inverter", "generator", "changeover", "transformer"])
+
+    results = []
+    for item in RAW_LISTINGS:
+        l_rent = item.get("pricing", {}).get("annual_rent", 0) or item.get("annual_rent", 0)
+        l_neigh = item.get("neighborhood", "")
+        l_beds = item.get("bedrooms", 1)
+        amenities_str = " ".join(item.get("amenities", [])).lower() + " " + item.get("description", "").lower()
+        commute_str = (item.get("commute_badge", "") + " " + item.get("commute_context", "")).lower()
+
+        score = 55
+        highlights = []
+
+        if neighborhood != "all":
+            if l_neigh.lower() == neighborhood.lower():
+                score += 25
+                highlights.append(f"Located in {l_neigh}")
+            else:
+                score -= 35
+                continue  # Exclude neighborhood mismatch
+
+        if bedrooms is not None:
+            if l_beds == bedrooms:
+                score += 20
+                highlights.append(f"Exact {l_beds}-bedroom layout")
+            else:
+                score -= 20
+
+        if budget:
+            if l_rent <= budget:
+                score += 25
+                highlights.append(f"Rent ₦{l_rent:,} is within your ₦{budget:,} budget")
+            else:
+                score -= 30
+
+        if req_meter and ("prepaid" in amenities_str or "self-billed" in amenities_str):
+            score += 15
+            highlights.append("Independent prepaid electric meter")
+
+        if req_water and ("borehole" in amenities_str or "water" in amenities_str):
+            score += 10
+            highlights.append("Borehole water supply with storage")
+
+        if req_sec and ("security" in amenities_str or "guard" in amenities_str or "fence" in amenities_str):
+            score += 10
+            highlights.append("Gated compound with security coverage")
+
+        if req_solar and ("solar" in amenities_str or "inverter" in amenities_str or "changeover" in amenities_str):
+            score += 15
+            highlights.append("Power backup infrastructure")
+
+        if "gtbank" in norm_q and "gtbank" in commute_str:
+            score += 15
+            highlights.append(f"Prime location: {item.get('commute_badge')}")
+
+        raw_score = score
+        clamped = max(20, min(99, score))
+        if clamped >= 35:
+            results.append({
+                "listing": item,
+                "raw_score": raw_score,
+                "relevance_score": clamped,
+                "highlights": highlights,
+                "is_top_match": False,
+            })
+
+    results.sort(key=lambda x: x["raw_score"], reverse=True)
+    if results:
+        results[0]["is_top_match"] = True
+
+    return {
+        "query": q,
+        "neighborhood": neighborhood,
+        "bedrooms": bedrooms,
+        "max_budget": budget,
+        "total_matches": len(results),
+        "results": results,
+    }
+
+
+
 
 

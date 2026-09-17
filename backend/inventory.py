@@ -194,5 +194,43 @@ RAW_LISTINGS = [
             {"day": "Tuesdays & Fridays", "hours": "2:00 PM – 5:00 PM"},
             {"day": "Saturdays", "hours": "9:00 AM – 2:00 PM"}
         ]
+    },
+    {
+        "id": "prop_malali_03",
+        "title": "Luxury 3-Bedroom Semi-Detached Duplex off Danmarna Road",
+        "neighborhood": "Malali",
+        "zone": "Malali GRA",
+        "full_address": "14 Danmarna Close, Malali GRA, Kaduna",
+        "title_reference": "KADGIS Certificate of Occupancy No. KDL-MAL-2019-0824 (Deed Reg. Vol. 22, Page 15, Kaduna Land Registry)",
+        "property_type": "3-Bedroom Duplex",
+        "bedrooms": 3,
+        "bathrooms": 4,
+        "annual_rent": 1200000,
+        "commute_badge": "4 mins to NDA Gate / Rabah Road",
+        "commute_context": "Serene Malali diplomatic enclave with fast 4-minute connection to Rabah Road and central Kaduna.",
+        "description": "Exquisite modern duplex in Malali GRA featuring personal dedicated transformer connection, solar inverter backup pre-wiring, automated gate, boys' quarters, and manicured private compound.",
+        "amenities": [
+            "Dedicated 33kVA Transformer Connection",
+            "Solar & Inverter Pre-Wired Infrastructure",
+            "Motorized Security Gate & CCTV",
+            "Attached Self-Contained BQ (Boys Quarters)",
+            "Automated Water Treatment Plant"
+        ],
+        "images": [
+            "/images/exterior.jpg",
+            "/images/living_room.jpg",
+            "/images/bedroom.jpg"
+        ],
+        "mandate": {
+            "mandate_ref": "HBA-KD-MAL-2026-198",
+            "manager_name": "HB&A Partners & Co.",
+            "accreditation": "ESVARBON / NIESV Reg. #A2840",
+            "landlord_name": "Hajiya Maryam Lamido",
+            "mandate_status": "Verified & Active"
+        },
+        "visiting_windows": [
+            {"day": "Wednesdays & Saturdays", "hours": "11:00 AM – 4:00 PM"},
+            {"day": "Sundays", "hours": "1:00 PM – 5:00 PM"}
+        ]
     }
 ]
