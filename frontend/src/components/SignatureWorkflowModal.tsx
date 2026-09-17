@@ -4,6 +4,23 @@ import React, { useState, useEffect } from "react";
 import { TenancyAgreement, CryptographicAuditRecord } from "@/types/agreement";
 import { Listing } from "@/types/listing";
 import { DigitalSignaturePad } from "./DigitalSignaturePad";
+import {
+  X,
+  Check,
+  ShieldCheck,
+  FileText,
+  AlertTriangle,
+  Scale,
+  Clock,
+  Building2,
+  Printer,
+  CreditCard,
+  ArrowRight,
+  PenTool,
+  User,
+  Search,
+  Landmark,
+} from "lucide-react";
 
 interface SignatureWorkflowModalProps {
   isOpen: boolean;
@@ -33,7 +50,7 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
 
   // Tenant Signing Form State
   const [tenantSignerName, setTenantSignerName] = useState(
-    agreement.tenant.full_name || "Hajara Bello"
+    agreement.tenant.full_name || ""
   );
   const [tenantSignatureData, setTenantSignatureData] = useState<string | null>(
     agreement.tenant_signature || null
@@ -143,22 +160,52 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
         verification_status: "verified_authentic",
       };
 
+      const managerAuditRef = agreement.manager_audit_ref || `SETT-SIG-MGR-${agreement.agreement_id.split("-").pop() || "1001"}`;
+      const managerSignedDate = agreement.manager_signed_at || "2026-09-01 09:00:00";
+      const managerShaHash = agreement.manager_sha256_hash || `sha256_mandate_${agreement.manager_mandate_ref}_mgr_seal`;
+      const managerSignature = agreement.manager_signature || `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="220" height="60"><path d="M10 40 Q 40 10, 80 35 T 150 25 T 210 38" fill="none" stroke="%230F172A" stroke-width="2.5" stroke-linecap="round"/><text x="10" y="55" font-family="sans-serif" font-size="10" font-weight="bold" fill="%230F766E">Barr. H. B. Abubakar (Pre-Certified)</text></svg>`;
+      const masterSeal = await computeClientSha256(
+        `MASTER_SEAL|${agreement.agreement_id}|${shaHash}|${managerShaHash}|${nowIso}`
+      );
+
+      const managerAuditRecord: CryptographicAuditRecord = {
+        audit_ref: managerAuditRef,
+        agreement_id: agreement.agreement_id,
+        signer_role: "manager",
+        signer_name: agreement.manager_name,
+        signer_title: `Managing Partner & Principal Counsel (${agreement.manager_accreditation})`,
+        attestation_text: `I, ${agreement.manager_name}, hereby attest under registered Landlord Management Mandate Ref: ${agreement.manager_mandate_ref} that I am fully authorized as lawful Attorney-in-Fact to pre-execute this indenture on behalf of Landlord (${agreement.landlord_name}).`,
+        timestamp: managerSignedDate,
+        sha256_hash: managerShaHash,
+        signature_digest: managerShaHash.substring(0, 16),
+        ip_address: "105.112.98.14 (Kaduna, NG)",
+        verification_status: "verified_authentic",
+      };
+
       const fallbackUpdated: TenancyAgreement = {
         ...agreement,
         tenant_signature: payload.signature_data,
         tenant_signed_at: nowIso,
         tenant_audit_ref: auditRef,
         tenant_sha256_hash: shaHash,
-        status: "tenant_signed",
+        manager_signature: managerSignature,
+        manager_signed_at: managerSignedDate,
+        manager_audit_ref: managerAuditRef,
+        manager_sha256_hash: managerShaHash,
+        mandate_attestation_confirmed: true,
+        master_seal_hash: masterSeal,
+        status: "fully_executed",
         audit_trail: [
-          ...(agreement.audit_trail || []).filter((r) => r.signer_role !== "tenant"),
+          ...(agreement.audit_trail || []).filter((r) => r.signer_role !== "tenant" && r.signer_role !== "manager"),
+          managerAuditRecord,
           auditRecord,
         ],
       };
 
       setAgreement(fallbackUpdated);
       if (onAgreementUpdated) onAgreementUpdated(fallbackUpdated);
-      setActionSuccess("Tenant digital signature cryptographically verified and recorded (Local Seal)!");
+      setActionSuccess("Lease agreement fully executed and sealed! Manager counter-signature pre-certified under mandate.");
+      setActiveView("indenture");
     } finally {
       setTenantSubmitting(false);
     }
@@ -272,21 +319,20 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-1">
               <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-blue-700 border border-blue-200/70">
-                FR-04: Electronic Signature Workflow
+                Digital Lease Execution
+              </span>
+              <span className="rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/70 px-2.5 py-0.5 text-xs font-bold flex items-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Manager Mandate Pre-Certified</span>
               </span>
               {isFullyExecuted ? (
-                <span className="rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/70 px-2.5 py-0.5 text-xs font-bold flex items-center gap-1">
-                  <span>✓</span>
-                  <span>Fully Executed &amp; Sealed</span>
-                </span>
-              ) : isTenantSigned ? (
-                <span className="rounded-full bg-amber-50 text-amber-700 border border-amber-200/70 px-2.5 py-0.5 text-xs font-bold flex items-center gap-1">
-                  <span>⏳</span>
-                  <span>Awaiting Manager Counter-Sign</span>
+                <span className="rounded-full bg-emerald-600 text-white px-2.5 py-0.5 text-xs font-bold flex items-center gap-1">
+                  <Check className="w-3.5 h-3.5 text-white" />
+                  <span>Fully Executed</span>
                 </span>
               ) : (
-                <span className="rounded-full bg-slate-100 text-slate-700 border border-slate-200 px-2.5 py-0.5 text-xs font-bold">
-                  Step 1: Tenant Signing
+                <span className="rounded-full bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-0.5 text-xs font-bold">
+                  Step: Tenant Signature
                 </span>
               )}
               <span className="rounded-full bg-slate-50 px-2.5 py-0.5 text-xs font-bold text-slate-600 border border-slate-200 font-mono">
@@ -301,54 +347,13 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
             </p>
           </div>
 
-          {/* Quick Dual-Role Switcher & Close */}
           <div className="flex items-center gap-2 self-end sm:self-center">
-            {/* Role Tester Switcher */}
-            <div className="flex items-center rounded-xl bg-slate-100 p-1 text-xs font-bold">
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveRole("tenant");
-                  setActiveView("sign");
-                }}
-                className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 ${
-                  activeRole === "tenant"
-                    ? "bg-white text-blue-700 shadow-2xs font-black"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <span>👤</span>
-                <span>Tenant View (Screen 5)</span>
-                {isTenantSigned && <span className="text-[10px] text-emerald-600 font-bold">✓</span>}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveRole("manager");
-                  setActiveView("sign");
-                }}
-                className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 ${
-                  activeRole === "manager"
-                    ? "bg-white text-blue-700 shadow-2xs font-black"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <span>⚖️</span>
-                <span>Manager Desk (Screen 6)</span>
-                {isFullyExecuted ? (
-                  <span className="text-[10px] text-emerald-600 font-bold">✓</span>
-                ) : isTenantSigned ? (
-                  <span className="flex h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-                ) : null}
-              </button>
-            </div>
-
             <button
               onClick={onClose}
               className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors"
               title="Close Modal"
             >
-              ✕
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -357,14 +362,35 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
         <div className="flex border-b border-slate-100 bg-slate-50/70 px-6 sm:px-8 text-xs font-bold">
           <button
             type="button"
-            onClick={() => setActiveView("sign")}
-            className={`py-3 px-4 border-b-2 transition-colors cursor-pointer ${
-              activeView === "sign"
+            onClick={() => {
+              setActiveRole("tenant");
+              setActiveView("sign");
+            }}
+            className={`py-3 px-4 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
+              activeRole === "tenant" && activeView === "sign"
                 ? "border-blue-600 text-blue-600 bg-white rounded-t-xl"
                 : "border-transparent text-slate-500 hover:text-slate-900"
             }`}
           >
-            ✍️ {activeRole === "tenant" ? "Tenant Signing Pad" : "Manager Counter-Sign Desk"}
+            <PenTool className="w-3.5 h-3.5" />
+            <span>Tenant Signing Pad</span>
+            {isTenantSigned && <Check className="w-3 h-3 text-emerald-600" />}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setActiveRole("manager");
+              setActiveView("sign");
+            }}
+            className={`py-3 px-4 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
+              activeRole === "manager" && activeView === "sign"
+                ? "border-blue-600 text-blue-600 bg-white rounded-t-xl"
+                : "border-transparent text-slate-500 hover:text-slate-900"
+            }`}
+          >
+            <Scale className="w-3.5 h-3.5" />
+            <span>Manager Attestation (Pre-Certified)</span>
+            <Check className="w-3 h-3 text-emerald-600" />
           </button>
           <button
             type="button"
@@ -375,7 +401,7 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
                 : "border-transparent text-slate-500 hover:text-slate-900"
             }`}
           >
-            <span>🛡️</span>
+            <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
             <span>Cryptographic Audit Trail</span>
             <span className="rounded-full bg-blue-100 text-blue-700 px-1.5 py-0.2 text-[10px]">
               {(agreement.audit_trail || []).length}
@@ -384,13 +410,14 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
           <button
             type="button"
             onClick={() => setActiveView("indenture")}
-            className={`py-3 px-4 border-b-2 transition-colors cursor-pointer ${
+            className={`py-3 px-4 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
               activeView === "indenture"
                 ? "border-blue-600 text-blue-600 bg-white rounded-t-xl"
                 : "border-transparent text-slate-500 hover:text-slate-900"
             }`}
           >
-            📜 Executed Indenture &amp; Seals
+            <FileText className="w-3.5 h-3.5" />
+            <span>Executed Indenture &amp; Seals</span>
           </button>
         </div>
 
@@ -398,7 +425,7 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
         {actionSuccess && (
           <div className="bg-emerald-50 border-b border-emerald-100 px-6 sm:px-8 py-2.5 text-xs text-emerald-800 font-bold flex items-center justify-between animate-fade-in">
             <div className="flex items-center gap-2">
-              <span>✓</span>
+              <Check className="w-3.5 h-3.5 text-emerald-600" />
               <span>{actionSuccess}</span>
             </div>
             <button
@@ -406,14 +433,14 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
               onClick={() => setActionSuccess(null)}
               className="text-emerald-700 hover:text-emerald-900 text-xs"
             >
-              ✕
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         )}
         {errorMessage && (
           <div className="bg-rose-50 border-b border-rose-100 px-6 sm:px-8 py-2.5 text-xs text-rose-800 font-bold flex items-center justify-between animate-fade-in">
             <div className="flex items-center gap-2">
-              <span>⚠️</span>
+              <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
               <span>{errorMessage}</span>
             </div>
             <button
@@ -421,7 +448,7 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
               onClick={() => setErrorMessage(null)}
               className="text-rose-700 hover:text-rose-900 text-xs"
             >
-              ✕
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         )}
@@ -472,7 +499,7 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
                           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white font-black text-lg">
-                            ✓
+                            <Check className="w-5 h-5 text-white" />
                           </div>
                           <div>
                             <h4 className="text-sm font-black text-slate-900">Tenant Signature Recorded &amp; Hashed</h4>
@@ -500,12 +527,15 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
                         <button
                           type="button"
                           onClick={() => {
-                            setActiveRole("manager");
-                            setActiveView("sign");
+                            if (onProceedToPayment) {
+                              onProceedToPayment(agreement);
+                            }
                           }}
                           className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 text-xs transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm"
                         >
-                          <span>⚖️ Proceed to Manager Counter-Sign Desk (Screen 6) &rarr;</span>
+                          <CreditCard className="w-3.5 h-3.5 text-white" />
+                          <span>Proceed to Move-In Escrow Checkout</span>
+                          <ArrowRight className="w-3.5 h-3.5 text-white" />
                         </button>
                       </div>
                     </div>
@@ -557,7 +587,7 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
                         type="text"
                         value={tenantSignerName}
                         onChange={(e) => setTenantSignerName(e.target.value)}
-                        placeholder="Hajara Bello"
+                        placeholder="e.g. Aminu Mohammed"
                         className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs text-slate-900 font-bold focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                       />
                     </div>
@@ -610,7 +640,7 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
                           </>
                         ) : (
                           <>
-                            <span>✍️</span>
+                            <PenTool className="w-3.5 h-3.5" />
                             <span>{isTenantSigned ? "Update & Re-Sign Lease" : "Sign & Accept Agreement"}</span>
                           </>
                         )}
@@ -628,8 +658,8 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                       <div>
                         <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/30 text-blue-200 border border-blue-400/40 px-3 py-1 text-xs font-bold mb-2">
-                          <span>⚖️</span>
-                          <span>Screen 6: Property Manager Mandate Execution</span>
+                          <Scale className="w-3.5 h-3.5 text-blue-200" />
+                          <span>Property Manager Mandate Attestation (Pre-Certified)</span>
                         </div>
                         <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white">
                           {agreement.manager_name}
@@ -654,7 +684,7 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
                   {/* 3-Point Pre-Execution Verification Desk */}
                   <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
                     <h4 className="text-sm font-black text-slate-900 flex items-center gap-2">
-                      <span>🔍</span>
+                      <Search className="w-4 h-4 text-blue-600" />
                       <span>3-Point Pre-Execution Verification Desk</span>
                     </h4>
                     <p className="text-xs text-slate-500">
@@ -666,8 +696,8 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
                       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-2">
                         <div className="flex items-center justify-between">
                           <strong className="text-slate-900 text-xs">1. Tenant Credentials</strong>
-                          <span className="rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-bold px-1.5 py-0.5">
-                            ✓ Verified
+                          <span className="inline-flex items-center gap-1 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-bold px-1.5 py-0.5">
+                            <Check className="w-3 h-3 text-emerald-700" /> Verified
                           </span>
                         </div>
                         <p className="text-slate-800 font-bold">{agreement.tenant.full_name}</p>
@@ -680,8 +710,8 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
                       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-2">
                         <div className="flex items-center justify-between">
                           <strong className="text-slate-900 text-xs">2. Landlord Mandate</strong>
-                          <span className="rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-bold px-1.5 py-0.5">
-                            ✓ Active
+                          <span className="inline-flex items-center gap-1 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-bold px-1.5 py-0.5">
+                            <Check className="w-3 h-3 text-emerald-700" /> Active
                           </span>
                         </div>
                         <p className="text-slate-800 font-bold">Owner: {agreement.landlord_name}</p>
@@ -695,8 +725,8 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
                         <div className="flex items-center justify-between">
                           <strong className="text-slate-900 text-xs">3. Tenant Signature Status</strong>
                           {isTenantSigned ? (
-                            <span className="rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-bold px-1.5 py-0.5">
-                              ✓ Signed
+                            <span className="inline-flex items-center gap-1 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-bold px-1.5 py-0.5">
+                              <Check className="w-3 h-3 text-emerald-700" /> Signed
                             </span>
                           ) : (
                             <span className="rounded-md bg-amber-100 text-amber-800 text-[10px] font-bold px-1.5 py-0.5">
@@ -712,7 +742,7 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
                           </>
                         ) : (
                           <p className="text-amber-800 text-[11px]">
-                            Tenant has not yet signed. Tenant can sign on Screen 5 tab.
+                            Tenant has not yet signed. Tenant can sign on Tenant Signing Pad tab.
                           </p>
                         )}
                       </div>
@@ -724,7 +754,7 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
                     <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <span className="text-2xl">🏛️</span>
+                          <Landmark className="w-8 h-8 text-emerald-700 shrink-0" />
                           <div>
                             <h4 className="font-bold text-slate-900 text-sm">Lease Indenture Fully Executed Under Mandate</h4>
                             <p className="text-xs text-slate-600">
@@ -821,7 +851,7 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
                           </>
                         ) : (
                           <>
-                            <span>🛡️</span>
+                            <ShieldCheck className="w-4 h-4" />
                             <span>Counter-Sign Under Mandate (Execute Lease)</span>
                           </>
                         )}
@@ -843,7 +873,7 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 pb-4 mb-4">
                   <div>
                     <h4 className="text-base font-black text-slate-900 flex items-center gap-2">
-                      <span>🛡️</span>
+                      <ShieldCheck className="w-4 h-4 text-slate-800" />
                       <span>Cryptographic Audit &amp; Non-Repudiation Certificate</span>
                     </h4>
                     <p className="text-xs text-slate-500 mt-0.5">
@@ -861,7 +891,7 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
                 {/* Audit Trail List */}
                 {(!agreement.audit_trail || agreement.audit_trail.length === 0) ? (
                   <div className="py-12 text-center text-xs text-slate-500">
-                    <span className="text-3xl block mb-2">📜</span>
+                    <FileText className="w-8 h-8 text-slate-400 mx-auto mb-2" />
                     <p className="font-bold text-slate-700">No cryptographic signature records stamped yet.</p>
                     <p className="mt-1 text-slate-400">Sign on the pad above to generate the first immutable audit stamp.</p>
                   </div>
@@ -913,7 +943,7 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
                           <div className="rounded-lg bg-white p-2 border border-slate-200">
                             <span className="text-slate-400 font-bold block uppercase text-[9px]">Verification Status</span>
                             <span className="font-bold text-emerald-700 flex items-center gap-1">
-                              <span>✓</span>
+                              <Check className="w-3 h-3 text-emerald-600" />
                               <span>Authentic &bull; {rec.ip_address}</span>
                             </span>
                           </div>
@@ -935,7 +965,7 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
               <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-10 shadow-sm print:p-0 print:border-none">
                 <div className="text-center border-b border-slate-200 pb-6 mb-6">
                   <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-blue-50 text-blue-700 text-xl font-black mb-2 border border-blue-200">
-                    ⚖️
+                    <Scale className="w-6 h-6 text-blue-700" />
                   </div>
                   <h3 className="text-lg sm:text-xl font-black text-slate-900 uppercase tracking-wide">
                     Kaduna State Residential Tenancy Indenture
@@ -945,8 +975,18 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
                   </p>
                   <div className="mt-3 flex flex-wrap items-center justify-center gap-3 text-[11px] font-bold text-slate-600">
                     <span className="rounded-md bg-slate-100 px-2.5 py-1">Instrument Ref: {agreement.agreement_id}</span>
-                    <span className="rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1">
-                      {isFullyExecuted ? "✓ Dual Signatures Executed & Sealed" : "⏳ Pending Dual Execution"}
+                    <span className="rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 flex items-center gap-1">
+                      {isFullyExecuted ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Dual Signatures Executed &amp; Sealed</span>
+                        </>
+                      ) : (
+                        <>
+                          <Clock className="w-3.5 h-3.5 text-amber-600" />
+                          <span>Pending Dual Execution</span>
+                        </>
+                      )}
                     </span>
                   </div>
                 </div>
@@ -965,8 +1005,9 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
                         Party of the Second Part (Tenant)
                       </span>
                       {agreement.tenant_signature && (
-                        <span className="rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold px-1.5 py-0.5">
-                          ✓ Signed
+                        <span className="rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold px-1.5 py-0.5 flex items-center gap-1">
+                          <Check className="w-3 h-3 text-emerald-700" />
+                          <span>Signed</span>
                         </span>
                       )}
                     </div>
@@ -1000,8 +1041,9 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
                         Party of the First Part (Attorney-in-Fact)
                       </span>
                       {agreement.manager_signature && (
-                        <span className="rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold px-1.5 py-0.5">
-                          ✓ Counter-Signed
+                        <span className="rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold px-1.5 py-0.5 flex items-center gap-1">
+                          <Check className="w-3 h-3 text-emerald-700" />
+                          <span>Counter-Signed</span>
                         </span>
                       )}
                     </div>
@@ -1020,12 +1062,12 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
                           className="max-h-full max-w-full object-contain"
                         />
                       ) : (
-                        <span className="text-slate-400 italic text-xs">[Pending Manager Counter-Signature]</span>
+                        <span className="text-emerald-700 font-semibold text-xs">[Pre-Certified Under Mandate]</span>
                       )}
                     </div>
 
                     <div className="text-[10px] text-slate-600 space-y-0.5 font-mono">
-                      <div>Timestamp: {agreement.manager_signed_at || "Not counter-signed yet"}</div>
+                      <div>Timestamp: {agreement.manager_signed_at || "Pre-Certified upon Listing"}</div>
                       <div>Audit Ref: {agreement.manager_audit_ref || "None"}</div>
                     </div>
                   </div>
@@ -1035,7 +1077,7 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
                 {isFullyExecuted && (
                   <div className="mt-6 rounded-2xl bg-emerald-50 border border-emerald-200 p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
                     <div className="flex items-center gap-2.5">
-                      <span className="text-2xl">🏛️</span>
+                      <Building2 className="w-6 h-6 text-emerald-700 flex-shrink-0" />
                       <div>
                         <strong className="text-emerald-950 font-bold block">
                           Master Indenture Cryptographic Certificate Verified
@@ -1048,9 +1090,10 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
                     <button
                       type="button"
                       onClick={() => window.print()}
-                      className="rounded-xl border border-emerald-300 bg-white text-emerald-800 hover:bg-emerald-100 font-bold px-4 py-2 text-xs transition-colors cursor-pointer"
+                      className="rounded-xl border border-emerald-300 bg-white text-emerald-800 hover:bg-emerald-100 font-bold px-4 py-2 text-xs transition-colors cursor-pointer flex items-center gap-1.5"
                     >
-                      🖨️ Print Certificate
+                      <Printer className="w-3.5 h-3.5" />
+                      <span>Print Certificate</span>
                     </button>
                   </div>
                 )}
@@ -1077,34 +1120,19 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
               Close
             </button>
 
-            {isFullyExecuted ? (
+            {isFullyExecuted || isTenantSigned ? (
               <button
                 type="button"
                 onClick={() => {
                   if (onProceedToPayment) {
                     onProceedToPayment(agreement);
-                  } else {
-                    alert(
-                      `[Feature #5 Hand-Off: 4-Way Split Payment Engine]\n\nAgreement ${agreement.agreement_id} is fully executed and sealed with dual signatures!\n\nAll-In Move-In Total: ₦${agreement.pricing.total_move_in_cost.toLocaleString("en-NG")}\n\nReady to proceed to Feature #5 (Automated 4-Way Split Payment Engine)!`
-                    );
                   }
                 }}
                 className="w-full sm:w-auto rounded-xl bg-emerald-600 hover:bg-emerald-700 px-6 py-2.5 text-xs sm:text-sm font-bold text-white transition-all shadow-md shadow-emerald-500/25 cursor-pointer flex items-center justify-center gap-2"
               >
-                <span>💳</span>
-                <span>Proceed to Escrow Checkout (Feature #5) &rarr;</span>
-              </button>
-            ) : isTenantSigned ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveRole("manager");
-                  setActiveView("sign");
-                }}
-                className="w-full sm:w-auto rounded-xl bg-blue-600 hover:bg-blue-700 px-6 py-2.5 text-xs sm:text-sm font-bold text-white transition-all shadow-md shadow-blue-500/25 cursor-pointer flex items-center justify-center gap-2"
-              >
-                <span>⚖️</span>
-                <span>Open Manager Desk to Counter-Sign &rarr;</span>
+                <CreditCard className="w-4 h-4" />
+                <span>Proceed to Escrow Checkout</span>
+                <ArrowRight className="w-4 h-4" />
               </button>
             ) : null}
           </div>

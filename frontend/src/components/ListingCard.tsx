@@ -3,17 +3,35 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { Listing } from "../types/listing";
+import {
+  BadgeCheck,
+  Check,
+  CheckCircle2,
+  Bed,
+  Bath,
+  Zap,
+  Droplets,
+  Camera,
+  ChevronLeft,
+  ChevronRight,
+  MapPin,
+  Calendar,
+  ArrowRight,
+  ShieldCheck,
+} from "lucide-react";
 
 interface ListingCardProps {
   listing: Listing;
   onSelect: (listing: Listing) => void;
   onBookInspection?: (listing: Listing) => void;
+  onDirectApply?: (listing: Listing) => void;
 }
 
 export const ListingCard: React.FC<ListingCardProps> = ({
   listing,
   onSelect,
   onBookInspection,
+  onDirectApply,
 }) => {
   const [activeImageIdx, setActiveImageIdx] = useState(0);
 
@@ -47,17 +65,16 @@ export const ListingCard: React.FC<ListingCardProps> = ({
 
           {/* Top Badges */}
           <div className="absolute top-3 left-3 flex items-center gap-2">
-            <span className="flex items-center gap-1 rounded-full bg-blue-600/95 px-3 py-1 text-[11px] font-bold text-white shadow-md backdrop-blur-xs">
-              <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-              </svg>
-              Verified Mandate
+            <span className="flex items-center gap-1.5 rounded-full bg-blue-600/95 px-3 py-1 text-[11px] font-bold text-white shadow-md backdrop-blur-xs">
+              <BadgeCheck className="h-3.5 w-3.5 text-white" />
+              <span>Verified Mandate</span>
             </span>
           </div>
 
           <div className="absolute top-3 right-3 flex items-center gap-1.5">
-            <span className="rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold text-blue-700 shadow-sm backdrop-blur-xs border border-blue-100">
-              ₦0 Inspection
+            <span className="inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold text-blue-700 shadow-sm backdrop-blur-xs border border-blue-100">
+              <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+              <span>Inspection Optional</span>
             </span>
           </div>
 
@@ -67,18 +84,18 @@ export const ListingCard: React.FC<ListingCardProps> = ({
               <button
                 type="button"
                 onClick={handlePrevImage}
-                className="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-md hover:bg-white hover:scale-110 transition-all"
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-md hover:bg-white hover:scale-110 transition-all cursor-pointer"
                 aria-label="Previous image"
               >
-                ‹
+                <ChevronLeft className="h-4 w-4" />
               </button>
               <button
                 type="button"
                 onClick={handleNextImage}
-                className="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-md hover:bg-white hover:scale-110 transition-all"
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-md hover:bg-white hover:scale-110 transition-all cursor-pointer"
                 aria-label="Next image"
               >
-                ›
+                <ChevronRight className="h-4 w-4" />
               </button>
             </div>
           )}
@@ -91,8 +108,9 @@ export const ListingCard: React.FC<ListingCardProps> = ({
               <span className="text-[10px] text-slate-300">/yr</span>
             </div>
 
-            <span className="rounded-lg bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-xs">
-              📷 {activeImageIdx + 1}/{listing.images.length}
+            <span className="inline-flex items-center gap-1 rounded-lg bg-black/60 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-xs">
+              <Camera className="h-3 w-3" />
+              <span>{activeImageIdx + 1}/{listing.images.length}</span>
             </span>
           </div>
         </div>
@@ -102,7 +120,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({
           {/* Commute Badge */}
           <div className="mb-2">
             <span className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-800 border border-blue-100">
-              <span>📍</span>
+              <MapPin className="h-3.5 w-3.5 text-blue-600 flex-shrink-0" />
               <span className="truncate">{listing.commute_badge}</span>
             </span>
           </div>
@@ -121,22 +139,26 @@ export const ListingCard: React.FC<ListingCardProps> = ({
             <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">{listing.full_address}</p>
           </div>
 
-          {/* Specs Row */}
+          {/* Specs Row with Lucide Icons */}
           <div className="flex items-center gap-3 py-2.5 border-y border-slate-100 text-xs font-semibold text-slate-700">
-            <span className="flex items-center gap-1">
-              <span>🛏️</span> {listing.bedrooms} Bed
+            <span className="flex items-center gap-1.5">
+              <Bed className="h-4 w-4 text-blue-600" />
+              <span>{listing.bedrooms} Bed</span>
             </span>
             <span className="text-slate-300">•</span>
-            <span className="flex items-center gap-1">
-              <span>🚿</span> {listing.bathrooms} Bath
+            <span className="flex items-center gap-1.5">
+              <Bath className="h-4 w-4 text-blue-600" />
+              <span>{listing.bathrooms} Bath</span>
             </span>
             <span className="text-slate-300">•</span>
             <span className="flex items-center gap-1 text-emerald-600">
-              <span>⚡</span> Prepaid
+              <Zap className="h-3.5 w-3.5" />
+              <span>Prepaid</span>
             </span>
             <span className="text-slate-300">•</span>
             <span className="flex items-center gap-1 text-blue-600">
-              <span>💧</span> Borehole
+              <Droplets className="h-3.5 w-3.5" />
+              <span>Borehole</span>
             </span>
           </div>
 
@@ -192,28 +214,32 @@ export const ListingCard: React.FC<ListingCardProps> = ({
           </div>
 
           {/* Zero Hidden Fee Tag */}
-          <div className="mt-2 text-center text-[10px] font-semibold text-emerald-700 bg-emerald-50 rounded-md py-0.5 border border-emerald-200/60">
-            ✓ Statutory transparency guarantee • Zero roadside agent markups
+          <div className="mt-2 text-center text-[10px] font-semibold text-emerald-700 bg-emerald-50 rounded-md py-0.5 border border-emerald-200/60 flex items-center justify-center gap-1">
+            <CheckCircle2 className="h-3 w-3" />
+            <span>Statutory transparency guarantee • Zero roadside agent markups</span>
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Action Buttons: Direct Rent & Optional Inspection */}
         <div className="mt-3.5 grid grid-cols-2 gap-2">
           <button
             type="button"
-            onClick={() => onSelect(listing)}
-            className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-3 py-2.5 text-xs font-bold text-slate-800 transition-colors shadow-2xs cursor-pointer"
+            onClick={() => onDirectApply ? onDirectApply(listing) : onSelect(listing)}
+            className="flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 px-3 py-2.5 text-xs font-bold text-white transition-all shadow-md shadow-blue-500/20 hover:shadow-blue-500/30 cursor-pointer"
+            title="Apply & draft tenancy agreement directly without inspection"
           >
-            <span>View Details</span>
-            <span className="text-sm">→</span>
+            <Zap className="h-3.5 w-3.5" />
+            <span>Instant Rent</span>
           </button>
 
           <button
             type="button"
             onClick={() => onBookInspection ? onBookInspection(listing) : onSelect(listing)}
-            className="flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 px-3 py-2.5 text-xs font-bold text-white transition-all shadow-md shadow-blue-500/20 hover:shadow-blue-500/30 cursor-pointer"
+            className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-3 py-2.5 text-xs font-bold text-slate-800 transition-colors shadow-2xs cursor-pointer"
+            title="Book an optional free walkthrough inspection"
           >
-            <span>Book Tour (₦0)</span>
+            <Calendar className="h-3.5 w-3.5 text-slate-500" />
+            <span>Tour (Optional)</span>
           </button>
         </div>
       </div>

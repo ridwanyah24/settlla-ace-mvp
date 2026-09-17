@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { Navbar } from "./Navbar";
 import { HeroSection } from "./HeroSection";
 import { FilterBar } from "./FilterBar";
@@ -18,13 +19,18 @@ import { Listing } from "@/types/listing";
 import { filterSeedListings, SEED_LISTINGS } from "@/data/seedListings";
 import { TenantProfile, TenancyAgreement } from "@/types/agreement";
 import { MoveInPass, PaymentTransaction, EscrowHoldRecord } from "@/types/payment";
+import { AlertCircle, Search, ShieldCheck, Ticket } from "lucide-react";
 
 interface SettllaAppProps {
   initialListings?: Listing[];
 }
 
-export const SettllaApp: React.FC<SettllaAppProps> = ({ initialListings = SEED_LISTINGS }) => {
-  const [listings, setListings] = useState<Listing[]>(initialListings && initialListings.length > 0 ? initialListings : SEED_LISTINGS);
+const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LISTINGS }) => {
+  const { currentUser, role } = useAuth();
+
+  const [listings, setListings] = useState<Listing[]>(
+    initialListings && initialListings.length > 0 ? initialListings : SEED_LISTINGS
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -150,7 +156,14 @@ export const SettllaApp: React.FC<SettllaAppProps> = ({ initialListings = SEED_L
   const handleOpenAgreement = (item: Listing, tenantData?: Partial<TenantProfile>) => {
     setListingForDetail(null);
     setListingForBooking(null);
-    if (tenantData) setAgreementTenant(tenantData);
+    const profileToUse: Partial<TenantProfile> = tenantData || {
+      full_name: currentUser?.fullName || "",
+      phone_number: currentUser?.phoneNumber || "",
+      email_address: currentUser?.email || "",
+      nin_number: currentUser?.ninNumber || "",
+      employer_name: currentUser?.relocationContext || "",
+    };
+    setAgreementTenant(profileToUse);
     setListingForAgreement(item);
   };
 
@@ -162,10 +175,10 @@ export const SettllaApp: React.FC<SettllaAppProps> = ({ initialListings = SEED_L
     setSigningRole("tenant");
   };
 
-  const handleOpenSigningWorkflowFromQueue = (agreement: TenancyAgreement, listing: Listing, role: "tenant" | "manager") => {
+  const handleOpenSigningWorkflowFromQueue = (agreement: TenancyAgreement, listing: Listing, roleToSign: "tenant" | "manager") => {
     setSigningAgreement(agreement);
     setSigningListing(listing);
-    setSigningRole(role);
+    setSigningRole(roleToSign);
   };
 
   const handleAgreementUpdated = (updated: TenancyAgreement) => {
@@ -180,18 +193,21 @@ export const SettllaApp: React.FC<SettllaAppProps> = ({ initialListings = SEED_L
     }
   };
 
+  const handleAddNewListing = (newListing: Listing) => {
+    setListings((prev) => [newListing, ...prev]);
+  };
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-blue-600 selection:text-white">
-      {/* 1. Header & Announcement */}
+      {/* 1. Header Navigation */}
       <Navbar
         verifiedCount={listings.length}
         pendingManagerSignatures={pendingCount}
-        onOpenManagerDesk={() => setManagerQueueOpen(true)}
         activeEscrowStatus={activeEscrow?.escrow_status || "holding"}
         onOpenEscrowDashboard={() => setEscrowDashboardOpen(true)}
       />
 
-      {/* 2. Hero Section matching reference image */}
+      {/* 2. Hero Section */}
       <HeroSection
         neighborhood={neighborhood}
         setNeighborhood={setNeighborhood}
@@ -219,8 +235,9 @@ export const SettllaApp: React.FC<SettllaAppProps> = ({ initialListings = SEED_L
         />
 
         {error && (
-          <div className="mb-8 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-800 text-sm font-medium">
-            ⚠️ {error}
+          <div className="mb-8 flex items-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-800 text-sm font-medium">
+            <AlertCircle className="h-5 w-5 text-rose-600 shrink-0" />
+            <span>{error}</span>
           </div>
         )}
 
@@ -235,8 +252,8 @@ export const SettllaApp: React.FC<SettllaAppProps> = ({ initialListings = SEED_L
             </div>
           ) : listings.length === 0 ? (
             <div className="rounded-3xl border border-slate-200 bg-white py-16 px-6 text-center shadow-xs">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-2xl text-blue-600 mb-3">
-                🔍
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 mb-3">
+                <Search className="h-7 w-7" />
               </div>
               <h3 className="text-lg font-bold text-slate-900">No matching verified apartments found</h3>
               <p className="mt-1 text-xs text-slate-500 max-w-md mx-auto">
@@ -257,6 +274,7 @@ export const SettllaApp: React.FC<SettllaAppProps> = ({ initialListings = SEED_L
                   listing={listing}
                   onSelect={handleOpenDetail}
                   onBookInspection={handleOpenBooking}
+                  onDirectApply={(item) => handleOpenAgreement(item)}
                 />
               ))}
             </div>
@@ -267,7 +285,7 @@ export const SettllaApp: React.FC<SettllaAppProps> = ({ initialListings = SEED_L
       {/* 4. Complete Landing Sections from Reference Design */}
       <LandingSections onExploreFeed={scrollToFeed} />
 
-      {/* 5. Listing Detail Modal (Screen 1 Detail View) */}
+      {/* 5. Listing Detail Modal */}
       <ListingDetailModal
         listing={listingForDetail}
         onClose={() => setListingForDetail(null)}
@@ -278,7 +296,7 @@ export const SettllaApp: React.FC<SettllaAppProps> = ({ initialListings = SEED_L
         onDraftAgreement={(item) => handleOpenAgreement(item)}
       />
 
-      {/* 6. Direct Booking Drawer (Screen 2 & 3 Flow) */}
+      {/* 6. Direct Booking Drawer (Optional Walkthrough) */}
       {listingForBooking && (
         <BookingDrawer
           isOpen={Boolean(listingForBooking)}
@@ -295,7 +313,7 @@ export const SettllaApp: React.FC<SettllaAppProps> = ({ initialListings = SEED_L
         />
       )}
 
-      {/* 7. Dynamic Tenancy Agreement Generator (Screen 5) */}
+      {/* 7. Dynamic Tenancy Agreement Generator */}
       {listingForAgreement && (
         <TenancyAgreementViewer
           isOpen={Boolean(listingForAgreement)}
@@ -306,7 +324,7 @@ export const SettllaApp: React.FC<SettllaAppProps> = ({ initialListings = SEED_L
         />
       )}
 
-      {/* 8. Feature #4: Two-Party Electronic Signature Workflow Modal (Screens 5 & 6) */}
+      {/* 8. Feature #4: Two-Party Electronic Signature Workflow Modal */}
       {signingAgreement && signingListing && (
         <SignatureWorkflowModal
           isOpen={Boolean(signingAgreement)}
@@ -325,7 +343,7 @@ export const SettllaApp: React.FC<SettllaAppProps> = ({ initialListings = SEED_L
         />
       )}
 
-      {/* 9. Feature #5: 4-Way Automated Split Payment Checkout Modal (Screen 7) */}
+      {/* 9. Feature #5: 4-Way Automated Split Payment Checkout Modal */}
       {checkoutAgreement && checkoutListing && (
         <CheckoutPaymentModal
           isOpen={Boolean(checkoutAgreement && checkoutListing)}
@@ -350,7 +368,7 @@ export const SettllaApp: React.FC<SettllaAppProps> = ({ initialListings = SEED_L
         />
       )}
 
-      {/* 10. Standalone Move-In Pass Modal (Screen 7 Pass & Escrow Verification) */}
+      {/* 10. Standalone Move-In Pass Modal */}
       {activePass && (
         <MoveInPassViewer
           isOpen={Boolean(activePass)}
@@ -386,7 +404,7 @@ export const SettllaApp: React.FC<SettllaAppProps> = ({ initialListings = SEED_L
             onClick={() => setEscrowDashboardOpen(true)}
             className="flex items-center gap-2 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 shadow-xl shadow-blue-600/30 text-xs sm:text-sm font-bold transition-all cursor-pointer"
           >
-            <span>🛡️</span>
+            <ShieldCheck className="h-4 w-4" />
             <span>Move-In Escrow Dashboard</span>
           </button>
           <button
@@ -394,7 +412,7 @@ export const SettllaApp: React.FC<SettllaAppProps> = ({ initialListings = SEED_L
             onClick={() => setActivePassListing(listings[0])}
             className="flex items-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 shadow-xl shadow-emerald-600/30 text-xs font-bold transition-all cursor-pointer"
           >
-            <span>🎫</span>
+            <Ticket className="h-4 w-4" />
             <span>View Pass ({activePass.pass_id})</span>
           </button>
         </div>
@@ -403,3 +421,10 @@ export const SettllaApp: React.FC<SettllaAppProps> = ({ initialListings = SEED_L
   );
 };
 
+export const SettllaApp: React.FC<SettllaAppProps> = (props) => {
+  return (
+    <AuthProvider>
+      <SettllaAppInner {...props} />
+    </AuthProvider>
+  );
+};

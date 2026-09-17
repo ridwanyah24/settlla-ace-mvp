@@ -2,6 +2,26 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import {
+  Zap,
+  Check,
+  Sparkles,
+  ShieldCheck,
+  CreditCard,
+  Lock,
+  FileText,
+  Handshake,
+  Scale,
+  X,
+  MessageSquare,
+  Star,
+  HelpCircle,
+  Plus,
+  Minus,
+  Phone,
+  MapPin,
+  Heart,
+} from "lucide-react";
 
 interface LandingSectionsProps {
   onExploreFeed: () => void;
@@ -51,7 +71,7 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
       <section id="how-it-works" className="w-full bg-[#0B1528] py-16 sm:py-20 text-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-2 rounded-full bg-blue-500/10 px-3.5 py-1 text-xs font-bold text-blue-400 border border-blue-500/20 mb-3">
-            <span>⚡</span>
+            <Zap className="h-3.5 w-3.5 text-blue-400" />
             <span>Simple 3-Step Process</span>
           </div>
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white">
@@ -115,8 +135,8 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
 
             {/* Floating Trust Badge */}
             <div className="absolute -bottom-6 -right-4 sm:right-6 rounded-2xl bg-white p-4 shadow-xl border border-slate-150 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-white font-black text-xl">
-                ✓
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
+                <Check className="h-6 w-6 text-white" />
               </div>
               <div>
                 <span className="block text-xs font-bold uppercase text-blue-600">Verified Mandates</span>
@@ -129,7 +149,7 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
           {/* Right: Value Pillars */}
           <div>
             <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700 border border-blue-200 mb-3">
-              <span>🌟</span>
+              <Sparkles className="h-3.5 w-3.5 text-blue-600" />
               <span>WHY PEOPLE CHOOSE SETTLLA</span>
             </div>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-slate-900 leading-tight">
@@ -143,7 +163,7 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
               {/* Feature 1 */}
               <div className="flex items-start gap-4 p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 font-bold">
-                  🛡️
+                  <ShieldCheck className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-slate-900">Verified Listings Only</h4>
@@ -156,7 +176,7 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
               {/* Feature 2 */}
               <div className="flex items-start gap-4 p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 font-bold">
-                  💳
+                  <CreditCard className="h-5 w-5 text-emerald-600" />
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-slate-900">100% Upfront Pricing Transparency</h4>
@@ -169,7 +189,7 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
               {/* Feature 3 */}
               <div className="flex items-start gap-4 p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-600 font-bold">
-                  🔒
+                  <Lock className="h-5 w-5 text-purple-600" />
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-slate-900">Escrow Caution Deposit Protection</h4>
@@ -182,7 +202,7 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
               {/* Feature 4 */}
               <div className="flex items-start gap-4 p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 font-bold">
-                  📝
+                  <FileText className="h-5 w-5 text-amber-600" />
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-slate-900">Legally Binding Digital Lease</h4>
@@ -209,7 +229,7 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center relative z-10">
             <div>
               <div className="inline-flex items-center gap-2 rounded-full bg-blue-500/20 px-3 py-1 text-xs font-bold text-blue-300 border border-blue-500/30 mb-3">
-                <span>🤝</span>
+                <Handshake className="h-3.5 w-3.5 text-blue-300" />
                 <span>PARTNER WITH SETTLLA</span>
               </div>
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight">
@@ -221,19 +241,19 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
 
               <div className="mt-6 space-y-3 text-xs sm:text-sm text-slate-200">
                 <div className="flex items-center gap-2.5">
-                  <span className="text-emerald-400 font-bold">✓</span>
+                  <Check className="h-4 w-4 text-emerald-400 shrink-0" />
                   <span>Pre-screened tenants with NIN &amp; employment verification</span>
                 </div>
                 <div className="flex items-center gap-2.5">
-                  <span className="text-emerald-400 font-bold">✓</span>
+                  <Check className="h-4 w-4 text-emerald-400 shrink-0" />
                   <span>Zero roadside inspection hassle — scheduled viewing windows only</span>
                 </div>
                 <div className="flex items-center gap-2.5">
-                  <span className="text-emerald-400 font-bold">✓</span>
+                  <Check className="h-4 w-4 text-emerald-400 shrink-0" />
                   <span>Automated statutory lease agreements &amp; digital signatures</span>
                 </div>
                 <div className="flex items-center gap-2.5">
-                  <span className="text-emerald-400 font-bold">✓</span>
+                  <Check className="h-4 w-4 text-emerald-400 shrink-0" />
                   <span>Direct rent disbursement with escrow protection</span>
                 </div>
               </div>
@@ -267,7 +287,7 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
       {/* 4. "Simple, Transparent Plans" Comparison */}
       <section id="pricing-plans" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
         <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700 border border-blue-200 mb-3">
-          <span>⚖️</span>
+          <Scale className="h-3.5 w-3.5 text-blue-700" />
           <span>NO HIDDEN FEES</span>
         </div>
         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-slate-900">
@@ -294,19 +314,24 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
 
               <div className="mt-6 space-y-3 text-xs text-slate-600 border-t border-slate-100 pt-6">
                 <div className="flex items-center gap-2 text-rose-600">
-                  <span>✕</span> ₦3,000 – ₦5,000 per inspection trip
+                  <X className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+                  <span>₦3,000 – ₦5,000 per inspection trip</span>
                 </div>
                 <div className="flex items-center gap-2 text-rose-600">
-                  <span>✕</span> Arbitrary 15% – 20% agency markups
+                  <X className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+                  <span>Arbitrary 15% – 20% agency markups</span>
                 </div>
                 <div className="flex items-center gap-2 text-rose-600">
-                  <span>✕</span> Non-refundable caution deposits
+                  <X className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+                  <span>Non-refundable caution deposits</span>
                 </div>
                 <div className="flex items-center gap-2 text-rose-600">
-                  <span>✕</span> High risk of double-letting scams
+                  <X className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+                  <span>High risk of double-letting scams</span>
                 </div>
                 <div className="flex items-center gap-2 text-rose-600">
-                  <span>✕</span> Handwritten, questionable receipts
+                  <X className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+                  <span>Handwritten, questionable receipts</span>
                 </div>
               </div>
             </div>
@@ -337,19 +362,24 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
 
               <div className="mt-6 space-y-3 text-xs text-slate-700 border-t border-slate-100 pt-6">
                 <div className="flex items-center gap-2 text-emerald-600 font-bold">
-                  <span>✓</span> ₦0 Physical Inspection Fee
+                  <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                  <span>₦0 Physical Inspection Fee</span>
                 </div>
                 <div className="flex items-center gap-2 text-emerald-600 font-bold">
-                  <span>✓</span> 10% Caution held safe in Escrow
+                  <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                  <span>10% Caution held safe in Escrow</span>
                 </div>
                 <div className="flex items-center gap-2 text-emerald-600 font-bold">
-                  <span>✓</span> 5% Statutory Legal Agreement
+                  <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                  <span>5% Statutory Legal Agreement</span>
                 </div>
                 <div className="flex items-center gap-2 text-emerald-600 font-bold">
-                  <span>✓</span> 10% Professional HB&amp;A Mandate
+                  <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                  <span>10% Professional HB&amp;A Mandate</span>
                 </div>
                 <div className="flex items-center gap-2 text-emerald-600 font-bold">
-                  <span>✓</span> 100% Vetted Landlord Direct Mandates
+                  <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                  <span>100% Vetted Landlord Direct Mandates</span>
                 </div>
               </div>
             </div>
@@ -380,19 +410,24 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
 
               <div className="mt-6 space-y-3 text-xs text-slate-600 border-t border-slate-100 pt-6">
                 <div className="flex items-center gap-2 text-blue-600">
-                  <span>✓</span> Zero listing or setup fees
+                  <Check className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                  <span>Zero listing or setup fees</span>
                 </div>
                 <div className="flex items-center gap-2 text-blue-600">
-                  <span>✓</span> Professional photography &amp; verification
+                  <Check className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                  <span>Professional photography &amp; verification</span>
                 </div>
                 <div className="flex items-center gap-2 text-blue-600">
-                  <span>✓</span> Screened tenants (NIN &amp; salary verified)
+                  <Check className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                  <span>Screened tenants (NIN &amp; salary verified)</span>
                 </div>
                 <div className="flex items-center gap-2 text-blue-600">
-                  <span>✓</span> Digital legal tenancy drafting
+                  <Check className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                  <span>Digital legal tenancy drafting</span>
                 </div>
                 <div className="flex items-center gap-2 text-blue-600">
-                  <span>✓</span> Guaranteed 72-hour placement target
+                  <Check className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                  <span>Guaranteed 72-hour placement target</span>
                 </div>
               </div>
             </div>
@@ -412,7 +447,7 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
       {/* 5. "Trusted by People Like You" Testimonials */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
         <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700 border border-blue-200 mb-3">
-          <span>💬</span>
+          <MessageSquare className="h-3.5 w-3.5 text-blue-600" />
           <span>TENANT REVIEWS</span>
         </div>
         <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
@@ -425,8 +460,10 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
         <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
           {/* Review 1 */}
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex items-center gap-1 text-amber-400 text-sm mb-3">
-              ★★★★★
+            <div className="flex items-center gap-1 text-amber-400 mb-3">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+              ))}
             </div>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed italic">
               "Settlla saved me from paying ₦45k in fake agent inspection fees. I saw the exact total move-in cost before stepping out of Barau Dikko Hospital, inspected at 2 PM on Saturday for free, and signed my lease digitally."
@@ -444,8 +481,10 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
 
           {/* Review 2 */}
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex items-center gap-1 text-amber-400 text-sm mb-3">
-              ★★★★★
+            <div className="flex items-center gap-1 text-amber-400 mb-3">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+              ))}
             </div>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed italic">
               "As an NYSC corps member posted to Kaduna, finding an apartment without getting scammed felt impossible. Settlla gave me the exact breakdown down to the last Naira and held my caution deposit safely."
@@ -463,8 +502,10 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
 
           {/* Review 3 */}
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex items-center gap-1 text-amber-400 text-sm mb-3">
-              ★★★★★
+            <div className="flex items-center gap-1 text-amber-400 mb-3">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+              ))}
             </div>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed italic">
               "The ₦0 inspection and direct HB&amp;A mandate gave me total confidence. No roadside agent drama or hidden fees when paying the rent. Clean, transparent, and prompt."
@@ -525,8 +566,9 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
 
             <form onSubmit={handleLandlordSubmit} className="w-full lg:w-auto flex flex-col sm:flex-row gap-2.5">
               {landlordSubmitted ? (
-                <div className="rounded-xl bg-emerald-950 border border-emerald-500/40 px-5 py-3 text-xs font-bold text-emerald-300">
-                  ✓ Thank you! Our Kaduna mandate team will call you within 2 business hours.
+                <div className="flex items-center gap-1.5 rounded-xl bg-emerald-950 border border-emerald-500/40 px-5 py-3 text-xs font-bold text-emerald-300">
+                  <Check className="h-4 w-4 text-emerald-300 shrink-0" />
+                  <span>Thank you! Our Kaduna mandate team will call you within 2 business hours.</span>
                 </div>
               ) : (
                 <>
@@ -555,7 +597,7 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
       <section id="faq-section" className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700 border border-blue-200 mb-2">
-            <span>❓</span>
+            <HelpCircle className="h-3.5 w-3.5 text-blue-600" />
             <span>GOT QUESTIONS?</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
@@ -580,8 +622,8 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
                   className="w-full p-4 sm:p-5 text-left flex items-center justify-between gap-4 font-bold text-sm sm:text-base text-slate-900 hover:text-blue-600 transition-colors cursor-pointer"
                 >
                   <span>{faq.q}</span>
-                  <span className="text-lg text-slate-400 font-normal">
-                    {isOpen ? "−" : "+"}
+                  <span className="text-slate-400">
+                    {isOpen ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                   </span>
                 </button>
                 {isOpen && (
@@ -610,9 +652,15 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
               <p className="mt-3 text-xs text-slate-400 leading-relaxed">
                 Kaduna's first verified residential rental platform with 100% upfront pricing transparency and zero inspection fees.
               </p>
-              <div className="mt-4 text-xs text-slate-300">
-                <p>📞 <strong>+234 800 SETTLLA</strong></p>
-                <p className="mt-1">📍 Barnawa GRA, Kaduna, Nigeria</p>
+              <div className="mt-4 text-xs text-slate-300 space-y-1.5">
+                <p className="flex items-center gap-1.5">
+                  <Phone className="h-3.5 w-3.5 text-blue-400 shrink-0" />
+                  <strong>+234 800 SETTLLA</strong>
+                </p>
+                <p className="flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 text-blue-400 shrink-0" />
+                  <span>Barnawa GRA, Kaduna, Nigeria</span>
+                </p>
               </div>
             </div>
 
@@ -666,7 +714,11 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
 
           <div className="mt-12 pt-8 border-t border-slate-800 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p>© 2026 Settlla Technologies Ltd. All rights reserved.</p>
-            <p>Built for Kaduna tenants and landlords with ❤️ and complete transparency.</p>
+            <p className="flex items-center justify-center gap-1">
+              <span>Built for Kaduna tenants and landlords with</span>
+              <Heart className="h-3.5 w-3.5 text-rose-500 fill-rose-500 inline" />
+              <span>and complete transparency.</span>
+            </p>
           </div>
         </div>
       </footer>

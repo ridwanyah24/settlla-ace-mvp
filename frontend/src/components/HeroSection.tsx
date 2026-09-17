@@ -2,6 +2,14 @@
 
 import React from "react";
 import Image from "next/image";
+import {
+  ShieldCheck,
+  Search,
+  MapPin,
+  Home,
+  CreditCard,
+  CheckCircle2,
+} from "lucide-react";
 
 interface HeroSectionProps {
   neighborhood: string;
@@ -41,7 +49,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         {/* Top Trust Pill */}
         <div className="inline-flex items-center gap-2 rounded-full bg-blue-50/90 px-4 py-1.5 text-xs font-bold text-blue-700 border border-blue-200 shadow-xs mb-6 backdrop-blur-xs">
           <span className="flex h-2 w-2 rounded-full bg-blue-600 animate-ping"></span>
-          <span>🛡️ Kaduna's Most Trusted Rental Platform</span>
+          <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
+          <span>Kaduna's Most Trusted Rental Platform</span>
           <span className="hidden sm:inline text-blue-300">•</span>
           <span className="hidden sm:inline text-blue-600 font-medium">Barnawa &amp; Malali Wedge</span>
         </div>
@@ -62,23 +71,25 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         <div className="mx-auto mt-10 max-w-5xl rounded-3xl bg-white p-4 sm:p-6 shadow-2xl shadow-blue-950/10 border border-slate-200/80 backdrop-blur-md">
           <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3 text-left">
             <div className="flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-50 text-blue-600 text-xs font-bold">
-                🔍
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600 text-xs font-bold">
+                <Search className="h-4 w-4 text-blue-600" />
               </span>
               <span className="text-xs sm:text-sm font-bold text-slate-800">
                 Search Vetted Kaduna Homes with 100% Upfront Pricing
               </span>
             </div>
-            <span className="hidden sm:inline text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-              ✓ ₦0 Inspection Fee Guarantee
+            <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+              <CheckCircle2 className="h-3 w-3" />
+              <span>₦0 Inspection Fee Guarantee</span>
             </span>
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 text-left">
             {/* 1. Location */}
             <div className="rounded-2xl bg-slate-50 p-3 border border-slate-200/60 focus-within:border-blue-500 focus-within:bg-white transition-all">
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1 flex items-center gap-1">
-                <span>📍</span> Location
+              <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1 flex items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5 text-blue-600" />
+                <span>Location</span>
               </label>
               <select
                 value={neighborhood}
@@ -93,8 +104,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
             {/* 2. Property Type */}
             <div className="rounded-2xl bg-slate-50 p-3 border border-slate-200/60 focus-within:border-blue-500 focus-within:bg-white transition-all">
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1 flex items-center gap-1">
-                <span>🏠</span> Property Type
+              <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1 flex items-center gap-1.5">
+                <Home className="h-3.5 w-3.5 text-blue-600" />
+                <span>Property Type</span>
               </label>
               <select
                 value={propertyType}
@@ -111,8 +123,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
             {/* 3. Max Move-In Budget */}
             <div className="rounded-2xl bg-slate-50 p-3 border border-slate-200/60 focus-within:border-blue-500 focus-within:bg-white transition-all">
-              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1 flex items-center gap-1">
-                <span>💳</span> Max Move-In Budget
+              <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1 flex items-center gap-1.5">
+                <CreditCard className="h-3.5 w-3.5 text-blue-600" />
+                <span>Max Move-In Budget</span>
               </label>
               <select
                 value={maxBudget}
@@ -134,9 +147,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 onClick={onSearch}
                 className="w-full flex items-center justify-center gap-2 rounded-2xl bg-blue-600 hover:bg-blue-700 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-600/30 hover:shadow-blue-600/40 transition-all cursor-pointer"
               >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+                <Search className="h-4 w-4" />
                 <span>Find Home</span>
               </button>
             </div>
@@ -146,15 +157,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         {/* Value Prop Micro-Chips */}
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs font-semibold text-slate-600">
           <div className="flex items-center gap-1.5 rounded-full bg-white/80 px-3.5 py-1.5 border border-slate-200 shadow-2xs backdrop-blur-xs">
-            <span className="text-emerald-500 font-bold">✓</span>
+            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
             <span>Zero Roadside Inspection Fees</span>
           </div>
           <div className="flex items-center gap-1.5 rounded-full bg-white/80 px-3.5 py-1.5 border border-slate-200 shadow-2xs backdrop-blur-xs">
-            <span className="text-blue-500 font-bold">✓</span>
+            <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
             <span>10% Caution Kept in Escrow</span>
           </div>
           <div className="flex items-center gap-1.5 rounded-full bg-white/80 px-3.5 py-1.5 border border-slate-200 shadow-2xs backdrop-blur-xs">
-            <span className="text-indigo-500 font-bold">✓</span>
+            <CheckCircle2 className="h-3.5 w-3.5 text-indigo-600" />
             <span>Direct Landlord Mandates Only</span>
           </div>
         </div>

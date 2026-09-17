@@ -1,8 +1,22 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { Listing } from "@/types/listing";
 import { TenancyAgreement, TenantProfile } from "@/types/agreement";
+import {
+  X,
+  FileText,
+  Scale,
+  ShieldCheck,
+  AlertTriangle,
+  PenTool,
+  ArrowRight,
+  Printer,
+  Pencil,
+  Check,
+  CreditCard,
+} from "lucide-react";
 
 interface TenancyAgreementViewerProps {
   isOpen: boolean;
@@ -19,6 +33,8 @@ export const TenancyAgreementViewer: React.FC<TenancyAgreementViewerProps> = ({
   initialTenantProfile,
   onProceedToSignature,
 }) => {
+  const { currentUser } = useAuth();
+
   // Active Tab: "contract" (Full Legal Text), "covenants" (Statutory Covenants Breakdown), "mandate" (Attorney Mandate Proof)
   const [activeTab, setActiveTab] = useState<"contract" | "covenants" | "mandate">("contract");
 
@@ -28,21 +44,42 @@ export const TenancyAgreementViewer: React.FC<TenancyAgreementViewerProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   // Tenant Profile State (Editable)
-  const [isEditingTenant, setIsEditingTenant] = useState(false);
-  const [tenantName, setTenantName] = useState(initialTenantProfile?.full_name || "Hajara Bello");
-  const [tenantPhone, setTenantPhone] = useState(initialTenantProfile?.phone_number || "0803 123 4567");
-  const [tenantEmail, setTenantEmail] = useState(initialTenantProfile?.email_address || "hajara.bello@example.com");
-  const [tenantNIN, setTenantNIN] = useState(initialTenantProfile?.nin_number || "28491029384");
-  const [tenantAddress, setTenantAddress] = useState(initialTenantProfile?.residential_address || "Plot 5, Constitution Road, Kaduna");
-  const [tenantEmployer, setTenantEmployer] = useState(initialTenantProfile?.employer_name || "Guaranty Trust Bank (GTBank), Barnawa Branch");
-  const [emergencyContact, setEmergencyContact] = useState(initialTenantProfile?.emergency_contact_name || "Ibrahim Bello (0802 334 5566, Brother)");
+  const [tenantName, setTenantName] = useState(
+    initialTenantProfile?.full_name || currentUser?.fullName || ""
+  );
+  const [tenantPhone, setTenantPhone] = useState(
+    initialTenantProfile?.phone_number || currentUser?.phoneNumber || ""
+  );
+  const [tenantEmail, setTenantEmail] = useState(
+    initialTenantProfile?.email_address || currentUser?.email || ""
+  );
+  const [tenantNIN, setTenantNIN] = useState(
+    initialTenantProfile?.nin_number || currentUser?.ninNumber || ""
+  );
+  const [tenantAddress, setTenantAddress] = useState(
+    initialTenantProfile?.residential_address || "Kaduna, Nigeria"
+  );
+  const [tenantEmployer, setTenantEmployer] = useState(
+    initialTenantProfile?.employer_name || currentUser?.relocationContext || "Professional / Resident"
+  );
+  const [emergencyContact, setEmergencyContact] = useState(
+    initialTenantProfile?.emergency_contact_name || ""
+  );
+
+  // Auto-expand editing if tenant hasn't provided name/email
+  const [isEditingTenant, setIsEditingTenant] = useState(
+    !initialTenantProfile?.full_name && !currentUser?.fullName
+  );
 
   // Sync initial tenant profile if prop updates
   useEffect(() => {
     if (initialTenantProfile?.full_name) setTenantName(initialTenantProfile.full_name);
     if (initialTenantProfile?.phone_number) setTenantPhone(initialTenantProfile.phone_number);
     if (initialTenantProfile?.email_address) setTenantEmail(initialTenantProfile.email_address);
-  }, [initialTenantProfile]);
+    if (currentUser?.fullName && !tenantName) setTenantName(currentUser.fullName);
+    if (currentUser?.email && !tenantEmail) setTenantEmail(currentUser.email);
+    if (currentUser?.phoneNumber && !tenantPhone) setTenantPhone(currentUser.phoneNumber);
+  }, [initialTenantProfile, currentUser]);
 
   // Fetch or generate agreement
   useEffect(() => {
@@ -55,16 +92,16 @@ export const TenancyAgreementViewer: React.FC<TenancyAgreementViewerProps> = ({
       const payload = {
         listing_id: listing.id,
         tenant: {
-          full_name: tenantName.trim() || "Hajara Bello",
-          phone_number: tenantPhone.trim() || "0803 123 4567",
-          email_address: tenantEmail.trim() || "hajara.bello@example.com",
-          nin_number: tenantNIN.trim() || "28491029384",
-          residential_address: tenantAddress.trim() || "Plot 5, Constitution Road, Kaduna",
-          emergency_contact_name: emergencyContact.trim() || "Ibrahim Bello",
-          emergency_contact_phone: "0802 334 5566",
-          emergency_contact_rel: "Brother",
-          employer_name: tenantEmployer.trim() || "Guaranty Trust Bank (GTBank), Barnawa Branch",
-          employment_role: "Banking Operations Associate",
+          full_name: tenantName.trim() || "Prospective Tenant",
+          phone_number: tenantPhone.trim() || "0800 000 0000",
+          email_address: tenantEmail.trim() || "tenant@example.com",
+          nin_number: tenantNIN.trim() || "NIN-Pending",
+          residential_address: tenantAddress.trim() || "Kaduna, Nigeria",
+          emergency_contact_name: emergencyContact.trim() || "Contact on file",
+          emergency_contact_phone: "0800 000 0000",
+          emergency_contact_rel: "Next of Kin",
+          employer_name: tenantEmployer.trim() || "Resident",
+          employment_role: "Occupant",
         },
         lease_start_date: "2026-10-01",
         lease_end_date: "2027-09-30",
@@ -140,7 +177,7 @@ export const TenancyAgreementViewer: React.FC<TenancyAgreementViewerProps> = ({
       },
       {
         category: "Key-in-Door Move-In Escrow Protection",
-        statute_reference: "Settlla Scam Indemnity Protocol (FR-07)",
+        statute_reference: "Settlla Scam Indemnity Protocol",
         items: [
           `Net rent (${rentStr}) locked in escrow until tenant taps 'Confirm Key Handover'.`,
           "24-hour automatic safety countdown timer with immediate freeze on 'Report a Problem' dispute.",
@@ -148,7 +185,7 @@ export const TenancyAgreementViewer: React.FC<TenancyAgreementViewerProps> = ({
       },
       {
         category: "Ringfenced Caution Deposit Safeguard",
-        statute_reference: "Settlla Non-Custodial Reserve Mandate (FR-06)",
+        statute_reference: "Settlla Non-Custodial Reserve Mandate",
         items: [
           `10% damage deposit (${cautionStr}) isolated in merchant reserve / PayRep custody vault.`,
           "Mandatory full return within 14 calendar days post-move-out minus verified damage deductions.",
@@ -230,6 +267,11 @@ Accreditation: ${item.mandate.accreditation}
 Audit Reference: SETT-SIG-MGR-${agreementId}
 ================================================================================`;
 
+    const managerAuditRef = `SETT-SIG-MGR-${refNum}`;
+    const managerSignedDate = new Date().toISOString().replace("T", " ").substring(0, 19);
+    const managerShaHash = `sha256_mandate_${item.mandate.mandate_ref}_mgr_signed`;
+    const managerSignatureSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="220" height="60"><path d="M10 40 Q 40 10, 80 35 T 150 25 T 210 38" fill="none" stroke="%230F172A" stroke-width="2.5" stroke-linecap="round"/><text x="10" y="55" font-family="sans-serif" font-size="10" font-weight="bold" fill="%230F766E">Barr. H. B. Abubakar (Pre-Certified)</text></svg>`;
+
     return {
       agreement_id: agreementId,
       listing_id: item.id,
@@ -250,6 +292,26 @@ Audit Reference: SETT-SIG-MGR-${agreementId}
       escrow_clause: `Annual rent of ${rentStr} held in Settlla Move-In Escrow until key handover confirmation.`,
       caution_ringfencing_clause: `Caution fee of ${cautionStr} ringfenced in PayRep vault for 12 months.`,
       full_legal_text: fullLegalText,
+      manager_signature: managerSignatureSvg,
+      manager_signed_at: managerSignedDate,
+      manager_audit_ref: managerAuditRef,
+      manager_sha256_hash: managerShaHash,
+      mandate_attestation_confirmed: true,
+      audit_trail: [
+        {
+          audit_ref: managerAuditRef,
+          agreement_id: agreementId,
+          signer_role: "manager",
+          signer_name: item.mandate.manager_name,
+          signer_title: `Managing Partner & Principal Counsel (${item.mandate.accreditation})`,
+          attestation_text: `I, ${item.mandate.manager_name}, hereby attest under registered Landlord Management Mandate Ref: ${item.mandate.mandate_ref} that I am fully authorized as lawful Attorney-in-Fact to pre-execute this indenture on behalf of Landlord (${item.mandate.landlord_name}).`,
+          timestamp: managerSignedDate,
+          sha256_hash: managerShaHash,
+          signature_digest: managerShaHash.substring(0, 16),
+          ip_address: "105.112.98.14 (Kaduna, NG)",
+          verification_status: "verified_authentic",
+        },
+      ],
       status: "draft_ready_for_signature",
       created_at: new Date().toISOString(),
     };
@@ -276,7 +338,7 @@ Audit Reference: SETT-SIG-MGR-${agreementId}
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-1">
               <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-blue-700 border border-blue-200/70">
-                Screen 5: Dynamic Legal Lease
+                Dynamic Legal Tenancy Indenture
               </span>
               <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-700 border border-emerald-200/70">
                 Kaduna State Compliant
@@ -303,7 +365,7 @@ Audit Reference: SETT-SIG-MGR-${agreementId}
               className="rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold px-3.5 py-2 text-xs transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
               title="Print or Save as PDF"
             >
-              <span>🖨️</span>
+              <Printer className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Print / Save PDF</span>
             </button>
             <button
@@ -311,7 +373,7 @@ Audit Reference: SETT-SIG-MGR-${agreementId}
               onClick={() => setIsEditingTenant(!isEditingTenant)}
               className="rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-3.5 py-2 text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
             >
-              <span>✏️</span>
+              <Pencil className="w-3.5 h-3.5" />
               <span>{isEditingTenant ? "Close Edit" : "Edit Tenant Info"}</span>
             </button>
             <button
@@ -319,7 +381,7 @@ Audit Reference: SETT-SIG-MGR-${agreementId}
               className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors"
               title="Close Modal"
             >
-              ✕
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -395,35 +457,38 @@ Audit Reference: SETT-SIG-MGR-${agreementId}
           <button
             type="button"
             onClick={() => setActiveTab("contract")}
-            className={`py-3 px-4 border-b-2 transition-colors cursor-pointer ${
+            className={`py-3 px-4 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
               activeTab === "contract"
                 ? "border-blue-600 text-blue-600 bg-white rounded-t-xl"
                 : "border-transparent text-slate-500 hover:text-slate-900"
             }`}
           >
-            📜 Full Legal Contract
+            <FileText className="w-3.5 h-3.5" />
+            <span>Full Legal Contract</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("covenants")}
-            className={`py-3 px-4 border-b-2 transition-colors cursor-pointer ${
+            className={`py-3 px-4 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
               activeTab === "covenants"
                 ? "border-blue-600 text-blue-600 bg-white rounded-t-xl"
                 : "border-transparent text-slate-500 hover:text-slate-900"
             }`}
           >
-            ⚖️ Statutory Covenants &amp; Fees
+            <Scale className="w-3.5 h-3.5" />
+            <span>Statutory Covenants &amp; Fees</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("mandate")}
-            className={`py-3 px-4 border-b-2 transition-colors cursor-pointer ${
+            className={`py-3 px-4 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
               activeTab === "mandate"
                 ? "border-blue-600 text-blue-600 bg-white rounded-t-xl"
                 : "border-transparent text-slate-500 hover:text-slate-900"
             }`}
           >
-            🛡️ Manager Mandate Proof
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>Manager Mandate Proof</span>
           </button>
         </div>
 
@@ -437,8 +502,9 @@ Audit Reference: SETT-SIG-MGR-${agreementId}
               </p>
             </div>
           ) : !agreement ? (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-xs text-rose-800">
-              ⚠️ Unable to generate tenancy agreement. Please verify backend service at http://127.0.0.1:8000.
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-xs text-rose-800 flex flex-col items-center justify-center">
+              <AlertTriangle className="w-6 h-6 text-rose-600 mb-2" />
+              <span>Unable to generate tenancy agreement. Please verify backend service at http://127.0.0.1:8000.</span>
             </div>
           ) : (
             <div>
@@ -476,7 +542,7 @@ Audit Reference: SETT-SIG-MGR-${agreementId}
                     {/* Official Document Header */}
                     <div className="text-center border-b border-slate-200 pb-6 mb-6">
                       <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-blue-50 text-blue-700 text-xl font-black mb-2 border border-blue-200">
-                        ⚖️
+                        <Scale className="w-6 h-6 text-blue-700" />
                       </div>
                       <h3 className="text-lg sm:text-xl font-black text-slate-900 uppercase tracking-wide">
                         Kaduna State Residential Tenancy Indenture
@@ -486,8 +552,9 @@ Audit Reference: SETT-SIG-MGR-${agreementId}
                       </p>
                       <div className="mt-3 flex flex-wrap items-center justify-center gap-3 text-[11px] font-bold text-slate-600">
                         <span className="rounded-md bg-slate-100 px-2.5 py-1">Instrument Ref: {agreement.agreement_id}</span>
-                        <span className="rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1">
-                          ✓ Settlla Verified Attorney Mandate
+                        <span className="rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 flex items-center gap-1">
+                          <Check className="w-3.5 h-3.5 text-emerald-700" />
+                          <span>Settlla Verified Attorney Mandate</span>
                         </span>
                       </div>
                     </div>
@@ -504,8 +571,8 @@ Audit Reference: SETT-SIG-MGR-${agreementId}
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-[10px] uppercase font-bold text-slate-400 block">Party of the Second Part (Tenant)</span>
                           {agreement.tenant_signature && (
-                            <span className="rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold px-1.5 py-0.5">
-                              ✓ Signed
+                            <span className="rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold px-1.5 py-0.5 flex items-center gap-1">
+                              <Check className="w-3 h-3 text-emerald-700" /> Signed
                             </span>
                           )}
                         </div>
@@ -515,13 +582,15 @@ Audit Reference: SETT-SIG-MGR-${agreementId}
                         
                         {agreement.tenant_signature ? (
                           <div className="mt-3 rounded-lg bg-white p-2 border border-emerald-200 flex items-center justify-between">
-                            <span className="text-[11px] text-emerald-800 font-bold">✓ Signed ({agreement.tenant_audit_ref})</span>
+                            <span className="text-[11px] text-emerald-800 font-bold flex items-center gap-1">
+                              <Check className="w-3.5 h-3.5 text-emerald-700" /> Signed ({agreement.tenant_audit_ref})
+                            </span>
                             <span className="text-slate-400 font-mono text-[10px]">{agreement.tenant_signed_at}</span>
                           </div>
                         ) : (
                           <div className="mt-3 rounded-lg bg-white p-2.5 border border-slate-200 text-[11px] text-slate-600 flex items-center justify-between">
                             <span>Status: Ready for E-Signature</span>
-                            <span className="text-blue-600 font-bold">Feature #4 Pad</span>
+                            <span className="text-blue-600 font-bold">Digital Signature Pad</span>
                           </div>
                         )}
                       </div>
@@ -531,8 +600,8 @@ Audit Reference: SETT-SIG-MGR-${agreementId}
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-[10px] uppercase font-bold text-blue-600 block">Party of the First Part (Attorney-in-Fact)</span>
                           {agreement.manager_signature && (
-                            <span className="rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold px-1.5 py-0.5">
-                              ✓ Counter-Signed
+                            <span className="rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold px-1.5 py-0.5 flex items-center gap-1">
+                              <Check className="w-3 h-3 text-emerald-700" /> Counter-Signed
                             </span>
                           )}
                         </div>
@@ -542,13 +611,17 @@ Audit Reference: SETT-SIG-MGR-${agreementId}
                         
                         {agreement.manager_signature ? (
                           <div className="mt-3 rounded-lg bg-white p-2 border border-emerald-200 flex items-center justify-between">
-                            <span className="text-[11px] text-emerald-800 font-bold">✓ Mandate Executed</span>
+                            <span className="text-[11px] text-emerald-800 font-bold flex items-center gap-1">
+                              <Check className="w-3.5 h-3.5 text-emerald-700" /> Mandate Executed
+                            </span>
                             <span className="text-slate-400 font-mono text-[10px]">{agreement.manager_signed_at}</span>
                           </div>
                         ) : (
                           <div className="mt-3 rounded-lg bg-white p-2.5 border border-blue-200 text-[11px] text-slate-700 flex items-center justify-between">
                             <span>Status: Mandate Authorized</span>
-                            <span className="text-emerald-700 font-bold">✓ Verified Authority</span>
+                            <span className="text-emerald-700 font-bold flex items-center gap-1">
+                              <Check className="w-3.5 h-3.5 text-emerald-700" /> Verified Authority
+                            </span>
                           </div>
                         )}
                       </div>
@@ -563,7 +636,7 @@ Audit Reference: SETT-SIG-MGR-${agreementId}
                   {/* Fee Schedule Table */}
                   <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                     <h4 className="text-sm font-bold text-slate-900 mb-1 flex items-center gap-2">
-                      <span>💰</span>
+                      <CreditCard className="w-4 h-4 text-emerald-600" />
                       <span>Statutory All-In Upfront Fee Schedule</span>
                     </h4>
                     <p className="text-xs text-slate-500 mb-4">
@@ -670,7 +743,7 @@ Audit Reference: SETT-SIG-MGR-${agreementId}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                       <div>
                         <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 text-white px-3 py-1 text-xs font-bold mb-2">
-                          <span>✓</span>
+                          <Check className="w-3.5 h-3.5 text-white" />
                           <span>Verified Legal Mandate on File</span>
                         </div>
                         <h3 className="text-xl font-black text-slate-900">
@@ -705,21 +778,21 @@ Audit Reference: SETT-SIG-MGR-${agreementId}
                     <h4 className="font-bold text-slate-900 text-sm">Mandate Verification Safeguards for Tenant</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div className="rounded-2xl border border-slate-200 p-4 bg-slate-50">
-                        <span className="text-lg text-blue-600 block mb-1">📜</span>
+                        <FileText className="w-5 h-5 text-blue-600 mb-2" />
                         <strong className="text-slate-900 block">Registered Title Proof</strong>
                         <p className="text-slate-500 text-[11px] mt-1">
                           Ownership verified directly with KADGIS title records under {agreement.title_reference}.
                         </p>
                       </div>
                       <div className="rounded-2xl border border-slate-200 p-4 bg-slate-50">
-                        <span className="text-lg text-emerald-600 block mb-1">🛡️</span>
+                        <ShieldCheck className="w-5 h-5 text-emerald-600 mb-2" />
                         <strong className="text-slate-900 block">No Roadside Agent Floating</strong>
                         <p className="text-slate-500 text-[11px] mt-1">
                           Strict written authority from {agreement.landlord_name} eliminates roadside middlemen holding tenant cash.
                         </p>
                       </div>
                       <div className="rounded-2xl border border-slate-200 p-4 bg-slate-50">
-                        <span className="text-lg text-blue-600 block mb-1">✍️</span>
+                        <PenTool className="w-5 h-5 text-blue-600 mb-2" />
                         <strong className="text-slate-900 block">Enforceable Digital Signatures</strong>
                         <p className="text-slate-500 text-[11px] mt-1">
                           Manager counter-signs digitally under power of attorney with cryptographic timestamping.
@@ -754,18 +827,20 @@ Audit Reference: SETT-SIG-MGR-${agreementId}
               type="button"
               disabled={!agreement}
               onClick={() => {
+                if (!tenantName.trim() || !tenantPhone.trim() || !tenantEmail.trim()) {
+                  setIsEditingTenant(true);
+                  setError("Please fill in your Full Legal Name, Phone Number, and Email Address above before proceeding to signature.");
+                  return;
+                }
                 if (agreement && onProceedToSignature) {
                   onProceedToSignature(agreement);
-                } else {
-                  alert(
-                    `[Feature #4 Hand-Off: Electronic Signature Workflow]\n\nAgreement ${agreement?.agreement_id} is generated and validated!\n\nTenant: ${tenantName}\nManager: ${listing.mandate.manager_name}\nAll-In Total: ₦${listing.pricing.total_move_in_cost.toLocaleString("en-NG")}\n\nReady for two-party digital signing pad execution!`
-                  );
                 }
               }}
               className="w-full sm:w-auto rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 px-6 py-2.5 text-xs sm:text-sm font-bold text-white transition-all shadow-md shadow-blue-500/25 cursor-pointer flex items-center justify-center gap-2"
             >
-              <span>✍️</span>
-              <span>Proceed to E-Signature (Feature #4) &rarr;</span>
+              <PenTool className="w-4 h-4" />
+              <span>Proceed to Electronic Signature</span>
+              <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </div>

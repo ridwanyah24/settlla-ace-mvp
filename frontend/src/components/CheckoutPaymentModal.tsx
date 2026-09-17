@@ -1,10 +1,27 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import { TenancyAgreement } from "@/types/agreement";
 import { Listing } from "@/types/listing";
 import { PaymentTransaction, PaymentSplitBreakdown, MoveInPass } from "@/types/payment";
 import { MoveInPassViewer } from "./MoveInPassViewer";
+import {
+  X,
+  Check,
+  Key,
+  ArrowRight,
+  Zap,
+  Ticket,
+  ShieldCheck,
+  CreditCard,
+  Building2,
+  Smartphone,
+  Lock,
+  Copy,
+  User,
+} from "lucide-react";
 
 interface CheckoutPaymentModalProps {
   isOpen: boolean;
@@ -40,6 +57,11 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
   const [cardCVV, setCardCVV] = useState("729");
   const [cardPin, setCardPin] = useState("4921");
 
+  const router = useRouter();
+  const { currentUser, isAuthenticated, signUp } = useAuth();
+  const [authPassword, setAuthPassword] = useState("");
+  const [authError, setAuthError] = useState<string | null>(null);
+
   // Processing & Success State
   const [processing, setProcessing] = useState(false);
   const [transaction, setTransaction] = useState<PaymentTransaction | null>(null);
@@ -56,10 +78,60 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
     setTimeout(() => setCopiedAccount(false), 3000);
   };
 
+  const saveRentalToStorage = (tx: PaymentTransaction, pass: MoveInPass) => {
+    const rentalRecord = {
+      rental_id: tx.transaction_id,
+      agreement: agreement,
+      listing: listing,
+      transaction: tx,
+      move_in_pass: pass,
+      escrow_hold: tx.escrow_hold,
+      caution_vault: tx.caution_vault,
+      status: "active",
+      created_at: new Date().toISOString(),
+    };
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("settlla_current_rental", JSON.stringify(rentalRecord));
+        const existing = JSON.parse(localStorage.getItem("settlla_active_rentals") || "[]");
+        localStorage.setItem(
+          "settlla_active_rentals",
+          JSON.stringify([
+            rentalRecord,
+            ...existing.filter((r: any) => r.rental_id !== rentalRecord.rental_id),
+          ])
+        );
+      } catch (e) {
+        console.error("Failed to save rental to storage", e);
+      }
+    }
+  };
+
   // Process Payment Execution
   const handleAuthorizePayment = async () => {
-    setProcessing(true);
     setErrorMessage(null);
+    setAuthError(null);
+
+    // If guest / unauthenticated, create and link account
+    if (!isAuthenticated && !currentUser) {
+      if (!authPassword || authPassword.trim().length < 4) {
+        setAuthError("Please create a password (at least 4 characters) to link your Tenant Dashboard account.");
+        return;
+      }
+      const emailToUse =
+        agreement.tenant.email_address ||
+        `${agreement.tenant.full_name.toLowerCase().replace(/[^a-z0-9]/g, ".")}@example.com`;
+      await signUp({
+        fullName: agreement.tenant.full_name,
+        email: emailToUse,
+        password: authPassword,
+        role: "tenant",
+        phoneNumber: agreement.tenant.phone_number || "0803 123 4567",
+        ninNumber: agreement.tenant.nin_number,
+      });
+    }
+
+    setProcessing(true);
 
     const payload = {
       agreement_id: agreement.agreement_id,
@@ -82,6 +154,9 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
 
       if (res.ok) {
         const data: PaymentTransaction = await res.json();
+        if (data.move_in_pass) {
+          saveRentalToStorage(data, data.move_in_pass);
+        }
         setTransaction(data);
         if (onPaymentSuccess) onPaymentSuccess(data);
         return;
@@ -200,7 +275,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
           escrow_status: "holding",
           confirmed_by_tenant: false,
           dispute_active: false,
-          guarantee_seal: "100% Scam Indemnity Guarantee (FR-07)",
+          guarantee_seal: "100% Scam Indemnity Guarantee",
           created_at: nowIso,
         },
         caution_vault: {
@@ -220,6 +295,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
         receipt_url: `/receipts/${txId}.pdf`,
       };
 
+      saveRentalToStorage(fallbackTx, moveInPass);
       setTransaction(fallbackTx);
       if (onPaymentSuccess) onPaymentSuccess(fallbackTx);
     } finally {
@@ -245,7 +321,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
             <div>
               <div className="flex flex-wrap items-center gap-2 mb-1">
                 <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-bold text-blue-700 border border-blue-200/70">
-                  Screen 7: Escrow Checkout
+                  Escrow Checkout
                 </span>
                 <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-700 border border-emerald-200/70">
                   Automated 4-Way Split
@@ -271,7 +347,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                 className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors ml-2"
                 title="Close Modal"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -288,7 +364,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
                       <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-3 py-1 text-xs font-bold mb-2">
-                        <span>✓</span>
+                        <Check className="w-3.5 h-3.5 text-emerald-300" />
                         <span>Payment Successfully Settled &amp; Split</span>
                       </div>
                       <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
@@ -299,14 +375,27 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                       </p>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => setShowPassModal(true)}
-                      className="rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-5 py-3 text-xs sm:text-sm shadow-lg transition-transform hover:scale-105 flex items-center gap-2 cursor-pointer whitespace-nowrap"
-                    >
-                      <span>🔑</span>
-                      <span>View Move-In Pass &rarr;</span>
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => setShowPassModal(true)}
+                        className="rounded-2xl border border-emerald-400 bg-emerald-500/20 hover:bg-emerald-500/30 text-white font-bold px-4 py-2.5 text-xs sm:text-sm shadow-xs transition-colors flex items-center gap-2 cursor-pointer whitespace-nowrap"
+                      >
+                        <Key className="w-4 h-4 text-emerald-300" />
+                        <span>View Move-In Pass</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onClose();
+                          router.push("/dashboard/tenant");
+                        }}
+                        className="rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-5 py-2.5 text-xs sm:text-sm shadow-lg transition-transform hover:scale-105 flex items-center gap-2 cursor-pointer whitespace-nowrap"
+                      >
+                        <span>Go to My Tenant Dashboard</span>
+                        <ArrowRight className="w-4 h-4 text-slate-950" />
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -315,15 +404,16 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                   <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                     <div>
                       <h4 className="text-sm font-black text-slate-900 flex items-center gap-2">
-                        <span>⚡</span>
+                        <Zap className="w-4 h-4 text-amber-500" />
                         <span>Automated 4-Way Split Disbursement Ledger (Settled)</span>
                       </h4>
                       <p className="text-xs text-slate-500">
                         Funds were atomically routed to their authorized custody containers and accounts.
                       </p>
                     </div>
-                    <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 font-mono">
-                      Atomic Settlement ✓
+                    <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 font-mono flex items-center gap-1">
+                      <span>Atomic Settlement</span>
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
                     </span>
                   </div>
 
@@ -409,8 +499,8 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                 {/* Move-In Pass Trigger Card */}
                 <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-600 text-white text-2xl shadow-sm">
-                      🎫
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-sm">
+                      <Ticket className="w-6 h-6 text-white" />
                     </div>
                     <div>
                       <h5 className="font-black text-slate-900 text-sm">Move-In Pass Ready for Possession</h5>
@@ -432,13 +522,12 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                       type="button"
                       onClick={() => {
                         onClose();
-                        alert(
-                          `[Feature #6 & #7 Hand-Off: Key-in-Door Move-In Escrow]\n\nYour rent (₦${transaction.split_breakdown.annual_rent_escrow.toLocaleString("en-NG")}) is secured in Escrow!\n\nWhen you receive working keys on move-in day, tap 'Confirm Key Handover' to release payout.`
-                        );
+                        router.push("/dashboard/tenant");
                       }}
-                      className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 text-xs transition-colors cursor-pointer shadow-md shadow-emerald-600/25"
+                      className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 text-xs transition-colors cursor-pointer shadow-md shadow-emerald-600/25 flex items-center gap-1.5"
                     >
-                      Go to Move-In Dashboard &rarr;
+                      <span>Go to Move-In Dashboard</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
@@ -531,8 +620,8 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                 {/* 2. Escrow Scam Protection Notice */}
                 <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 text-xs space-y-1.5">
                   <div className="flex items-center gap-2 font-bold text-emerald-950">
-                    <span className="text-lg">🛡️</span>
-                    <span>100% Move-In Escrow Scam Indemnity Guarantee (FR-07)</span>
+                    <ShieldCheck className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                    <span>100% Move-In Escrow Scam Indemnity Guarantee</span>
                   </div>
                   <p className="text-emerald-800 text-[11px] leading-relaxed">
                     Settlla holds your annual rent (<strong>₦{rent.toLocaleString("en-NG")}</strong>) in secure escrow. The
@@ -541,6 +630,55 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                     misrepresentation, click <strong>&ldquo;Report a Problem&rdquo;</strong> to freeze funds immediately.
                   </p>
                 </div>
+
+                {/* Inline Account Creation for Unauthenticated Users */}
+                {!isAuthenticated && (
+                  <div className="rounded-3xl border border-blue-200 bg-blue-50/60 p-6 space-y-4">
+                    <div className="flex items-center gap-2 font-bold text-blue-950">
+                      <User className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                      <span className="text-sm">Link Tenancy to Your Dashboard Account</span>
+                    </div>
+                    <p className="text-xs text-blue-800 leading-relaxed">
+                      You are completing this lease as <strong>{agreement.tenant.full_name}</strong> ({agreement.tenant.phone_number}). Create a password to link your executed indenture, Move-In Pass, and 24-hr escrow control directly to your personal Tenant Dashboard.
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                          Tenant Login Email
+                        </label>
+                        <input
+                          type="email"
+                          readOnly
+                          value={
+                            agreement.tenant.email_address ||
+                            `${agreement.tenant.full_name.toLowerCase().replace(/[^a-z0-9]/g, ".")}@example.com`
+                          }
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-700"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                          Create Account Password
+                        </label>
+                        <input
+                          type="password"
+                          value={authPassword}
+                          onChange={(e) => {
+                            setAuthPassword(e.target.value);
+                            setAuthError(null);
+                          }}
+                          placeholder="Enter a password (min 4 chars)"
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                        />
+                      </div>
+                    </div>
+                    {authError && (
+                      <p className="text-xs font-bold text-rose-600 bg-rose-50 border border-rose-200 p-2.5 rounded-xl">
+                        {authError}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 {/* 3. Payment Gateway & Channel Selector */}
                 <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
@@ -588,7 +726,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                           : "text-slate-600 hover:text-slate-900"
                       }`}
                     >
-                      <span>💳</span>
+                      <CreditCard className="w-4 h-4" />
                       <span>Debit / Credit Card</span>
                     </button>
                     <button
@@ -600,7 +738,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                           : "text-slate-600 hover:text-slate-900"
                       }`}
                     >
-                      <span>🏦</span>
+                      <Building2 className="w-4 h-4" />
                       <span>Virtual Bank Transfer</span>
                     </button>
                     <button
@@ -612,7 +750,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                           : "text-slate-600 hover:text-slate-900"
                       }`}
                     >
-                      <span>📱</span>
+                      <Smartphone className="w-4 h-4" />
                       <span>USSD Banking</span>
                     </button>
                   </div>
@@ -667,7 +805,10 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                       </div>
 
                       <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                        <span>🔒 256-bit SSL Encrypted</span>
+                        <span className="flex items-center gap-1">
+                          <Lock className="w-3 h-3 text-slate-400" />
+                          <span>256-bit SSL Encrypted</span>
+                        </span>
                         <span>&bull;</span>
                         <span>Mastercard / Visa / Verve Accepted</span>
                       </div>
@@ -701,7 +842,17 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                               onClick={handleCopyAccount}
                               className="mt-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-2.5 py-1 text-[11px] transition-colors cursor-pointer inline-flex items-center gap-1"
                             >
-                              <span>{copiedAccount ? "✓ Copied" : "📋 Copy Account"}</span>
+                              {copiedAccount ? (
+                                <>
+                                  <Check className="w-3 h-3 text-emerald-600" />
+                                  <span>Copied</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-3 h-3" />
+                                  <span>Copy Account</span>
+                                </>
+                              )}
                             </button>
                           </div>
                         </div>
@@ -758,7 +909,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                         </>
                       ) : (
                         <>
-                          <span>🔒</span>
+                          <Lock className="w-4 h-4" />
                           <span>Pay ₦{total.toLocaleString("en-NG")} Securely via Escrow</span>
                         </>
                       )}
@@ -771,7 +922,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
 
           {/* Modal Footer */}
           <div className="border-t border-slate-100 px-6 py-3.5 bg-white text-xs text-slate-400 flex items-center justify-between">
-            <span>Settlla Closing Engine &bull; FR-05 4-Way Split &bull; FR-07 Escrow Protection</span>
+            <span>Settlla Kaduna Hub &bull; Statutory 4-Way Split &bull; Escrow Scam Protection</span>
             <span className="font-mono text-[10px]">Kaduna State Tenancy Compliant</span>
           </div>
         </div>

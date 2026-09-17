@@ -2,6 +2,15 @@
 
 import React from "react";
 import { MoveInPass, PaymentTransaction } from "@/types/payment";
+import {
+  Check,
+  CheckCircle2,
+  X,
+  Key,
+  ShieldCheck,
+  Printer,
+  ArrowRight,
+} from "lucide-react";
 
 interface MoveInPassViewerProps {
   isOpen: boolean;
@@ -37,8 +46,9 @@ export const MoveInPassViewer: React.FC<MoveInPassViewerProps> = ({
         {/* Header Bar */}
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-900 text-white">
           <div className="flex items-center gap-2">
-            <span className="rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2.5 py-0.5 text-xs font-bold">
-              ✓ Move-In Pass Verified
+            <span className="rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2.5 py-0.5 text-xs font-bold flex items-center gap-1.5">
+              <Check className="w-3.5 h-3.5 text-emerald-300" />
+              <span>Move-In Pass Verified</span>
             </span>
             <span className="font-mono text-xs text-slate-400 font-bold">
               {pass.pass_id}
@@ -48,7 +58,7 @@ export const MoveInPassViewer: React.FC<MoveInPassViewerProps> = ({
             onClick={onClose}
             className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -70,8 +80,8 @@ export const MoveInPassViewer: React.FC<MoveInPassViewerProps> = ({
                     Present this pass on key-handover day to gain authorized physical possession.
                   </p>
                 </div>
-                <div className="h-12 w-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-2xl border border-white/20">
-                  🔑
+                <div className="h-12 w-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
+                  <Key className="w-6 h-6 text-amber-300" />
                 </div>
               </div>
             </div>
@@ -111,8 +121,8 @@ export const MoveInPassViewer: React.FC<MoveInPassViewerProps> = ({
               <div className="rounded-2xl bg-emerald-50 border border-emerald-200 p-4 text-xs space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 font-bold text-emerald-900">
-                    <span>🛡️</span>
-                    <span>100% Scam Indemnity Guarantee (FR-07)</span>
+                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                    <span>100% Move-In Escrow Scam Indemnity Guarantee</span>
                   </div>
                   <span className="font-mono text-[10px] text-emerald-700 font-bold bg-white px-2 py-0.5 rounded border border-emerald-200">
                     ESCROW HOLDING
@@ -137,7 +147,7 @@ export const MoveInPassViewer: React.FC<MoveInPassViewerProps> = ({
                       {pass.qr_token.substring(0, 12)}
                     </div>
                     <div className="flex justify-between text-[6px] text-emerald-400">
-                      <span>✓ PASS</span>
+                      <span>PASS</span>
                       <span>KAD</span>
                     </div>
                   </div>
@@ -146,7 +156,10 @@ export const MoveInPassViewer: React.FC<MoveInPassViewerProps> = ({
                     <span className="font-mono text-[10px] text-slate-500 block truncate max-w-xs">
                       {pass.verification_hash}
                     </span>
-                    <span className="text-[10px] text-emerald-600 font-bold">✓ Verified by Kaduna Closing Engine</span>
+                    <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                      <span>Verified by Kaduna Closing Engine</span>
+                    </span>
                   </div>
                 </div>
 
@@ -155,7 +168,7 @@ export const MoveInPassViewer: React.FC<MoveInPassViewerProps> = ({
                   onClick={handlePrint}
                   className="rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold px-4 py-2 text-xs transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
                 >
-                  <span>🖨️</span>
+                  <Printer className="w-3.5 h-3.5 text-slate-700" />
                   <span>Print Pass</span>
                 </button>
               </div>
@@ -183,9 +196,10 @@ export const MoveInPassViewer: React.FC<MoveInPassViewerProps> = ({
                   onClose();
                   onOpenDashboard();
                 }}
-                className="w-full sm:w-auto rounded-xl bg-blue-600 hover:bg-blue-700 px-6 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md shadow-blue-500/25 transition-all cursor-pointer"
+                className="w-full sm:w-auto rounded-xl bg-blue-600 hover:bg-blue-700 px-6 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md shadow-blue-500/25 transition-all cursor-pointer flex items-center justify-center gap-1.5"
               >
-                Go to Move-In Dashboard &rarr;
+                <span>Go to Move-In Dashboard</span>
+                <ArrowRight className="w-4 h-4" />
               </button>
             )}
           </div>

@@ -4,6 +4,22 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { Listing } from "@/types/listing";
 import { DaySchedule, TimeSlot, InspectionBookingResponse } from "@/types/booking";
+import {
+  Check,
+  CheckCircle2,
+  X,
+  Lightbulb,
+  Calendar,
+  Clock,
+  MapPin,
+  AlertCircle,
+  MessageSquare,
+  ShieldCheck,
+  FileText,
+  ArrowRight,
+  ArrowLeft,
+  Zap,
+} from "lucide-react";
 
 export interface BookingDrawerProps {
   isOpen: boolean;
@@ -302,7 +318,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200/80">
-                <span>✓</span> Mandate Verified
+                <Check className="h-3 w-3 text-emerald-600" /> Mandate Verified
               </span>
               <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100">
                 ₦0 Inspection Fee
@@ -320,7 +336,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
             className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors"
             title="Close Drawer"
           >
-            ✕
+            <X className="h-4 w-4" />
           </button>
         </div>
 
@@ -381,12 +397,32 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                 </div>
               ) : (
                 <div className="space-y-5">
-                  {/* Manager Schedule Notice */}
-                  <div className="rounded-2xl bg-blue-50/60 border border-blue-100 p-3.5 flex items-start gap-2.5 text-xs text-slate-700">
-                    <span className="text-base text-blue-600">ℹ️</span>
-                    <div className="leading-snug">
-                      <strong className="text-slate-900">Official Manager Visiting Windows:</strong> Walkthrough slots are strictly constrained to pre-scheduled days when {listing.mandate.manager_name} staff are on-site in {listing.neighborhood}.
+                  {/* Optional Inspection Notice & Skip Button */}
+                  <div className="rounded-2xl bg-blue-50/70 border border-blue-200 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-slate-700">
+                    <div className="flex items-start gap-2.5">
+                      <Lightbulb className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+                      <div>
+                        <strong className="text-slate-900 block">Inspecting is 100% Optional:</strong>
+                        <span>You can skip the walkthrough and proceed directly to your digital tenancy agreement.</span>
+                      </div>
                     </div>
+                    {onProceedToAgreement && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onProceedToAgreement(listing, {
+                            fullName: tenantName.trim(),
+                            phoneNumber: tenantPhone.trim(),
+                            emailAddress: tenantEmail.trim(),
+                            relocationContext,
+                          });
+                        }}
+                        className="flex items-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold px-3.5 py-2 text-xs transition-all shadow-xs cursor-pointer whitespace-nowrap"
+                      >
+                        <Zap className="h-3.5 w-3.5 text-amber-300" />
+                        <span>Skip &amp; Rent Directly</span>
+                      </button>
+                    )}
                   </div>
 
                   {/* Date Selection Pills */}
@@ -470,7 +506,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                                 <span className={`text-[10px] font-semibold ${isSelected ? "text-blue-100" : isLocked ? "text-slate-400" : "text-blue-600"}`}>
                                   {isLocked ? "Taken / Locked" : isSelected ? "Selected" : "Open • ₦0"}
                                 </span>
-                                {isSelected && <span className="text-xs">✓</span>}
+                                {isSelected && <Check className="h-3 w-3 text-white" />}
                               </div>
                             </button>
                           );
@@ -489,11 +525,13 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                           <span className="text-[10px] uppercase font-bold text-blue-700 tracking-wider">
                             Selected Appointment
                           </span>
-                          <h4 className="text-sm font-black text-slate-900 mt-0.5">
-                            🗓️ {selectedDay.formatted_date} at {selectedSlot.time_label}
+                          <h4 className="flex items-center gap-1.5 text-sm font-black text-slate-900 mt-0.5">
+                            <Calendar className="h-4 w-4 text-blue-600 shrink-0" />
+                            <span>{selectedDay.formatted_date} at {selectedSlot.time_label}</span>
                           </h4>
-                          <p className="text-xs text-slate-600 mt-1">
-                            📍 {listing.full_address} (Host: {listing.mandate.manager_name})
+                          <p className="flex items-center gap-1 text-xs text-slate-600 mt-1">
+                            <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                            <span>{listing.full_address} (Host: {listing.mandate.manager_name})</span>
                           </p>
                         </div>
                         <span className="rounded-full bg-emerald-600 text-white text-[11px] font-bold px-2.5 py-1">
@@ -520,8 +558,9 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
               </div>
 
               {submitError && (
-                <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800 font-semibold">
-                  ⚠️ {submitError}
+                <div className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800 font-semibold">
+                  <AlertCircle className="h-4 w-4 text-rose-600 shrink-0" />
+                  <span>{submitError}</span>
                 </div>
               )}
 
@@ -533,7 +572,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Hajara Bello"
+                  placeholder="e.g. Amina Bello"
                   value={tenantName}
                   onChange={(e) => setTenantName(e.target.value)}
                   className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
@@ -565,7 +604,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                 </label>
                 <input
                   type="email"
-                  placeholder="e.g. hajara.bello@example.com"
+                  placeholder="e.g. user@example.com"
                   value={tenantEmail}
                   onChange={(e) => setTenantEmail(e.target.value)}
                   className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
@@ -610,9 +649,10 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+                  className="flex items-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
                 >
-                  ← Back to Slots
+                  <ArrowLeft className="h-3.5 w-3.5 text-slate-500" />
+                  <span>Back to Slots</span>
                 </button>
                 <button
                   type="submit"
@@ -630,8 +670,8 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
             <div className="space-y-5 animate-fade-in">
               {/* Success Badge */}
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-5 text-center">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-2xl text-emerald-700 mb-2 font-bold">
-                  ✓
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 mb-2">
+                  <CheckCircle2 className="h-7 w-7 text-emerald-600" />
                 </div>
                 <h3 className="text-lg font-bold text-slate-900">Physical Tour Slot Locked!</h3>
                 <p className="text-xs text-emerald-800 mt-1">
@@ -678,7 +718,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                     rel="noreferrer"
                     className="rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-3 py-1.5 font-bold text-xs flex items-center gap-1.5 transition-colors shadow-2xs"
                   >
-                    <span>💬</span>
+                    <MessageSquare className="h-3.5 w-3.5 text-emerald-600" />
                     <span>WhatsApp Manager</span>
                   </a>
                 </div>
@@ -686,7 +726,10 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
 
               {/* Anti-Scam Security Footer Box */}
               <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-3.5 text-xs text-slate-700">
-                <span className="font-bold text-slate-900 block mb-0.5">🔒 Anti-Scam Scam-Free Guarantee:</span>
+                <div className="flex items-center gap-1.5 font-bold text-slate-900 mb-0.5">
+                  <ShieldCheck className="h-4 w-4 text-blue-600 shrink-0" />
+                  <span>Anti-Scam Scam-Free Guarantee:</span>
+                </div>
                 Present this digital reference at the gate. If any roadside agent demands an inspection fee, report immediately to Settlla Concierge.
               </div>
 
@@ -706,8 +749,9 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
                   }}
                   className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 text-xs sm:text-sm transition-all shadow-md shadow-blue-500/25 flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <span>📜</span>
-                  <span>Proceed to Tenancy Agreement (Feature #3) &rarr;</span>
+                  <FileText className="h-4 w-4" />
+                  <span>Proceed to Tenancy Agreement</span>
+                  <ArrowRight className="h-4 w-4" />
                 </button>
                 <button
                   type="button"
@@ -732,9 +776,10 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
               type="button"
               disabled={!selectedSlot}
               onClick={() => setStep(2)}
-              className="rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed px-6 py-2.5 text-xs sm:text-sm font-bold text-white transition-all shadow-md shadow-blue-500/25 cursor-pointer"
+              className="flex items-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed px-6 py-2.5 text-xs sm:text-sm font-bold text-white transition-all shadow-md shadow-blue-500/25 cursor-pointer"
             >
-              Proceed to Details &rarr;
+              <span>Proceed to Details</span>
+              <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         )}

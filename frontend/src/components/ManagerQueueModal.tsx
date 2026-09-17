@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { TenancyAgreement } from "@/types/agreement";
 import { Listing } from "@/types/listing";
+import { X, Sparkles, Check, Scale, ArrowRight } from "lucide-react";
 
 interface ManagerQueueModalProps {
   isOpen: boolean;
@@ -50,9 +51,9 @@ export const ManagerQueueModal: React.FC<ManagerQueueModalProps> = ({
             manager_accreditation: l.mandate.accreditation,
             manager_mandate_ref: l.mandate.mandate_ref,
             tenant: {
-              full_name: "Hajara Bello",
-              phone_number: "0803 123 4567",
-              email_address: "hajara.bello@example.com",
+              full_name: "Aminu Mohammed",
+              phone_number: "0803 555 7890",
+              email_address: "aminu.mohammed@example.com",
               nin_number: "28491029384",
               employer_name: "Guaranty Trust Bank (GTBank), Barnawa Branch",
               residential_address: "Plot 5, Constitution Road, Kaduna",
@@ -110,10 +111,10 @@ export const ManagerQueueModal: React.FC<ManagerQueueModalProps> = ({
               </span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
-              Manager Lease Counter-Signing Desk (Screen 6)
+              Manager Mandate &amp; Lease Desk
             </h2>
             <p className="text-xs text-slate-300 mt-0.5">
-              Review tenant credentials, verify registered landlord mandates, and execute dual-signed indentures.
+              Review tenant credentials, verify registered landlord mandates, and oversee pre-certified indentures.
             </p>
           </div>
 
@@ -121,7 +122,7 @@ export const ManagerQueueModal: React.FC<ManagerQueueModalProps> = ({
             onClick={onClose}
             className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         </div>
 
@@ -130,9 +131,9 @@ export const ManagerQueueModal: React.FC<ManagerQueueModalProps> = ({
           {/* Quick Metrics */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
-              <span className="text-slate-400 uppercase font-bold block text-[10px]">Awaiting Counter-Signature</span>
-              <strong className="text-2xl font-black text-amber-600 block mt-1">{pendingList.length}</strong>
-              <span className="text-slate-500 text-[11px]">Tenant Signed &bull; Ready for Screen 6</span>
+              <span className="text-slate-400 uppercase font-bold block text-[10px]">Active Pre-Certified Leases</span>
+              <strong className="text-2xl font-black text-emerald-600 block mt-1">{pendingList.length}</strong>
+              <span className="text-slate-500 text-[11px]">Tenant Signed &bull; Pre-Certified Mandate</span>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
               <span className="text-slate-400 uppercase font-bold block text-[10px]">Fully Executed Leases</span>
@@ -149,8 +150,8 @@ export const ManagerQueueModal: React.FC<ManagerQueueModalProps> = ({
           {/* Pending Agreements Section */}
           <div className="space-y-4">
             <h4 className="text-sm font-black text-slate-900 flex items-center gap-2">
-              <span className="flex h-2 w-2 rounded-full bg-amber-500" />
-              <span>Pending Counter-Signatures under Written Mandate</span>
+              <span className="flex h-2 w-2 rounded-full bg-emerald-500" />
+              <span>Executed Leases Under Written Mandate</span>
             </h4>
 
             {loading ? (
@@ -160,10 +161,10 @@ export const ManagerQueueModal: React.FC<ManagerQueueModalProps> = ({
               </div>
             ) : pendingList.length === 0 ? (
               <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center text-xs text-slate-500">
-                <span className="text-2xl block mb-1">🎉</span>
+                <Sparkles className="w-8 h-8 text-emerald-500 mx-auto mb-1" />
                 <p className="font-bold text-slate-700">All lease agreements have been counter-signed!</p>
                 <p className="mt-1 text-slate-400">
-                  New leases will appear here when tenants execute their electronic signature on Screen 5.
+                  New leases will appear here when tenants execute their electronic signature.
                 </p>
               </div>
             ) : (
@@ -189,8 +190,9 @@ export const ManagerQueueModal: React.FC<ManagerQueueModalProps> = ({
                           Tenant: <strong>{agr.tenant.full_name}</strong> ({agr.tenant.employer_name}) &bull; Landlord:{" "}
                           <strong>{agr.landlord_name}</strong>
                         </p>
-                        <p className="text-[11px] text-emerald-700 font-medium">
-                          ✓ Tenant signed on {agr.tenant_signed_at || "Recently"} (Audit Ref: {agr.tenant_audit_ref})
+                        <p className="text-[11px] text-emerald-700 font-medium flex items-center gap-1">
+                          <Check className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                          <span>Tenant signed on {agr.tenant_signed_at || "Recently"} (Audit Ref: {agr.tenant_audit_ref})</span>
                         </p>
                       </div>
 
@@ -202,8 +204,9 @@ export const ManagerQueueModal: React.FC<ManagerQueueModalProps> = ({
                         }}
                         className="rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold px-5 py-2.5 text-xs transition-all shadow-sm cursor-pointer whitespace-nowrap flex items-center gap-1.5"
                       >
-                        <span>⚖️</span>
-                        <span>Counter-Sign Under Mandate &rarr;</span>
+                        <Scale className="w-3.5 h-3.5" />
+                        <span>Review Mandate &amp; Lease</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   );

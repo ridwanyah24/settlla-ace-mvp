@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useState, useEffect, useCallback } from "react";
+import { PenTool, Keyboard, Trash2 } from "lucide-react";
 
 interface DigitalSignaturePadProps {
   signerName: string;
@@ -43,7 +44,7 @@ export const DigitalSignaturePad: React.FC<DigitalSignaturePadProps> = ({
 
     ctx.font = "10px sans-serif";
     ctx.fillStyle = "#94A3B8";
-    ctx.fillText("✕ SIGN ABOVE THIS LINE", 24, height - 20);
+    ctx.fillText("— SIGN ABOVE THIS LINE —", 24, height - 20);
     ctx.restore();
   };
 
@@ -224,7 +225,7 @@ export const DigitalSignaturePad: React.FC<DigitalSignaturePadProps> = ({
               mode === "draw" ? "bg-white text-blue-700 shadow-2xs font-bold" : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            <span>✍️</span>
+            <PenTool className="w-3.5 h-3.5" />
             <span>Draw</span>
           </button>
           <button
@@ -237,7 +238,7 @@ export const DigitalSignaturePad: React.FC<DigitalSignaturePadProps> = ({
               mode === "type" ? "bg-white text-blue-700 shadow-2xs font-bold" : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            <span>⌨️</span>
+            <Keyboard className="w-3.5 h-3.5" />
             <span>Type Name</span>
           </button>
         </div>
@@ -356,7 +357,7 @@ export const DigitalSignaturePad: React.FC<DigitalSignaturePadProps> = ({
             onClick={clearCanvas}
             className="absolute bottom-2.5 right-2.5 rounded-xl border border-slate-200 bg-white/95 px-2.5 py-1 text-[11px] font-bold text-rose-600 hover:bg-rose-50 shadow-xs transition-colors cursor-pointer flex items-center gap-1"
           >
-            <span>🗑️</span>
+            <Trash2 className="w-3.5 h-3.5" />
             <span>Clear Pad</span>
           </button>
         )}

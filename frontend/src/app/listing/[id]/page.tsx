@@ -9,6 +9,19 @@ import { Listing } from "@/types/listing";
 import { getSeedListingById } from "@/data/seedListings";
 import { BookingDrawer } from "@/components/BookingDrawer";
 import { TenancyAgreementViewer } from "@/components/TenancyAgreementViewer";
+import {
+  ArrowLeft,
+  MapPin,
+  Check,
+  ShieldCheck,
+  CreditCard,
+  Bed,
+  Bath,
+  Zap,
+  Droplets,
+  Calendar,
+  FileText,
+} from "lucide-react";
 
 export default function ListingDetailPage() {
   const params = useParams();
@@ -103,11 +116,11 @@ export default function ListingDetailPage() {
             href="/"
             className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white transition-colors"
           >
-            <span>←</span>
+            <ArrowLeft className="w-4 h-4" />
             <span>Back to All Verified Listings</span>
           </Link>
           <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-400 border border-emerald-500/20">
-            Screen 2: Listing Detail View &amp; ₦0 Inspection
+            Verified Listing &amp; ₦0 Inspection
           </span>
         </div>
 
@@ -128,7 +141,7 @@ export default function ListingDetailPage() {
             {listing.title}
           </h1>
           <p className="mt-2 text-sm text-slate-400 flex items-center gap-1.5">
-            <span>📍</span>
+            <MapPin className="w-4 h-4 text-emerald-400 shrink-0" />
             <span>{listing.full_address} ({listing.commute_context})</span>
           </p>
         </div>
@@ -145,7 +158,8 @@ export default function ListingDetailPage() {
             />
             <div className="absolute top-4 left-4">
               <span className="flex items-center gap-1.5 rounded-full bg-emerald-950/90 px-3.5 py-1 text-xs font-bold text-emerald-300 border border-emerald-600/40 backdrop-blur-md">
-                ✓ Mandate Verified
+                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Mandate Verified</span>
               </span>
             </div>
           </div>
@@ -171,8 +185,8 @@ export default function ListingDetailPage() {
         {/* Mandate Verification Card */}
         <div className="mb-8 rounded-3xl border border-emerald-800/40 bg-gradient-to-r from-emerald-950/40 via-slate-900 to-slate-900 p-6 shadow-xl">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-2xl">
-              🛡️
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400">
+              <ShieldCheck className="w-6 h-6 text-emerald-400" />
             </div>
             <div>
               <div className="flex items-center gap-2.5">
@@ -193,7 +207,7 @@ export default function ListingDetailPage() {
         {/* 4-Way Statutory Pricing Table */}
         <div className="mb-8">
           <h2 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
-            <span>💳</span>
+            <CreditCard className="w-5 h-5 text-emerald-400" />
             <span>All-In Upfront Pricing Breakdown (Zero Hidden Fees)</span>
           </h2>
           <div className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/60 shadow-xl">
@@ -228,7 +242,8 @@ export default function ListingDetailPage() {
                 </tr>
                 <tr className="bg-emerald-950/20 text-emerald-300">
                   <td className="py-3.5 px-5 font-bold flex items-center gap-1.5">
-                    <span>✓</span> Physical Inspection Fee
+                    <Check className="w-4 h-4 text-emerald-400" />
+                    <span>Physical Inspection Fee</span>
                   </td>
                   <td className="py-3.5 px-5 text-slate-400">
                     <span className="line-through text-rose-400">₦3,000 – ₦5,000 roadside agent fee</span> (Eliminated on Settlla)
@@ -257,19 +272,19 @@ export default function ListingDetailPage() {
             <h3 className="text-base font-bold text-white mb-3">Key Specifications</h3>
             <ul className="space-y-2.5 text-xs sm:text-sm text-slate-300">
               <li className="flex items-center gap-2.5 rounded-xl bg-slate-900/60 p-3 border border-slate-800">
-                <span className="text-emerald-400 font-bold">🛏️</span>
+                <Bed className="w-4 h-4 text-emerald-400" />
                 <span>{listing.bedrooms} Bedroom(s) ({listing.property_type})</span>
               </li>
               <li className="flex items-center gap-2.5 rounded-xl bg-slate-900/60 p-3 border border-slate-800">
-                <span className="text-emerald-400 font-bold">🚿</span>
+                <Bath className="w-4 h-4 text-emerald-400" />
                 <span>{listing.bathrooms} Modern Bathroom(s)</span>
               </li>
               <li className="flex items-center gap-2.5 rounded-xl bg-slate-900/60 p-3 border border-slate-800">
-                <span className="text-emerald-400 font-bold">⚡</span>
+                <Zap className="w-4 h-4 text-emerald-400" />
                 <span>Dedicated Prepaid Meter (Self-Billed via Disco portal)</span>
               </li>
               <li className="flex items-center gap-2.5 rounded-xl bg-slate-900/60 p-3 border border-slate-800">
-                <span className="text-emerald-400 font-bold">💧</span>
+                <Droplets className="w-4 h-4 text-emerald-400" />
                 <span>Constant Potable Borehole Water System</span>
               </li>
             </ul>
@@ -280,7 +295,7 @@ export default function ListingDetailPage() {
             <div className="space-y-2.5 text-xs sm:text-sm text-slate-300">
               {listing.amenities.map((amenity, idx) => (
                 <div key={idx} className="flex items-center gap-2.5 rounded-xl bg-slate-900/60 p-3 border border-slate-800">
-                  <span className="text-emerald-400">✓</span>
+                  <Check className="w-4 h-4 text-emerald-400 shrink-0" />
                   <span>{amenity}</span>
                 </div>
               ))}
@@ -294,37 +309,38 @@ export default function ListingDetailPage() {
             <div>
               <h3 className="text-base font-bold text-white">Manager Recurring Visiting Windows</h3>
               <p className="text-xs text-slate-400 mt-1">
-                Walkthroughs are conducted strictly during official visiting windows by HB&amp;A Partners staff.
+                Walkthroughs are conducted strictly during official visiting windows by HB&amp;A Partners staff. Physical inspection is 100% optional.
               </p>
               <div className="mt-3 flex flex-wrap gap-2.5">
                 {listing.visiting_windows.map((win, idx) => (
                   <span
                     key={idx}
-                    className="rounded-xl bg-slate-950 px-3.5 py-2 text-xs text-slate-200 border border-slate-800 font-medium"
+                    className="flex items-center gap-1.5 rounded-xl bg-slate-950 px-3.5 py-2 text-xs text-slate-200 border border-slate-800 font-medium"
                   >
-                    🗓️ <strong>{win.day}:</strong> {win.hours}
+                    <Calendar className="w-3.5 h-3.5 text-emerald-400" />
+                    <span><strong>{win.day}:</strong> {win.hours}</span>
                   </span>
                 ))}
               </div>
             </div>
 
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-shrink-0">
-                <button
-                  onClick={() => setIsAgreementOpen(true)}
-                  className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 px-5 py-3.5 text-xs sm:text-sm font-bold text-emerald-400 transition-all flex items-center justify-center gap-1.5"
-                >
-                  <span>📜</span>
-                  <span>Preview Legal Lease (₦0)</span>
-                </button>
-                <button
-                  onClick={() => setIsBookingOpen(true)}
-                  className="rounded-2xl bg-emerald-600 hover:bg-emerald-500 px-6 py-3.5 text-xs sm:text-sm font-bold text-slate-950 transition-all shadow-xl shadow-emerald-600/30 hover:shadow-emerald-500/50"
-                >
-                  Book Free Inspection (₦0 Fee)
-                </button>
-              </div>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-shrink-0">
+              <button
+                onClick={() => setIsAgreementOpen(true)}
+                className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 px-5 py-3.5 text-xs sm:text-sm font-bold text-emerald-400 transition-all flex items-center justify-center gap-2"
+              >
+                <FileText className="w-4 h-4 text-emerald-400" />
+                <span>Instant Lease Preview (₦0)</span>
+              </button>
+              <button
+                onClick={() => setIsBookingOpen(true)}
+                className="rounded-2xl bg-emerald-600 hover:bg-emerald-500 px-6 py-3.5 text-xs sm:text-sm font-bold text-slate-950 transition-all shadow-xl shadow-emerald-600/30 hover:shadow-emerald-500/50"
+              >
+                Book Inspection (Optional)
+              </button>
             </div>
           </div>
+        </div>
       </main>
 
       {/* Booking Drawer (Screen 2 & 3 Flow) */}

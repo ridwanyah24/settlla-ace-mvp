@@ -1,6 +1,26 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
+import {
+  Phone,
+  MapPin,
+  CheckCircle2,
+  ShieldCheck,
+  Lock,
+  Home,
+  Building2,
+  User,
+  LogIn,
+  UserPlus,
+  LogOut,
+  Settings,
+  Scale,
+  Menu,
+  X,
+  ArrowRight,
+} from "lucide-react";
 
 interface NavbarProps {
   verifiedCount: number;
@@ -17,7 +37,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeEscrowStatus,
   onOpenEscrowDashboard,
 }) => {
+  const { currentUser, role, isAuthenticated, switchRole, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
   const scrollTo = (id: string) => {
     setMobileMenuOpen(false);
@@ -27,6 +49,8 @@ export const Navbar: React.FC<NavbarProps> = ({
     }
   };
 
+  const dashboardHref = role === "agent" ? "/dashboard/agent" : "/dashboard/tenant";
+
   return (
     <header className="sticky top-0 z-40 w-full shadow-xs bg-white">
       {/* 1. Top Announcement Strip (Dark Navy) */}
@@ -35,13 +59,13 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Left Contact & Location */}
           <div className="flex items-center gap-4 text-[11px] sm:text-xs">
             <span className="flex items-center gap-1.5 text-slate-300">
-              <span className="text-blue-400">📞</span>
+              <Phone className="h-3.5 w-3.5 text-blue-400" />
               <span className="font-semibold text-white">+234 800 SETTLLA</span>
               <span className="text-slate-500 hidden md:inline">|</span>
               <span className="hidden md:inline text-slate-400">0800 738 8552 (Toll Free)</span>
             </span>
-            <span className="hidden lg:flex items-center gap-1 text-slate-400">
-              <span className="text-blue-400">📍</span>
+            <span className="hidden lg:flex items-center gap-1.5 text-slate-400">
+              <MapPin className="h-3.5 w-3.5 text-blue-400" />
               <span>Kaduna Hub: Barnawa GRA &amp; Malali</span>
             </span>
           </div>
@@ -49,15 +73,18 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Right Trust Indicators */}
           <div className="flex items-center gap-3 text-[11px] sm:text-xs font-medium">
             <span className="flex items-center gap-1 text-emerald-400">
-              <span>✓</span> ₦0 Inspection Fee
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              <span>Inspection Optional (₦0)</span>
             </span>
             <span className="text-slate-600">•</span>
             <span className="flex items-center gap-1 text-blue-300">
-              <span>🛡️</span> HB&amp;A Mandates Only
+              <ShieldCheck className="h-3.5 w-3.5" />
+              <span>HB&amp;A Mandates Only</span>
             </span>
             <span className="text-slate-600">•</span>
             <span className="flex items-center gap-1 text-amber-300">
-              <span>🔒</span> 10% Caution Escrow
+              <Lock className="h-3.5 w-3.5" />
+              <span>10% Caution Escrow</span>
             </span>
           </div>
         </div>
@@ -65,16 +92,14 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* 2. Main Navigation Bar (Clean White) */}
       <nav className="border-b border-slate-200/80 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
           {/* Brand Logo */}
-          <div
-            onClick={() => scrollTo("hero")}
-            className="flex items-center gap-2.5 cursor-pointer select-none group"
+          <Link
+            href="/"
+            className="flex items-center gap-2.5 select-none group"
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/25 group-hover:bg-blue-700 transition-colors">
-              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
+              <Home className="h-5 w-5" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
@@ -83,23 +108,20 @@ export const Navbar: React.FC<NavbarProps> = ({
                   Kaduna
                 </span>
               </div>
-              <p className="text-[11px] font-medium text-slate-500 hidden sm:block">
-                Vetted Rentals • 100% Upfront Pricing
-              </p>
             </div>
-          </div>
+          </Link>
 
           {/* Desktop Navigation Links */}
-          <div className="hidden lg:flex items-center gap-8 text-sm font-semibold text-slate-600">
+          <div className="hidden lg:flex items-center gap-6 text-sm font-semibold text-slate-600">
             <button
               onClick={() => scrollTo("hero")}
-              className="text-blue-600 hover:text-blue-700 transition-colors py-1 relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-600"
+              className="text-blue-600 hover:text-blue-700 transition-colors py-1 relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-600 cursor-pointer"
             >
               Home
             </button>
             <button
               onClick={() => scrollTo("featured-properties")}
-              className="hover:text-blue-600 transition-colors py-1 flex items-center gap-1.5"
+              className="hover:text-blue-600 transition-colors py-1 flex items-center gap-1.5 cursor-pointer"
             >
               <span>Vetted Feed</span>
               <span className="rounded-full bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 font-bold">
@@ -108,92 +130,157 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
             <button
               onClick={() => scrollTo("how-it-works")}
-              className="hover:text-blue-600 transition-colors py-1"
+              className="hover:text-blue-600 transition-colors py-1 cursor-pointer"
             >
               How It Works
             </button>
             <button
               onClick={() => scrollTo("pricing-plans")}
-              className="hover:text-blue-600 transition-colors py-1"
+              className="hover:text-blue-600 transition-colors py-1 cursor-pointer"
             >
               Pricing Transparency
             </button>
             <button
               onClick={() => scrollTo("why-settlla")}
-              className="hover:text-blue-600 transition-colors py-1"
+              className="hover:text-blue-600 transition-colors py-1 cursor-pointer"
             >
               Why Settlla
             </button>
-            <button
-              onClick={() => scrollTo("faq-section")}
-              className="hover:text-blue-600 transition-colors py-1"
-            >
-              FAQs
-            </button>
           </div>
 
-          {/* Right Action Buttons */}
+          {/* Right Action & Auth Navigation */}
           <div className="flex items-center gap-2.5">
-            {onOpenEscrowDashboard && (
-              <button
-                type="button"
-                onClick={onOpenEscrowDashboard}
-                className="flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 px-3 py-2 text-xs font-bold text-emerald-900 transition-colors cursor-pointer"
-                title="Open Move-In Escrow Protection & Tenancy Status Dashboard (Screen 8)"
-              >
-                <span>🛡️</span>
-                <span className="hidden sm:inline">Move-In Escrow</span>
-                {activeEscrowStatus === "holding" && (
-                  <span className="rounded-full bg-emerald-600 text-white text-[9px] px-1.5 py-0.2 font-black">
-                    Active
-                  </span>
-                )}
-                {activeEscrowStatus === "disputed_frozen" && (
-                  <span className="rounded-full bg-rose-600 text-white text-[9px] px-1.5 py-0.2 font-black animate-ping">
-                    Frozen
-                  </span>
-                )}
-              </button>
-            )}
 
-            {onOpenManagerDesk && (
-              <button
-                type="button"
-                onClick={onOpenManagerDesk}
-                className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 px-3 py-2 text-xs font-bold text-slate-800 transition-colors cursor-pointer"
-                title="Open Property Manager Mandate Counter-Signing Desk (Screen 6)"
+            {/* Manager Desk Shortcut (if agent) */}
+            {role === "agent" && (
+              <Link
+                href="/dashboard/agent"
+                className="hidden sm:flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 px-3 py-2 text-xs font-bold text-slate-800 transition-colors"
+                title="Manager Desk"
               >
-                <span>⚖️</span>
-                <span className="hidden sm:inline">Manager Desk</span>
+                <Scale className="h-3.5 w-3.5 text-slate-700" />
+                <span className="hidden md:inline">Desk</span>
                 {pendingManagerSignatures > 0 && (
                   <span className="rounded-full bg-amber-500 text-white text-[10px] px-1.5 py-0.2 font-black animate-pulse">
                     {pendingManagerSignatures}
                   </span>
                 )}
-              </button>
+              </Link>
             )}
 
-            <button
-              onClick={() => scrollTo("featured-properties")}
-              className="rounded-xl bg-blue-600 hover:bg-blue-700 px-4 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-bold text-white shadow-md shadow-blue-600/25 transition-all hover:shadow-lg hover:shadow-blue-600/35"
-            >
-              Browse Verified Feed
-            </button>
+            {/* Authenticated User Menu vs Sign In Buttons */}
+            {isAuthenticated && currentUser ? (
+              <div className="relative">
+                <div className="flex items-center gap-1.5">
+                  <Link
+                    href={dashboardHref}
+                    className={`flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition-all shadow-xs border ${
+                      role === "agent"
+                        ? "bg-emerald-50 border-emerald-300 text-emerald-900 hover:bg-emerald-100"
+                        : "bg-blue-50 border-blue-300 text-blue-900 hover:bg-blue-100"
+                    }`}
+                  >
+                    {role === "agent" ? (
+                      <Building2 className="h-4 w-4 text-emerald-700" />
+                    ) : (
+                      <User className="h-4 w-4 text-blue-700" />
+                    )}
+                    <div className="text-left hidden sm:block">
+                      <div className="text-[11px] font-bold leading-tight truncate max-w-[120px]">
+                        {currentUser.fullName}
+                      </div>
+                      <div
+                        className={`text-[9px] uppercase font-black tracking-wider ${
+                          role === "agent" ? "text-emerald-700" : "text-blue-700"
+                        }`}
+                      >
+                        {role === "agent" ? "Agent Desk" : "Tenant Dashboard"}
+                      </div>
+                    </div>
+                  </Link>
+
+                  <button
+                    type="button"
+                    onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
+                    title="User Settings & Role Switcher"
+                  >
+                    <Settings className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {/* User Dropdown */}
+                {userDropdownOpen && (
+                  <div
+                    className="absolute right-0 mt-2 w-64 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl z-50 text-xs animate-fade-in"
+                    onClick={() => setUserDropdownOpen(false)}
+                  >
+                    <div className="p-3 border-b border-slate-100">
+                      <div className="font-bold text-slate-900">{currentUser.fullName}</div>
+                      <div className="text-[11px] text-slate-500 truncate">{currentUser.email}</div>
+                      <span
+                        className={`inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                          role === "agent"
+                            ? "bg-emerald-100 text-emerald-800"
+                            : "bg-blue-100 text-blue-800"
+                        }`}
+                      >
+                        Role: {role === "agent" ? "Agent / Property Manager" : "Tenant"}
+                      </span>
+                    </div>
+
+                    <div className="py-1">
+                      <Link
+                        href={dashboardHref}
+                        className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 font-bold text-slate-800 flex items-center justify-between"
+                      >
+                        <span>Open {role === "agent" ? "Agent" : "Tenant"} Dashboard</span>
+                        <ArrowRight className="h-3.5 w-3.5 text-slate-400" />
+                      </Link>
+
+                      <div className="my-1 border-t border-slate-100"></div>
+
+                      <button
+                        type="button"
+                        onClick={() => signOut()}
+                        className="w-full text-left px-3 py-2 rounded-xl hover:bg-rose-50 text-rose-700 font-bold cursor-pointer flex items-center gap-2"
+                      >
+                        <LogOut className="h-3.5 w-3.5 text-rose-600" />
+                        <span>Sign Out</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/login"
+                  className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-700 transition-colors"
+                >
+                  <LogIn className="h-3.5 w-3.5 text-slate-600" />
+                  <span>Sign In</span>
+                </Link>
+                <Link
+                  href="/signup"
+                  className="flex items-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 px-3.5 py-2 text-xs font-bold text-white shadow-md shadow-blue-600/25 transition-all"
+                >
+                  <UserPlus className="h-3.5 w-3.5 text-white" />
+                  <span>Sign Up</span>
+                </Link>
+              </div>
+            )}
 
             {/* Mobile Hamburger */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100"
+              className="lg:hidden flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 cursor-pointer"
               aria-label="Toggle Navigation Menu"
             >
               {mobileMenuOpen ? (
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <X className="h-5 w-5" />
               ) : (
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
+                <Menu className="h-5 w-5" />
               )}
             </button>
           </div>
@@ -231,23 +318,38 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
             <button
               onClick={() => scrollTo("why-settlla")}
-              className="block w-full text-left font-semibold text-slate-800 py-2 border-b border-slate-100"
+              className="block w-full text-left font-semibold text-slate-800 py-2"
             >
               Why Settlla
             </button>
-            <button
-              onClick={() => scrollTo("faq-section")}
-              className="block w-full text-left font-semibold text-slate-800 py-2"
-            >
-              FAQs
-            </button>
-            <div className="pt-2">
-              <a
-                href="tel:+2348007388552"
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-100 py-2.5 text-xs font-bold text-slate-800"
-              >
-                <span>📞 Call Kaduna Hub: 0800 738 8552</span>
-              </a>
+
+            <div className="pt-2 border-t border-slate-100 space-y-2">
+              {isAuthenticated ? (
+                <Link
+                  href={dashboardHref}
+                  className="flex items-center justify-center gap-1.5 w-full rounded-xl bg-blue-600 text-white py-2.5 font-bold text-xs"
+                >
+                  <User className="h-4 w-4" />
+                  <span>Open {role === "agent" ? "Agent" : "Tenant"} Dashboard</span>
+                </Link>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  <Link
+                    href="/login"
+                    className="flex items-center justify-center gap-1 rounded-xl border border-slate-200 bg-white py-2 text-xs font-bold text-slate-700"
+                  >
+                    <LogIn className="h-3.5 w-3.5" />
+                    <span>Sign In</span>
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="flex items-center justify-center gap-1 rounded-xl bg-blue-600 py-2 text-xs font-bold text-white"
+                  >
+                    <UserPlus className="h-3.5 w-3.5" />
+                    <span>Sign Up</span>
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         )}
