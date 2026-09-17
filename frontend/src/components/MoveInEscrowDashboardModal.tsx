@@ -81,6 +81,7 @@ export const MoveInEscrowDashboardModal: React.FC<MoveInEscrowDashboardModalProp
   // Key Handover Action States
   const [confirmingHandover, setConfirmingHandover] = useState(false);
   const [handoverSuccess, setHandoverSuccess] = useState(false);
+  const cautionFee = listing?.pricing ? listing.pricing.caution_fee : (transaction?.split_breakdown?.caution_deposit_vault ?? 0);
 
   // Dispute / Report Problem States
   const [issueCategory, setIssueCategory] = useState<
@@ -627,10 +628,12 @@ export const MoveInEscrowDashboardModal: React.FC<MoveInEscrowDashboardModalProp
                     <div className="rounded-2xl bg-white/10 p-4 border border-white/10 space-y-1">
                       <span className="text-[10px] uppercase font-bold text-blue-400">12-Month Caution Vault Status</span>
                       <strong className="block text-white text-sm">
-                        ₦{(escrow.amount_held * 0.1).toLocaleString("en-NG")} Ringfenced
+                        {cautionFee > 0 ? `₦${cautionFee.toLocaleString("en-NG")} Ringfenced` : "₦0 — Waived by Mandate"}
                       </strong>
                       <p className="text-slate-300 text-[11px]">
-                        Protected in Settlla Merchant Reserve / PayRep Vault. 100% refundable at tenancy end.
+                        {cautionFee > 0
+                          ? "Protected in Settlla Merchant Reserve / PayRep Vault. 100% refundable at tenancy end."
+                          : "No caution deposit withheld or deducted under landlord's approved mandate concession."}
                       </p>
                     </div>
                   </div>
@@ -767,27 +770,31 @@ export const MoveInEscrowDashboardModal: React.FC<MoveInEscrowDashboardModalProp
                 <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-3 shadow-xs">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                     <span className="font-bold text-slate-700 uppercase text-[10px]">2. Caution Deposit Vault</span>
-                    <span className="rounded bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 border border-blue-200">
-                      10% Sum
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                      cautionFee > 0
+                        ? "bg-blue-50 text-blue-700 border-blue-200"
+                        : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    }`}>
+                      {cautionFee > 0 ? "10% Sum" : "Waived"}
                     </span>
                   </div>
                   <strong className="text-xl font-black text-blue-700 block font-mono">
-                    ₦{(escrow.amount_held * 0.1).toLocaleString("en-NG")}
+                    {cautionFee > 0 ? `₦${cautionFee.toLocaleString("en-NG")}` : "₦0 (Waived)"}
                   </strong>
                   <div className="text-slate-600 text-[11px] space-y-1">
                     <p>
-                      <strong>Storage:</strong> Settlla Merchant Reserve
+                      <strong>Status:</strong> {cautionFee > 0 ? "Settlla Merchant Reserve" : "Waived by Landlord Mandate"}
                     </p>
                     <p>
-                      <strong>Custody:</strong> PayRep Isolated Balance
+                      <strong>Custody:</strong> {cautionFee > 0 ? "PayRep Isolated Balance" : "Zero Deposit Withheld"}
                     </p>
                     <p>
-                      <strong>Tenure:</strong> 12 Months (Full Lease)
+                      <strong>Tenure:</strong> {cautionFee > 0 ? "12 Months (Full Lease)" : "No Escrow Hold"}
                     </p>
                   </div>
                   <span className="text-[10px] text-blue-600 font-bold flex items-center gap-1 pt-1">
                     <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-                    <span>100% Refundable Post-Move-Out</span>
+                    <span>{cautionFee > 0 ? "100% Refundable Post-Move-Out" : "Zero Caution Liability"}</span>
                   </span>
                 </div>
 

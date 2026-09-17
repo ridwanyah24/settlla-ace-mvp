@@ -102,6 +102,12 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
                 <Check className="h-3.5 w-3.5 text-emerald-600" />
                 <span>Inspection Optional (₦0 Fee)</span>
               </span>
+              {listing.pricing.caution_fee === 0 && (
+                <span className="flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white shadow-xs">
+                  <Check className="h-3.5 w-3.5 text-white" />
+                  <span>₦0 Caution Deposit</span>
+                </span>
+              )}
             </div>
             <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
               {listing.title}
@@ -211,13 +217,26 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
                       {formatNaira(listing.pricing.annual_rent)}
                     </td>
                   </tr>
-                  <tr>
-                    <td className="py-3.5 px-4 font-semibold text-slate-800">Caution Deposit</td>
+                  <tr className={listing.pricing.caution_fee === 0 ? "bg-emerald-50/40" : ""}>
+                    <td className="py-3.5 px-4 font-semibold text-slate-800">
+                      <div className="flex items-center gap-1.5">
+                        <span>Caution Deposit</span>
+                        {listing.pricing.caution_fee === 0 && (
+                          <span className="rounded-md bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800">Waived</span>
+                        )}
+                      </div>
+                    </td>
                     <td className="py-3.5 px-4 text-slate-500">
-                      10% Refundable (Held in escrow reserve until end of tenancy)
+                      {listing.pricing.caution_fee > 0
+                        ? "10% Refundable (Held in escrow reserve until end of tenancy)"
+                        : "₦0 Caution Deposit — Waived under Landlord's approved mandate concession"}
                     </td>
                     <td className="py-3.5 px-4 text-right font-bold text-slate-800">
-                      {formatNaira(listing.pricing.caution_fee)}
+                      {listing.pricing.caution_fee > 0 ? (
+                        formatNaira(listing.pricing.caution_fee)
+                      ) : (
+                        <span className="text-emerald-700 font-bold">₦0 (Waived)</span>
+                      )}
                     </td>
                   </tr>
                   <tr>

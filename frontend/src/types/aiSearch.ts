@@ -11,6 +11,7 @@ export interface AISearchCriteria {
   requiredAmenities: string[];
   commuteAnchors: string[];
   lifestyleContext?: string[]; // e.g. ["nysc", "doctor", "family", "bachelor"]
+  noCautionFee?: boolean;
   parsedSummary: string;
 }
 

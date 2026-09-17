@@ -37,6 +37,13 @@ export const AI_PROMPT_SUGGESTIONS: AISuggestedPrompt[] = [
     query: "verified flat under 600k in Kaduna with personal meter and borehole",
     tag: "Kaduna • Under 600k",
   },
+  {
+    id: "zero-caution-barnawa",
+    emoji: "🎉",
+    label: "Barnawa Flat with ₦0 Caution Fee",
+    query: "2-bedroom in Barnawa near GTBank with zero caution deposit",
+    tag: "₦0 Caution • Barnawa",
+  },
 ];
 
 /**
@@ -296,6 +303,14 @@ export function parseNaturalLanguageQuery(rawQuery: string): AISearchCriteria {
     lifestyleContext.push("executive");
   }
 
+  // 7. Caution Fee Preferences
+  const noCautionFee =
+    normalized.includes("no caution") ||
+    normalized.includes("zero caution") ||
+    normalized.includes("without caution") ||
+    normalized.includes("no-caution") ||
+    normalized.includes("0 caution");
+
   // Build summary
   const summaryParts: string[] = [];
   if (neighborhood !== "all") summaryParts.push(`Location: ${neighborhood}`);
@@ -303,6 +318,7 @@ export function parseNaturalLanguageQuery(rawQuery: string): AISearchCriteria {
   if (propertyType && propertyType !== `${bedrooms}-Bedroom Flat`) summaryParts.push(propertyType);
   if (maxBudget) summaryParts.push(`Max Rent: ₦${maxBudget.toLocaleString()}`);
   if (maxTotalCost) summaryParts.push(`Max Move-In: ₦${maxTotalCost.toLocaleString()}`);
+  if (noCautionFee) summaryParts.push("₦0 Caution Fee");
   if (requiredAmenities.length > 0) summaryParts.push(`Amenities: ${requiredAmenities.join(", ")}`);
   if (commuteAnchors.length > 0) summaryParts.push(`Near: ${commuteAnchors.join(", ")}`);
 
@@ -317,6 +333,7 @@ export function parseNaturalLanguageQuery(rawQuery: string): AISearchCriteria {
     requiredAmenities,
     commuteAnchors,
     lifestyleContext,
+    noCautionFee,
     parsedSummary: summaryParts.length > 0 ? summaryParts.join(" • ") : "Broad search across verified listings",
   };
 }
@@ -509,10 +526,28 @@ export function scoreListing(listing: Listing, criteria: AISearchCriteria): AIMa
     }
   }
 
+  // 7. Caution Fee Matching
+  if (criteria.noCautionFee) {
+    if (listing.pricing.caution_fee === 0) {
+      score += 25;
+      matchHighlights.push(`🎉 Zero Caution Deposit Mandate (waived by landlord)`);
+    } else {
+      score -= 20;
+      missedCriteria.push("Requires 10% refundable caution deposit");
+    }
+  } else if (listing.pricing.caution_fee === 0) {
+    score += 5;
+    matchHighlights.push(`🎉 Zero Caution Deposit Concession (₦0 upfront caution)`);
+  }
+
   // Fallback highlight if matchHighlights is sparse but score is decent
   if (matchHighlights.length === 0) {
     matchHighlights.push(`✅ Verified landlord mandate (#${listing.mandate.mandate_ref}) with ESVARBON accreditation`);
-    matchHighlights.push(`🛡️ 10% caution fee protected in Key-in-Door Escrow`);
+    if (listing.pricing.caution_fee === 0) {
+      matchHighlights.push(`🎉 Zero Caution Deposit (waived under landlord mandate)`);
+    } else {
+      matchHighlights.push(`🛡️ 10% caution fee protected in Key-in-Door Escrow`);
+    }
   }
 
   // Clamp score between 15 and 99

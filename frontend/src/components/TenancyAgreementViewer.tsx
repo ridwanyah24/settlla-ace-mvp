@@ -183,14 +183,27 @@ export const TenancyAgreementViewer: React.FC<TenancyAgreementViewerProps> = ({
           "24-hour automatic safety countdown timer with immediate freeze on 'Report a Problem' dispute.",
         ],
       },
-      {
-        category: "Ringfenced Caution Deposit Safeguard",
-        statute_reference: "Settlla Non-Custodial Reserve Mandate",
-        items: [
-          `10% damage deposit (${cautionStr}) isolated in merchant reserve / PayRep custody vault.`,
-          "Mandatory full return within 14 calendar days post-move-out minus verified damage deductions.",
-        ],
-      },
+      ...(item.pricing.caution_fee > 0
+        ? [
+            {
+              category: "Ringfenced Caution Deposit Safeguard",
+              statute_reference: "Settlla Non-Custodial Reserve Mandate",
+              items: [
+                `10% damage deposit (${cautionStr}) isolated in merchant reserve / PayRep custody vault.`,
+                "Mandatory full return within 14 calendar days post-move-out minus verified damage deductions.",
+              ],
+            },
+          ]
+        : [
+            {
+              category: "Zero Caution Deposit Concession",
+              statute_reference: "Landlord Approved Mandate Concession",
+              items: [
+                "Zero caution deposit required upfront under approved Landlord Mandate.",
+                "Tenant retains general statutory duty to maintain interior fixtures in tenable repair.",
+              ],
+            },
+          ]),
     ];
 
     const mandateClause = `The Landlord (${item.mandate.landlord_name}) irrevocably designates ${item.mandate.manager_name} (${item.mandate.accreditation}) as lawful Attorney-in-Fact and exclusive property manager under registered written mandate Ref: ${item.mandate.mandate_ref}, with full authority to let, enforce, and execute this lease.`;
@@ -224,7 +237,7 @@ NOW THIS AGREEMENT WITNESSETH AS FOLLOWS:
 
 2. UPFRONT ALL-IN FEE SCHEDULE (NO HIDDEN CHARGES):
    (a) Annual Base Rent: ${rentStr} (75% of move-in consideration);
-   (b) Refundable Caution Deposit: ${cautionStr} (10% of annual rent);
+   (b) Refundable Caution Deposit: ${item.pricing.caution_fee > 0 ? `${cautionStr} (10% of annual rent)` : "NGN 0 (Waived under Landlord Mandate)"};
    (c) Legal Documentation & Drafting Fee: ${legalStr} (5% statutory legal fee);
    (d) Property Management Commission: ${agencyStr} (10% standard professional fee);
    TOTAL ALL-IN MOVE-IN CONSIDERATION: ${totalStr} only.
@@ -246,8 +259,10 @@ NOW THIS AGREEMENT WITNESSETH AS FOLLOWS:
 5. SETTLLA KEY-IN-DOOR ESCROW PROTECTION CLAUSE:
    The net annual rent (${rentStr}) shall remain locked in Move-In Escrow and shall not disburse to the Landlord until the Tenant taps "Confirm Key Handover" or the 24-hour safety timer expires without dispute.
 
-6. CAUTION DEPOSIT RINGFENCING CLAUSE:
-   The caution deposit (${cautionStr}) shall remain ringfenced in Settlla's merchant reserve / PayRep custody vault for the entire 12-month lease tenure, refundable in full within 14 calendar days post-move-out.
+6. CAUTION DEPOSIT CLAUSE:
+   ${item.pricing.caution_fee > 0
+     ? `The caution deposit (${cautionStr}) shall remain ringfenced in Settlla's merchant reserve / PayRep custody vault for the entire 12-month lease tenure, refundable in full within 14 calendar days post-move-out.`
+     : `No caution deposit is levied for this tenancy under the Landlord's approved mandate concession. Zero caution funds are held in escrow.`}
 
 7. STATUTORY NOTICE & DETERMINATION:
    A minimum statutory notice period of six (6) calendar months' formal written Notice to Quit shall be served prior to tenure determination, pursuant to Kaduna State Tenancy Laws.
@@ -290,7 +305,9 @@ Audit Reference: SETT-SIG-MGR-${agreementId}
       covenants,
       manager_mandate_clause: mandateClause,
       escrow_clause: `Annual rent of ${rentStr} held in Settlla Move-In Escrow until key handover confirmation.`,
-      caution_ringfencing_clause: `Caution fee of ${cautionStr} ringfenced in PayRep vault for 12 months.`,
+      caution_ringfencing_clause: item.pricing.caution_fee > 0
+        ? `Caution fee of ${cautionStr} ringfenced in PayRep vault for 12 months.`
+        : `Zero caution fee levied under Landlord Mandate concession.`,
       full_legal_text: fullLegalText,
       manager_signature: managerSignatureSvg,
       manager_signed_at: managerSignedDate,
@@ -533,7 +550,9 @@ Audit Reference: SETT-SIG-MGR-${agreementId}
                       <strong className="text-emerald-700 text-base font-black block mt-0.5">
                         ₦{agreement.pricing.total_move_in_cost.toLocaleString("en-NG")}
                       </strong>
-                      <span className="text-slate-500 text-[10px] block">Rent + Caution + Legal + Agency</span>
+                      <span className="text-slate-500 text-[10px] block">
+                        {agreement.pricing.caution_fee > 0 ? "Rent + Caution + Legal + Agency" : "Rent + Legal + Agency (Zero Caution)"}
+                      </span>
                     </div>
                   </div>
 
@@ -664,14 +683,27 @@ Audit Reference: SETT-SIG-MGR-${agreementId}
                               Locked in Move-In Escrow; releases to Landlord upon Key Handover
                             </td>
                           </tr>
-                          <tr>
-                            <td className="py-3 px-4 font-bold text-slate-900">Refundable Caution Deposit</td>
-                            <td className="py-3 px-4 text-slate-600">10% of annual rent</td>
-                            <td className="py-3 px-4 font-mono font-bold text-blue-700">
-                              ₦{agreement.pricing.caution_fee.toLocaleString("en-NG")}
+                          <tr className={agreement.pricing.caution_fee === 0 ? "bg-emerald-50/40" : ""}>
+                            <td className="py-3 px-4 font-bold text-slate-900">
+                              Refundable Caution Deposit
+                              {agreement.pricing.caution_fee === 0 && (
+                                <span className="ml-2 rounded-md bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800">Waived</span>
+                              )}
                             </td>
                             <td className="py-3 px-4 text-slate-600">
-                              Ringfenced in Merchant Reserve / PayRep Vault (repayable in 14 days)
+                              {agreement.pricing.caution_fee > 0 ? "10% of annual rent" : "₦0 (Waived by Landlord Mandate)"}
+                            </td>
+                            <td className="py-3 px-4 font-mono font-bold text-blue-700">
+                              {agreement.pricing.caution_fee > 0 ? (
+                                `₦${agreement.pricing.caution_fee.toLocaleString("en-NG")}`
+                              ) : (
+                                <span className="text-emerald-700 font-bold">₦0 (Waived)</span>
+                              )}
+                            </td>
+                            <td className="py-3 px-4 text-slate-600">
+                              {agreement.pricing.caution_fee > 0
+                                ? "Ringfenced in Merchant Reserve / PayRep Vault (repayable in 14 days)"
+                                : "Zero caution funds levied or withheld under landlord mandate concession"}
                             </td>
                           </tr>
                           <tr>

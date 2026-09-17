@@ -52,6 +52,7 @@ class VisitingWindowModel(BaseModel):
 class PricingBreakdownModel(BaseModel):
     annual_rent: int
     caution_fee: int
+    has_caution_fee: bool = True
     legal_fee: int
     agency_fee: int
     total_move_in_cost: int
@@ -81,7 +82,8 @@ class ListingModel(BaseModel):
 
 def build_listing_model(raw: dict) -> ListingModel:
     rent = int(raw["annual_rent"])
-    caution = int(round(rent * 0.10))
+    has_caution = raw.get("has_caution_fee", True)
+    caution = int(round(rent * 0.10)) if has_caution else 0
     legal = int(round(rent * 0.05))
     agency = int(round(rent * 0.10))
     total = rent + caution + legal + agency
@@ -89,6 +91,7 @@ def build_listing_model(raw: dict) -> ListingModel:
     pricing = PricingBreakdownModel(
         annual_rent=rent,
         caution_fee=caution,
+        has_caution_fee=has_caution,
         legal_fee=legal,
         agency_fee=agency,
         total_move_in_cost=total,
@@ -168,6 +171,9 @@ def get_listings(
                     continue
             elif qf == "prepaid":
                 if not any("prepaid" in a.lower() for a in item.amenities):
+                    continue
+            elif qf in ("no-caution", "no_caution"):
+                if item.pricing.caution_fee > 0:
                     continue
 
         filtered.append(item)
@@ -684,21 +690,41 @@ def generate_tenancy_agreement(req: GenerateAgreementRequest):
         ),
         CovenantCategoryModel(
             category="Key-in-Door Move-In Escrow Protection",
-            statute_reference="Settlla Scam Indemnity Protocol (FR-07)",
+            statute_reference="Settlla Scam Indemnity Protocol (FR-04)",
             items=[
                 f"Net rent ({format_naira_str(target_listing.pricing.annual_rent)}) locked in escrow until tenant taps 'Confirm Key Handover'.",
                 "24-hour automatic safety countdown timer with immediate freeze on 'Report a Problem' dispute."
             ]
         ),
-        CovenantCategoryModel(
-            category="Ringfenced Caution Deposit Safeguard",
-            statute_reference="Settlla Non-Custodial Reserve Mandate (FR-06)",
-            items=[
-                f"10% damage deposit ({format_naira_str(target_listing.pricing.caution_fee)}) isolated in merchant reserve / PayRep custody vault.",
-                "Mandatory full return within 14 calendar days post-move-out minus verified damage deductions."
-            ]
-        )
     ]
+
+    if target_listing.pricing.caution_fee > 0:
+        covenants.append(
+            CovenantCategoryModel(
+                category="Ringfenced Caution Deposit Safeguard",
+                statute_reference="Settlla Non-Custodial Reserve Mandate (FR-06)",
+                items=[
+                    f"10% damage deposit ({format_naira_str(target_listing.pricing.caution_fee)}) isolated in merchant reserve / PayRep custody vault.",
+                    "Mandatory full return within 14 calendar days post-move-out minus verified damage deductions."
+                ]
+            )
+        )
+        caution_clause = (
+            f"Caution deposit of {format_naira_str(target_listing.pricing.caution_fee)} is ringfenced in a non-custodial merchant "
+            f"reserve balance and protected against arbitrary landlord withholding, repayable within 14 days of move-out."
+        )
+    else:
+        covenants.append(
+            CovenantCategoryModel(
+                category="Zero Caution Deposit Concession",
+                statute_reference="Landlord Approved Mandate Concession",
+                items=[
+                    "Zero caution deposit required upfront under approved Landlord Mandate.",
+                    "Tenant retains general statutory duty to maintain interior fixtures in tenable repair."
+                ]
+            )
+        )
+        caution_clause = "Zero caution deposit levied under approved Landlord Mandate concession."
 
     mandate_clause = (
         f"The Landlord ({target_listing.mandate.landlord_name}) irrevocably designates {target_listing.mandate.manager_name} "
@@ -709,11 +735,6 @@ def generate_tenancy_agreement(req: GenerateAgreementRequest):
     escrow_clause = (
         f"Annual rent of {format_naira_str(target_listing.pricing.annual_rent)} shall be held in Settlla's Key-in-Door Move-In "
         f"Escrow and released only upon Tenant's physical key handover confirmation or the expiration of the 24-hour safety timer."
-    )
-
-    caution_clause = (
-        f"Caution deposit of {format_naira_str(target_listing.pricing.caution_fee)} is ringfenced in a non-custodial merchant "
-        f"reserve balance and protected against arbitrary landlord withholding, repayable within 14 days of move-out."
     )
 
     full_legal_text = build_full_legal_text(
@@ -1140,15 +1161,15 @@ MOVE_IN_PASSES_DB: List[dict] = []
 DISPUTES_DB: List[dict] = []
 
 
-def calculate_4way_split(annual_rent: int) -> PaymentSplitBreakdownModel:
+def calculate_4way_split(annual_rent: int, has_caution_fee: bool = True) -> PaymentSplitBreakdownModel:
     """
     Calculate atomic 4-way split cuts based on exact fee schedule:
     - Annual Rent (75% of move-in total)
-    - Caution Deposit (10% of annual rent)
+    - Caution Deposit (10% of annual rent, or 0% if waived)
     - Legal Documentation Fee (5% of annual rent)
     - Property Agency Commission (10% of annual rent)
     """
-    caution = int(round(annual_rent * 0.10))
+    caution = int(round(annual_rent * 0.10)) if has_caution_fee else 0
     legal = int(round(annual_rent * 0.05))
     agency = int(round(annual_rent * 0.10))
     total = annual_rent + caution + legal + agency
@@ -1160,7 +1181,7 @@ def calculate_4way_split(annual_rent: int) -> PaymentSplitBreakdownModel:
         legal_drafting_fee=legal,
         total_move_in_amount=total,
         escrow_percentage=75.0,
-        caution_percentage=10.0,
+        caution_percentage=10.0 if has_caution_fee else 0.0,
         agency_percentage=10.0,
         legal_percentage=5.0
     )
@@ -1191,7 +1212,7 @@ def initialize_payment(req: PaymentInitiateRequest):
         raise HTTPException(status_code=404, detail="Listing not found")
 
     # Calculate exact 4-way split
-    split_info = calculate_4way_split(target_listing.pricing.annual_rent)
+    split_info = calculate_4way_split(target_listing.pricing.annual_rent, target_listing.pricing.has_caution_fee)
 
     ref_id = f"SETT-PAY-{target_agr['agreement_id'].split('-')[-1]}-{datetime.datetime.now().strftime('%M%S')}"
 
@@ -1262,7 +1283,7 @@ def process_payment(req: PaymentProcessRequest):
     gateway_ref = req.gateway_ref or f"T{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}{ref_num}"
 
     # Calculate 4-way split
-    split_info = calculate_4way_split(target_listing.pricing.annual_rent)
+    split_info = calculate_4way_split(target_listing.pricing.annual_rent, target_listing.pricing.has_caution_fee)
 
     # Schedule move-in timestamps (e.g. Oct 1, 2026 10:00 AM)
     move_in_date_str = f"{target_agr['lease_start_date']} 10:00:00"
@@ -1293,14 +1314,14 @@ def process_payment(req: PaymentProcessRequest):
 
     # 2. Create Caution Vault Record
     caution_record = {
-        "caution_id": caution_id,
+        "caution_id": caution_id if split_info.caution_deposit_vault > 0 else "SETT-CAUT-WAIVED",
         "transaction_id": tx_id,
         "agreement_id": target_agr["agreement_id"],
         "amount": split_info.caution_deposit_vault,
         "currency": "NGN",
-        "vault_account": "Settlla Merchant Reserve (PayRep Custody Isolated)",
-        "vault_status": "ringfenced_isolated",
-        "tenure_months": 12,
+        "vault_account": "Settlla Merchant Reserve (PayRep Custody Isolated)" if split_info.caution_deposit_vault > 0 else "N/A (Zero Deposit Held)",
+        "vault_status": "ringfenced_isolated" if split_info.caution_deposit_vault > 0 else "not_applicable",
+        "tenure_months": 12 if split_info.caution_deposit_vault > 0 else 0,
         "refundable_date": target_agr["lease_end_date"],
         "refund_conditions": "Full refund within 14 calendar days post-move-out minus verified damage deductions",
         "created_at": now_iso
@@ -1349,12 +1370,12 @@ def process_payment(req: PaymentProcessRequest):
         ),
         SettlementDisbursalModel(
             recipient_role="caution_reserve",
-            recipient_name="Settlla Merchant Reserve / PayRep Vault",
-            account_destination=split_info.caution_vault_account,
-            percentage=10.0,
+            recipient_name="Settlla Merchant Reserve / PayRep Vault" if split_info.caution_deposit_vault > 0 else "N/A (Zero Caution Mandate)",
+            account_destination=split_info.caution_vault_account if split_info.caution_deposit_vault > 0 else "N/A (Waived)",
+            percentage=split_info.caution_percentage,
             amount_ngn=split_info.caution_deposit_vault,
-            purpose="10% Refundable Caution Deposit (12-Month Ringfenced Custody)",
-            settlement_status="ringfenced_in_vault"
+            purpose="10% Refundable Caution Deposit (12-Month Ringfenced Custody)" if split_info.caution_deposit_vault > 0 else "Zero Caution Deposit (Waived by Landlord Mandate)",
+            settlement_status="ringfenced_in_vault" if split_info.caution_deposit_vault > 0 else "disbursed_to_subaccount"
         ),
         SettlementDisbursalModel(
             recipient_role="property_manager",

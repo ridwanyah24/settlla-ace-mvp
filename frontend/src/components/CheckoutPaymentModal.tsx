@@ -177,7 +177,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
         legal_drafting_fee: legal,
         total_move_in_amount: total,
         escrow_percentage: 75.0,
-        caution_percentage: 10.0,
+        caution_percentage: caution > 0 ? 10.0 : 0.0,
         agency_percentage: 10.0,
         legal_percentage: 5.0,
         agency_subaccount: "ACCT_mp72kd90 (Stanbic IBTC - HB&A Partners)",
@@ -231,12 +231,12 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
           },
           {
             recipient_role: "caution_reserve",
-            recipient_name: "Settlla Merchant Reserve / PayRep Vault",
-            account_destination: splitBreakdown.caution_vault_account || "Settlla Merchant Reserve",
-            percentage: 10.0,
+            recipient_name: caution > 0 ? "Settlla Merchant Reserve / PayRep Vault" : "N/A (Zero Caution Mandate)",
+            account_destination: caution > 0 ? (splitBreakdown.caution_vault_account || "Settlla Merchant Reserve") : "N/A (Waived)",
+            percentage: caution > 0 ? 10.0 : 0.0,
             amount_ngn: caution,
-            purpose: "10% Refundable Caution Deposit (12-Month Ringfenced Custody)",
-            settlement_status: "ringfenced_in_vault",
+            purpose: caution > 0 ? "10% Refundable Caution Deposit (12-Month Ringfenced Custody)" : "Zero Caution Deposit (Waived by Landlord Mandate)",
+            settlement_status: caution > 0 ? "ringfenced_in_vault" : "disbursed_to_subaccount",
           },
           {
             recipient_role: "property_manager",
@@ -279,14 +279,14 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
           created_at: nowIso,
         },
         caution_vault: {
-          caution_id: cautionId,
+          caution_id: caution > 0 ? cautionId : "SETT-CAUT-WAIVED",
           transaction_id: txId,
           agreement_id: agreement.agreement_id,
           amount: caution,
           currency: "NGN",
-          vault_account: "Settlla Merchant Reserve (PayRep Custody Isolated)",
-          vault_status: "ringfenced_isolated",
-          tenure_months: 12,
+          vault_account: caution > 0 ? "Settlla Merchant Reserve (PayRep Custody Isolated)" : "N/A (Zero Deposit Held)",
+          vault_status: caution > 0 ? "ringfenced_isolated" : "not_applicable",
+          tenure_months: caution > 0 ? 12 : 0,
           refundable_date: "2027-09-30",
           refund_conditions: "Full refund within 14 calendar days post-move-out minus verified damage deductions",
           created_at: nowIso,
@@ -437,19 +437,33 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                       </span>
                     </div>
 
-                    {/* 2. Caution Deposit (10%) */}
-                    <div className="rounded-2xl border border-blue-200 bg-blue-50/50 p-4 space-y-2">
+                    {/* 2. Caution Deposit */}
+                    <div className={`rounded-2xl border p-4 space-y-2 ${
+                      transaction.split_breakdown.caution_deposit_vault === 0
+                        ? "border-emerald-200 bg-emerald-50/50"
+                        : "border-blue-200 bg-blue-50/50"
+                    }`}>
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-blue-800 uppercase">2. Caution Deposit (10%)</span>
-                        <span className="rounded bg-blue-200 text-blue-900 text-[10px] font-black px-1.5 py-0.5">
-                          Ringfenced
+                        <span className="text-[10px] font-bold text-blue-800 uppercase">
+                          2. Caution Deposit {transaction.split_breakdown.caution_deposit_vault > 0 ? "(10%)" : "(Waived)"}
+                        </span>
+                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${
+                          transaction.split_breakdown.caution_deposit_vault === 0
+                            ? "bg-emerald-200 text-emerald-900"
+                            : "bg-blue-200 text-blue-900"
+                        }`}>
+                          {transaction.split_breakdown.caution_deposit_vault === 0 ? "Waived (₦0)" : "Ringfenced"}
                         </span>
                       </div>
                       <strong className="text-lg font-black text-slate-900 block">
-                        ₦{transaction.split_breakdown.caution_deposit_vault.toLocaleString("en-NG")}
+                        {transaction.split_breakdown.caution_deposit_vault > 0
+                          ? `₦${transaction.split_breakdown.caution_deposit_vault.toLocaleString("en-NG")}`
+                          : "₦0 (No Caution)"}
                       </strong>
                       <p className="text-slate-600 text-[11px] leading-relaxed">
-                        Isolated in Settlla Merchant Reserve / PayRep Vault. 100% refundable within 14 days post-move-out.
+                        {transaction.split_breakdown.caution_deposit_vault > 0
+                          ? "Isolated in Settlla Merchant Reserve / PayRep Vault. 100% refundable within 14 days post-move-out."
+                          : "Waived under Landlord Mandate concession. No damage deposit held or deducted."}
                       </p>
                       <span className="text-[10px] text-blue-700 font-mono block">
                         Vault Ref: {transaction.caution_vault.caution_id}
@@ -572,14 +586,21 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                             Locked in Move-In Escrow; releases only upon Key Handover
                           </td>
                         </tr>
-                        <tr>
-                          <td className="py-3 px-3 font-bold text-slate-900">Refundable Caution Deposit</td>
-                          <td className="py-3 px-3 text-blue-700 font-bold">10%</td>
+                        <tr className={caution === 0 ? "bg-emerald-50/40" : ""}>
+                          <td className="py-3 px-3 font-bold text-slate-900">
+                            Refundable Caution Deposit
+                            {caution === 0 && (
+                              <span className="ml-2 rounded-md bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800">Waived</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-3 text-blue-700 font-bold">{caution > 0 ? "10%" : "0% (Waived)"}</td>
                           <td className="py-3 px-3 font-mono font-bold text-blue-700">
-                            ₦{caution.toLocaleString("en-NG")}
+                            {caution > 0 ? `₦${caution.toLocaleString("en-NG")}` : <span className="text-emerald-700">₦0 (Waived)</span>}
                           </td>
                           <td className="py-3 px-3 text-slate-600">
-                            Ringfenced in Settlla Reserve / PayRep Vault (12-Month Custody)
+                            {caution > 0
+                              ? "Ringfenced in Settlla Reserve / PayRep Vault (12-Month Custody)"
+                              : "Waived under Landlord's verified mandate concession"}
                           </td>
                         </tr>
                         <tr>

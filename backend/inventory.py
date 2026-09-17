@@ -54,6 +54,7 @@ RAW_LISTINGS = [
         "bedrooms": 2,
         "bathrooms": 2,
         "annual_rent": 750000,
+        "has_caution_fee": False,
         "commute_badge": "2 mins walk to GTBank Barnawa Branch",
         "commute_context": "Walking distance (approx 200m) to GTBank Barnawa branch and commercial axis.",
         "description": "Spacious serviced 2-bedroom flat with both rooms ensuite. Complete with fitted kitchen, automated borehole water system, dedicated prepaid meter, and private security guard on site.",
@@ -62,7 +63,8 @@ RAW_LISTINGS = [
             "Automated Borehole Pumping System",
             "Dedicated Security Guardhouse",
             "Fenced & Gated Perimeter",
-            "Ensuite Bedrooms with Water Heaters"
+            "Ensuite Bedrooms with Water Heaters",
+            "Zero Caution Deposit (Landlord Mandate)"
         ],
         "images": [
             "/images/living_room.jpg",
@@ -130,6 +132,7 @@ RAW_LISTINGS = [
         "bedrooms": 1,
         "bathrooms": 1,
         "annual_rent": 420000,
+        "has_caution_fee": False,
         "commute_badge": "3 mins to Kaduna Golf Club / Isa Kaita Road",
         "commute_context": "Strategic central Malali location, 3 minutes from Kaduna Golf Club and recreational hubs.",
         "description": "Affordable, secure mini-flat suitable for NYSC corps members or single professionals. Features a private kitchenette, clean filtered borehole water, smart prepaid meter, and night security guard.",
@@ -138,7 +141,8 @@ RAW_LISTINGS = [
             "Clean Borehole Water with Filtration",
             "Night Watchman on Duty",
             "Private Balcony & Cross Ventilation",
-            "Fully Tiled Interior"
+            "Fully Tiled Interior",
+            "Zero Caution Fee (NYSC & Youth Concession)"
         ],
         "images": [
             "/images/bedroom.jpg",

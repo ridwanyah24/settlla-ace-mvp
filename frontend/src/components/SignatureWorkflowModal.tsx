@@ -489,7 +489,9 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
                       <strong className="text-emerald-700 text-base font-black block mt-0.5">
                         ₦{agreement.pricing.total_move_in_cost.toLocaleString("en-NG")}
                       </strong>
-                      <span className="text-slate-500 text-[10px] block">Rent + Caution + Legal + Agency</span>
+                      <span className="text-slate-500 text-[10px] block">
+                        {agreement.pricing.caution_fee > 0 ? "Rent + Caution + Legal + Agency" : "Rent + Legal + Agency (Zero Caution)"}
+                      </span>
                     </div>
                   </div>
 
@@ -563,9 +565,13 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
                         </p>
                       </div>
                       <div className="rounded-xl bg-slate-50 p-3.5 border border-slate-200">
-                        <strong className="text-slate-900 block font-bold">2. Ringfenced Caution</strong>
+                        <strong className="text-slate-900 block font-bold">
+                          {agreement.pricing.caution_fee > 0 ? "2. Ringfenced Caution" : "2. Zero Caution Mandate"}
+                        </strong>
                         <p className="text-slate-600 text-[11px] mt-1 leading-relaxed">
-                          10% damage deposit is isolated in a non-custodial vault, repayable in 14 days post-tenancy.
+                          {agreement.pricing.caution_fee > 0
+                            ? "10% damage deposit is isolated in a non-custodial vault, repayable in 14 days post-tenancy."
+                            : "Zero caution fee charged upfront under landlord mandate. No caution funds are deducted or held."}
                         </p>
                       </div>
                       <div className="rounded-xl bg-slate-50 p-3.5 border border-slate-200">

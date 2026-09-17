@@ -74,6 +74,11 @@ export const ListingCard: React.FC<ListingCardProps> = ({
               <BadgeCheck className="h-3.5 w-3.5 text-white" />
               <span>Verified Mandate</span>
             </span>
+            {listing.pricing.caution_fee === 0 && (
+              <span className="flex items-center gap-1 rounded-full bg-emerald-600/95 px-2.5 py-1 text-[11px] font-bold text-white shadow-md backdrop-blur-xs">
+                <span>₦0 Caution</span>
+              </span>
+            )}
             {aiMatchScore !== undefined && (
               <span className="flex items-center gap-1 rounded-full bg-slate-900/90 text-amber-300 border border-amber-400/40 px-2.5 py-1 text-[11px] font-black shadow-md backdrop-blur-xs">
                 <Sparkles className="h-3 w-3 text-amber-400 animate-pulse" />
@@ -216,9 +221,15 @@ export const ListingCard: React.FC<ListingCardProps> = ({
               <span className="text-slate-500">Rent:</span>
               <strong className="text-slate-800">{formatNaira(listing.pricing.annual_rent)}</strong>
             </div>
-            <div className="rounded-lg bg-white px-2 py-1 border border-slate-200/80 flex justify-between">
-              <span className="text-slate-500">Caution (10%):</span>
-              <strong className="text-slate-800">{formatNaira(listing.pricing.caution_fee)}</strong>
+            <div className={`rounded-lg px-2 py-1 border flex justify-between ${
+              listing.pricing.caution_fee === 0
+                ? "bg-emerald-50/70 border-emerald-200 text-emerald-800"
+                : "bg-white border-slate-200/80"
+            }`}>
+              <span className={listing.pricing.caution_fee === 0 ? "text-emerald-700 font-medium" : "text-slate-500"}>Caution:</span>
+              <strong className={listing.pricing.caution_fee === 0 ? "text-emerald-700 font-bold" : "text-slate-800"}>
+                {listing.pricing.caution_fee > 0 ? formatNaira(listing.pricing.caution_fee) : "₦0 (Waived)"}
+              </strong>
             </div>
             <div className="rounded-lg bg-white px-2 py-1 border border-slate-200/80 flex justify-between">
               <span className="text-slate-500">Legal (5%):</span>
