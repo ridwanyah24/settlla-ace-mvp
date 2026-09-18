@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { UserProfile, UserRole } from "@/types/auth";
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { getEmailRedirectTo, isSupabaseConfigured } from "@/lib/supabase/config";
 import { profileRowToUser, ProfileRow } from "@/lib/settlla/profiles";
 import { assertPassword, formatSupabaseAuthError } from "@/lib/settlla/authErrors";
 
@@ -235,6 +235,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: cleanEmail,
           password: safePassword,
           options: {
+            emailRedirectTo: getEmailRedirectTo(),
             data: {
               full_name: data.fullName.trim(),
               role: data.role,

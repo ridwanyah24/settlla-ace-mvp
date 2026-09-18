@@ -28,6 +28,26 @@ Restart `npm run dev` after changing env files.
 
 Redirect after login uses the **role stored on `profiles`**.
 
+### Confirmation email links
+
+Signup passes `emailRedirectTo` as `{NEXT_PUBLIC_SITE_URL or current origin}/auth/callback`. If that env var is missing, Supabase falls back to the dashboard **Site URL**, which defaults to `http://localhost:3000`.
+
+In **Supabase → Authentication → URL Configuration**:
+
+1. Set **Site URL** to the live site (`https://www.your-domain.com`), not localhost.
+2. Add these **Redirect URLs**:
+   - `https://www.your-domain.com/auth/callback`
+   - `https://www.your-domain.com/**`
+   - `http://localhost:3000/auth/callback` (local testing)
+
+In **Vercel** (or `frontend/.env`), set:
+
+```env
+NEXT_PUBLIC_SITE_URL=https://www.your-domain.com
+```
+
+Restart the app after changing env vars. Existing emails already sent still contain the old localhost link; sign up again to get a new one.
+
 ## What connects to Supabase
 
 | Feature | Table(s) |

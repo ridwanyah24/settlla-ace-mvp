@@ -22,3 +22,34 @@ export function getSupabaseAnonKey(): string | undefined {
 export function isSupabaseConfigured(): boolean {
   return Boolean(getSupabaseUrl() && getSupabaseAnonKey());
 }
+
+function stripTrailingSlash(url: string): string {
+  return url.replace(/\/$/, "");
+}
+
+/** Canonical public origin for auth emails (not the Supabase dashboard Site URL). */
+export function getAuthSiteUrl(): string {
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (explicit) return stripTrailingSlash(explicit);
+
+  const vercelHost = (
+    process.env.NEXT_PUBLIC_VERCEL_URL ||
+    process.env.VERCEL_PROJECT_PRODUCTION_URL ||
+    ""
+  ).trim();
+  if (vercelHost) {
+    const host = vercelHost.replace(/^https?:\/\//, "");
+    return `https://${host}`;
+  }
+
+  if (typeof window !== "undefined" && window.location?.origin) {
+    return window.location.origin;
+  }
+
+  return "";
+}
+
+export function getEmailRedirectTo(): string {
+  const site = getAuthSiteUrl();
+  return site ? `${site}/auth/callback` : "/auth/callback";
+}

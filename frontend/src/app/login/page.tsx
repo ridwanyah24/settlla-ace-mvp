@@ -33,7 +33,20 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [roleHint, setRoleHint] = useState<string | null>(null);
+  const [confirmed, setConfirmed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("confirmed") === "1") {
+      setConfirmed(true);
+    }
+    const confirmError = params.get("error");
+    const message = params.get("message");
+    if (confirmError === "confirm") {
+      setError(message || "Email confirmation failed. Request a new link or try signing in.");
+    }
+  }, []);
 
   useEffect(() => {
     if (authReady && currentUser) {
@@ -161,6 +174,12 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
+
+            {confirmed && !error && (
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 text-xs text-emerald-800 font-semibold">
+                Email confirmed. Sign in with your password to continue.
+              </div>
+            )}
 
             {error && (
               <div className="rounded-xl border border-rose-200 bg-rose-50 p-3.5 text-xs text-rose-800 font-semibold">
