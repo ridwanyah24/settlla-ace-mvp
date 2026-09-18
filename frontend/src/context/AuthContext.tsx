@@ -8,9 +8,9 @@ import { getEmailRedirectTo, isSupabaseConfigured } from "@/lib/supabase/config"
 import { profileRowToUser, ProfileRow } from "@/lib/settlla/profiles";
 import { assertPassword, formatSupabaseAuthError, isAlreadyRegisteredError, isAuthRateLimitError } from "@/lib/settlla/authErrors";
 import {
+  clearConfirmationEmailSent,
   markConfirmationEmailSent,
   secondsUntilConfirmationResend,
-  wasConfirmationEmailSent,
 } from "@/lib/settlla/confirmationEmailCache";
 
 export type SignUpResult = {
@@ -20,6 +20,8 @@ export type SignUpResult = {
   confirmationEmailSent?: boolean;
   resendAvailableInSeconds?: number;
   rateLimited?: boolean;
+  /** Auth user missing (e.g. deleted in dashboard) — run signUp again from Pay */
+  accountMissing?: boolean;
 };
 
 interface AuthContextType {
@@ -241,7 +243,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const supabase = getSupabaseBrowserClient();
 
     const awaitingConfirmResult = (
-      sendResult: "sent" | "rate_limited" | "skipped",
+      sendResult: "sent" | "rate_limited" | "skipped" | "no_user",
       waitSec: number
     ): SignUpResult => ({
       needsEmailConfirmation: true,
@@ -256,7 +258,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const safePassword = assertPassword(data.password, true);
         const redirectTo = getEmailRedirectTo();
 
-        const sendConfirmationLink = async (): Promise<"sent" | "rate_limited" | "skipped"> => {
+        const sendConfirmationLink = async (): Promise<"sent" | "rate_limited" | "skipped" | "no_user"> => {
           const waitSec = secondsUntilConfirmationResend(cleanEmail);
           if (waitSec > 0) return "skipped";
 
@@ -267,23 +269,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
           if (resendError) {
             if (isAuthRateLimitError(resendError)) return "rate_limited";
+            const msg = (resendError.message || "").toLowerCase();
+            if (msg.includes("user not found") || msg.includes("not found")) {
+              clearConfirmationEmailSent(cleanEmail);
+              return "no_user";
+            }
             throw resendError;
           }
           markConfirmationEmailSent(cleanEmail);
           return "sent";
         };
-
-        if (wasConfirmationEmailSent(cleanEmail)) {
-          const waitSec = secondsUntilConfirmationResend(cleanEmail);
-          if (options?.resendIfAwaitingConfirmation && waitSec === 0) {
-            const sendResult = await sendConfirmationLink();
-            if (sendResult === "rate_limited") {
-              markConfirmationEmailSent(cleanEmail);
-            }
-            return awaitingConfirmResult(sendResult, waitSec);
-          }
-          return awaitingConfirmResult("skipped", waitSec);
-        }
 
         const { data: authData, error } = await supabase.auth.signUp({
           email: cleanEmail,
@@ -305,6 +300,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (error) {
           if (isAlreadyRegisteredError(error)) {
             const sendResult = await sendConfirmationLink();
+            if (sendResult === "no_user") {
+              clearConfirmationEmailSent(cleanEmail);
+              return {
+                needsEmailConfirmation: true,
+                user: null,
+                confirmationEmailSent: false,
+                accountMissing: true,
+              };
+            }
             if (sendResult === "rate_limited") {
               markConfirmationEmailSent(cleanEmail);
             }
@@ -320,6 +324,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             Array.isArray(identities) && identities.length === 0;
           if (looksLikeExistingUnconfirmed) {
             const sendResult = await sendConfirmationLink();
+            if (sendResult === "no_user") {
+              clearConfirmationEmailSent(cleanEmail);
+              return {
+                needsEmailConfirmation: true,
+                user: null,
+                confirmationEmailSent: false,
+                accountMissing: true,
+              };
+            }
             if (sendResult === "rate_limited") {
               markConfirmationEmailSent(cleanEmail);
             }
@@ -413,6 +426,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         message.includes("email address is already confirmed")
       ) {
         throw new Error("This email is already confirmed. Sign in with your password to continue.");
+      }
+      if (message.includes("user not found") || message.includes("not found")) {
+        clearConfirmationEmailSent(cleanEmail);
+        throw new Error(
+          "No account exists for this email in Supabase. Close this step, then tap Pay once to register again."
+        );
       }
       throw new Error(formatSupabaseAuthError(error));
     }

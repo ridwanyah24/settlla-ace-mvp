@@ -17,7 +17,12 @@ import {
   isEmailNotConfirmedError,
   MIN_PASSWORD_LENGTH,
 } from "@/lib/settlla/authErrors";
-import { clearPendingAuthFlow, loadPendingAuthFlow, savePendingAuthFlow } from "@/lib/settlla/pendingAuthFlow";
+import {
+  clearPendingAuthFlow,
+  loadPendingAuthFlow,
+  savePendingAuthFlow,
+} from "@/lib/settlla/pendingAuthFlow";
+import { clearConfirmationEmailSent } from "@/lib/settlla/confirmationEmailCache";
 import { MoveInPassViewer } from "./MoveInPassViewer";
 import {
   X,
@@ -190,6 +195,14 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
       );
     };
 
+    const beginFreshSignup = () => {
+      setEmailConfirmPending(false);
+      clearPendingAuthFlow();
+      clearConfirmationEmailSent(accountEmail);
+      setAuthSuccess(null);
+      setAuthError(null);
+    };
+
     // If guest / unauthenticated, create and link account
     if (!isAuthenticated && !currentUser) {
       if (emailConfirmPending) {
@@ -246,6 +259,13 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
           { resendIfAwaitingConfirmation: true }
         );
         if (result.needsEmailConfirmation) {
+          if (result.accountMissing) {
+            beginFreshSignup();
+            setAuthError(
+              "This email is not in Supabase anymore. Tap Pay once to create the account and get a new link."
+            );
+            return;
+          }
           showAwaitingEmailConfirm(result);
           return;
         }
@@ -493,6 +513,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                           onBack={() => {
                             setEmailConfirmPending(false);
                             clearPendingAuthFlow();
+                            clearConfirmationEmailSent(accountEmail);
                             setAuthSuccess(null);
                             setAuthError(null);
                           }}
