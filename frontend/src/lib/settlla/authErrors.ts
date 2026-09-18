@@ -81,8 +81,15 @@ export function formatSupabaseAuthError(error: unknown): string {
     return `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`;
   }
 
-  if (message.includes("rate limit") || message.includes("too many requests")) {
-    return "Too many attempts. Please wait a moment and try again.";
+  if (
+    code === "over_email_send_rate_limit" ||
+    code === "over_request_rate_limit" ||
+    err.status === 429 ||
+    message.includes("rate limit") ||
+    message.includes("too many requests") ||
+    message.includes("email rate limit")
+  ) {
+    return "Too many confirmation emails were sent just now. Wait a few minutes, then try again.";
   }
 
   if (err.message && err.message.trim()) {

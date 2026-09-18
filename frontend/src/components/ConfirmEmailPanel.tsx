@@ -21,7 +21,7 @@ export const ConfirmEmailPanel: React.FC<ConfirmEmailPanelProps> = ({
   const { resendConfirmationEmail } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
-  const [cooldown, setCooldown] = useState(0);
+  const [cooldown, setCooldown] = useState(60);
 
   useEffect(() => {
     if (cooldown <= 0) return;

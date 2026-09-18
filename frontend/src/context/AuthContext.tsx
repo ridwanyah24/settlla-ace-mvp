@@ -7,6 +7,10 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { getEmailRedirectTo, isSupabaseConfigured } from "@/lib/supabase/config";
 import { profileRowToUser, ProfileRow } from "@/lib/settlla/profiles";
 import { assertPassword, formatSupabaseAuthError } from "@/lib/settlla/authErrors";
+import {
+  markConfirmationEmailSent,
+  wasConfirmationEmailSent,
+} from "@/lib/settlla/confirmationEmailCache";
 
 export type SignUpResult = {
   needsEmailConfirmation: boolean;
@@ -232,6 +236,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (supabaseMode && supabase) {
       try {
         const safePassword = assertPassword(data.password, true);
+
+        // Don't send another confirmation email for the same address — that
+        // rate-limits the whole Supabase project and blocks other signups.
+        if (wasConfirmationEmailSent(cleanEmail)) {
+          return { needsEmailConfirmation: true, user: null };
+        }
+
         const { data: authData, error } = await supabase.auth.signUp({
           email: cleanEmail,
           password: safePassword,
@@ -250,17 +261,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
         if (error) throw error;
 
-        if (
-          authData.user &&
-          !authData.session &&
-          Array.isArray(authData.user.identities) &&
-          authData.user.identities.length === 0
-        ) {
-          throw new Error("An account with this email already exists. Sign in instead.");
-        }
-
         // Email confirmation enabled: no session until the user clicks the email link
         if (!authData.session) {
+          markConfirmationEmailSent(cleanEmail);
           return { needsEmailConfirmation: true, user: null };
         }
 
@@ -325,12 +328,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const supabase = getSupabaseBrowserClient();
     if (!supabase) throw new Error("Settlla is not connected to Supabase.");
 
+    const cleanEmail = email.trim();
     const { error } = await supabase.auth.resend({
       type: "signup",
-      email: email.trim(),
+      email: cleanEmail,
       options: { emailRedirectTo: getEmailRedirectTo() },
     });
     if (error) throw new Error(formatSupabaseAuthError(error));
+    markConfirmationEmailSent(cleanEmail);
   };
 
   const signOut = async () => {
