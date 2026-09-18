@@ -15,7 +15,6 @@ import {
   Tag,
   Clock,
   Home,
-  SlidersHorizontal,
   ChevronRight,
 } from "lucide-react";
 import { Button } from "./ui/Button";
@@ -429,7 +428,7 @@ export const AISearchModal: React.FC<AISearchModalProps> = ({
               onClick={handleApplyToFeed}
               className="w-full sm:w-auto rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold px-4 py-2.5 transition-colors cursor-pointer shrink-0"
             >
-              Apply Filter to Main Feed
+              Show matches on homepage
             </button>
           )}
         </div>

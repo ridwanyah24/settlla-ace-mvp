@@ -5,8 +5,8 @@ import Image from "next/image";
 import { Button } from "./ui/Button";
 import {
   HeroFiltersModal,
-  AMENITY_QUICK_FILTERS,
   countActiveHeroFilters,
+  type HeroFiltersState,
 } from "./HeroFiltersModal";
 import {
   ShieldCheck,
@@ -15,65 +15,90 @@ import {
   Sparkles,
   Zap,
   SlidersHorizontal,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 
-/** Shown on the hero — one-tap toggles; everything else lives in the filters modal. */
-const SURFACE_QUICK_FILTERS = [
-  {
-    id: "barnawa",
-    label: "Barnawa",
-    isActive: (s: SurfaceFilterState) => s.neighborhood === "Barnawa",
-    toggle: (s: SurfaceFilterState, setters: SurfaceFilterSetters) => {
-      setters.setNeighborhood(s.neighborhood === "Barnawa" ? "all" : "Barnawa");
-    },
-  },
-  {
-    id: "under-300k",
-    label: "≤ ₦300k / yr",
-    isActive: (s: SurfaceFilterState) => s.maxBudget === "300000",
-    toggle: (s: SurfaceFilterState, setters: SurfaceFilterSetters) => {
-      setters.setMaxBudget(s.maxBudget === "300000" ? "all" : "300000");
-    },
-  },
-  {
-    id: "no-caution",
-    label: "₦0 caution",
-    isActive: (s: SurfaceFilterState) => s.quickFilter === "no-caution",
-    toggle: (s: SurfaceFilterState, setters: SurfaceFilterSetters) => {
-      setters.setQuickFilter(s.quickFilter === "no-caution" ? "all" : "no-caution");
-    },
-  },
-] as const;
-
-type SurfaceFilterState = {
-  neighborhood: string;
-  maxBudget: string;
-  quickFilter: string;
-};
-
-type SurfaceFilterSetters = {
+interface HeroSectionProps extends HeroFiltersState {
   setNeighborhood: (val: string) => void;
   setMaxBudget: (val: string) => void;
-  setQuickFilter: (val: string) => void;
-};
-
-interface HeroSectionProps {
-  neighborhood: string;
-  setNeighborhood: (val: string) => void;
-  maxBudget: string;
-  setMaxBudget: (val: string) => void;
-  propertyType: string;
   setPropertyType: (val: string) => void;
-  minBedrooms: string;
   setMinBedrooms: (val: string) => void;
-  maxMoveInCost: string;
   setMaxMoveInCost: (val: string) => void;
-  quickFilter: string;
   setQuickFilter: (val: string) => void;
   onResetFilters: () => void;
   onSearch: () => void;
   onOpenAISearch?: (initialQuery?: string) => void;
+}
+
+const TRY_PROMPTS = [
+  {
+    emoji: "🎓",
+    label: "Malali Studio ₦200k (NYSC)",
+    query: "affordable studio mini-flat in Malali under 200k for NYSC corper",
+  },
+  {
+    emoji: "⚡",
+    label: "Barnawa 2-bed under ₦300k",
+    query: "2-bedroom in Barnawa near GTBank under 300k with prepaid meter",
+  },
+  {
+    emoji: "🎉",
+    label: "Zero Caution Deposit",
+    query: "verified flat with zero caution deposit for students",
+  },
+  {
+    emoji: "💰",
+    label: "Student Flat under ₦250k",
+    query: "verified flat under 250k in Kaduna with personal meter",
+  },
+] as const;
+
+function countExtraFilters(state: HeroFiltersState): number {
+  let n = countActiveHeroFilters(state);
+  if (state.neighborhood !== "all") n--;
+  if (state.propertyType !== "all") n--;
+  if (state.maxBudget !== "all") n--;
+  return n;
+}
+
+function HeroBrowseSelect({
+  id,
+  value,
+  onChange,
+  "aria-label": ariaLabel,
+  className,
+  children,
+}: {
+  id: string;
+  value: string;
+  onChange: (val: string) => void;
+  "aria-label": string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className={cn(
+        "settlla-panel-muted relative min-w-[9.5rem] shrink-0 focus-within:border-blue-500 focus-within:bg-white",
+        className
+      )}
+    >
+      <select
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={ariaLabel}
+        className="w-full cursor-pointer appearance-none bg-transparent py-2.5 pl-3 pr-8 text-xs font-semibold text-slate-900 outline-none sm:py-3 sm:text-sm"
+      >
+        {children}
+      </select>
+      <ChevronDown
+        className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+        aria-hidden
+      />
+    </div>
+  );
 }
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
@@ -93,11 +118,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onSearch,
   onOpenAISearch,
 }) => {
-  const [searchMode, setSearchMode] = React.useState<"ai" | "manual">("ai");
+  const [searchMode, setSearchMode] = React.useState<"ai" | "browse">("ai");
   const [aiPromptInput, setAiPromptInput] = React.useState("");
   const [filtersModalOpen, setFiltersModalOpen] = React.useState(false);
 
-  const filterState = {
+  const filterState: HeroFiltersState = {
     neighborhood,
     maxBudget,
     propertyType,
@@ -106,90 +131,41 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     quickFilter,
   };
 
-  const activeFilterCount = countActiveHeroFilters(filterState);
+  const extraFilterCount = countExtraFilters(filterState);
 
-  const surfaceState: SurfaceFilterState = { neighborhood, maxBudget, quickFilter };
-  const surfaceSetters: SurfaceFilterSetters = {
-    setNeighborhood,
-    setMaxBudget,
-    setQuickFilter,
-  };
-
-  const buildEnrichedAIQuery = (prompt: string) => {
-    const parts: string[] = [];
-    if (prompt.trim()) parts.push(prompt.trim());
-    if (neighborhood !== "all") parts.push(`in ${neighborhood}`);
-    if (propertyType !== "all") parts.push(propertyType);
-    if (minBedrooms !== "all") parts.push(`${minBedrooms}+ bedrooms`);
-    if (maxBudget !== "all") {
-      parts.push(`annual rent up to ₦${Number(maxBudget).toLocaleString("en-NG")}`);
-    }
-    if (maxMoveInCost !== "all") {
-      parts.push(
-        `total move-in up to ₦${Number(maxMoveInCost).toLocaleString("en-NG")}`
-      );
-    }
-    if (quickFilter !== "all") {
-      const chip = AMENITY_QUICK_FILTERS.find((c) => c.id === quickFilter);
-      if (chip) parts.push(chip.label);
-    }
-    return parts.length > 0 ? parts.join(", ") : "verified Kaduna apartments";
+  const resolveQuery = (prompt: string) => {
+    const trimmed = prompt.trim();
+    return trimmed || "verified Kaduna apartments";
   };
 
   const handleAISubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    onOpenAISearch?.(buildEnrichedAIQuery(aiPromptInput));
+    onOpenAISearch?.(resolveQuery(aiPromptInput));
   };
 
-  const filterIconButton = (
+  const handleBrowseSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    onSearch();
+  };
+
+  const filterButton = (
     <button
       type="button"
       onClick={() => setFiltersModalOpen(true)}
-      aria-label={`All filters${activeFilterCount ? `, ${activeFilterCount} active` : ""}`}
+      aria-label={`More filters${extraFilterCount ? `, ${extraFilterCount} active` : ""}`}
       className={cn(
-        "btn btn-md relative shrink-0 border",
-        activeFilterCount > 0 ? "btn-soft border-blue-300" : "btn-secondary"
+        "btn btn-md relative h-auto shrink-0 self-stretch border py-2.5 sm:py-3",
+        extraFilterCount > 0 ? "btn-soft border-blue-300" : "btn-secondary"
       )}
     >
       <SlidersHorizontal className="h-4 w-4" />
       <span className="hidden sm:inline">Filters</span>
-      {activeFilterCount > 0 && (
+      {extraFilterCount > 0 && (
         <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-bold text-white ring-2 ring-white">
-          {activeFilterCount}
+          {extraFilterCount}
         </span>
       )}
     </button>
-  );
-
-  const surfaceQuickChips = (
-    <div className="flex flex-wrap items-center gap-2">
-      {SURFACE_QUICK_FILTERS.map((chip) => {
-        const active = chip.isActive(surfaceState);
-        return (
-          <button
-            key={chip.id}
-            type="button"
-            onClick={() => chip.toggle(surfaceState, surfaceSetters)}
-            className={cn("settlla-chip whitespace-nowrap", active && "settlla-chip-active")}
-          >
-            {chip.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-
-  const browseFiltersRow = (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex flex-wrap items-center gap-2">
-        {filterIconButton}
-        {surfaceQuickChips}
-      </div>
-      <Button type="button" variant="primary" size="lg" onClick={onSearch} className="shrink-0">
-        <Search className="h-4 w-4" />
-        Find homes
-      </Button>
-    </div>
   );
 
   return (
@@ -246,10 +222,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               </button>
               <button
                 type="button"
-                onClick={() => setSearchMode("manual")}
+                onClick={() => setSearchMode("browse")}
                 className={cn(
                   "relative flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-colors sm:gap-2 sm:px-4 sm:text-sm",
-                  searchMode === "manual"
+                  searchMode === "browse"
                     ? "bg-white text-slate-900 shadow-sm"
                     : "text-slate-600 hover:text-slate-900"
                 )}
@@ -259,7 +235,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               </button>
             </div>
 
-            <span className="settlla-chip border-emerald-200 bg-emerald-50 text-emerald-800">
+            <span className="settlla-chip border-emerald-200 bg-emerald-50 text-emerald-800 shrink-0">
               <CheckCircle2 className="h-3.5 w-3.5" />
               ₦0 inspection
             </span>
@@ -267,6 +243,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
           {searchMode === "ai" ? (
             <div className="space-y-3.5 text-left">
+              <p className="text-xs text-slate-500 sm:text-sm">
+                Describe what you want — area, budget, beds, amenities. Settlla AI handles the rest.
+              </p>
               <form onSubmit={handleAISubmit} className="flex flex-col items-stretch gap-2.5 sm:flex-row">
                 <div className="relative min-w-0 flex-1">
                   <div
@@ -283,50 +262,24 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     className="settlla-input !pl-11"
                   />
                 </div>
-                <div className="flex shrink-0 gap-2">
-                  {filterIconButton}
-                  <Button type="submit" variant="primary" size="lg" className="min-w-[100px]">
-                    <Sparkles className="h-4 w-4" />
-                    Search
-                  </Button>
-                </div>
+                <Button type="submit" variant="primary" size="lg" className="min-w-[100px] shrink-0">
+                  <Sparkles className="h-4 w-4" />
+                  Search
+                </Button>
               </form>
-
-              <div className="flex flex-wrap items-center gap-2">{surfaceQuickChips}</div>
 
               <div className="flex flex-wrap items-center gap-2 text-xs">
                 <span className="text-overline shrink-0 text-slate-500">
                   <Zap className="mr-1 inline h-3 w-3" />
                   Try
                 </span>
-                {[
-                  {
-                    emoji: "🎓",
-                    label: "Malali Studio ₦200k (NYSC)",
-                    query: "affordable studio mini-flat in Malali under 200k for NYSC corper",
-                  },
-                  {
-                    emoji: "⚡",
-                    label: "Barnawa 2-bed under ₦300k",
-                    query: "2-bedroom in Barnawa near GTBank under 300k with prepaid meter",
-                  },
-                  {
-                    emoji: "🎉",
-                    label: "Zero Caution Deposit",
-                    query: "verified flat with zero caution deposit for students",
-                  },
-                  {
-                    emoji: "💰",
-                    label: "Student Flat under ₦250k",
-                    query: "verified flat under 250k in Kaduna with personal meter",
-                  },
-                ].map((item, idx) => (
+                {TRY_PROMPTS.map((item) => (
                   <button
-                    key={idx}
+                    key={item.label}
                     type="button"
                     onClick={() => {
                       setAiPromptInput(item.query);
-                      onOpenAISearch?.(buildEnrichedAIQuery(item.query));
+                      onOpenAISearch?.(item.query);
                     }}
                     className="settlla-chip hover:border-blue-300 hover:bg-blue-50 hover:text-blue-800"
                   >
@@ -337,19 +290,69 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               </div>
             </div>
           ) : (
-            <div className="space-y-4 text-left">
-              <p className="text-body text-slate-600">
-                Tap quick filters or open{" "}
-                <button
-                  type="button"
-                  onClick={() => setFiltersModalOpen(true)}
-                  className="font-semibold text-blue-600 hover:text-blue-800"
-                >
-                  all filters
-                </button>{" "}
-                for bedrooms, move-in budget, amenities, and more.
+            <div className="space-y-3 text-left">
+              <p className="text-xs text-slate-500 sm:text-sm">
+                Set location, type, and budget inline — use{" "}
+                <span className="font-semibold text-slate-700">Filters</span> for bedrooms, move-in total,
+                and amenities.
               </p>
-              {browseFiltersRow}
+
+              <form
+                onSubmit={handleBrowseSubmit}
+                className="flex flex-nowrap items-stretch gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              >
+                <HeroBrowseSelect
+                  id="hero-main-location"
+                  value={neighborhood}
+                  onChange={setNeighborhood}
+                  aria-label="Location"
+                  className="min-w-[11rem] flex-[1.2] sm:min-w-[12rem]"
+                >
+                  <option value="all">All Kaduna (Barnawa &amp; Malali)</option>
+                  <option value="Barnawa">Barnawa (GRA &amp; Phase 1)</option>
+                  <option value="Malali">Malali (Low Cost &amp; GRA Ext)</option>
+                </HeroBrowseSelect>
+
+                <HeroBrowseSelect
+                  id="hero-property-type"
+                  value={propertyType}
+                  onChange={setPropertyType}
+                  aria-label="Property type"
+                  className="min-w-[9rem] flex-1"
+                >
+                  <option value="all">All types</option>
+                  <option value="Mini-flat">Studio / Mini-flat</option>
+                  <option value="1-Bedroom Flat">1-Bedroom</option>
+                  <option value="2-Bedroom Flat">2-Bedroom</option>
+                  <option value="3-Bedroom Flat">3-Bedroom</option>
+                </HeroBrowseSelect>
+
+                <HeroBrowseSelect
+                  id="hero-max-rent"
+                  value={maxBudget}
+                  onChange={setMaxBudget}
+                  aria-label="Max annual rent"
+                  className="min-w-[9rem] flex-1"
+                >
+                  <option value="all">Any rent</option>
+                  <option value="200000">≤ ₦200k / yr</option>
+                  <option value="250000">≤ ₦250k / yr</option>
+                  <option value="300000">≤ ₦300k / yr</option>
+                  <option value="350000">≤ ₦350k / yr</option>
+                  <option value="450000">≤ ₦450k / yr</option>
+                </HeroBrowseSelect>
+
+                {filterButton}
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="lg"
+                  className="h-auto shrink-0 px-4 sm:min-w-[7.5rem]"
+                >
+                  <Search className="h-4 w-4" />
+                  Search
+                </Button>
+              </form>
             </div>
           )}
         </div>

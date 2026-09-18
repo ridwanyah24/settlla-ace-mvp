@@ -6,7 +6,6 @@ import {
   X,
   MapPin,
   Home,
-  CreditCard,
   BedDouble,
   Wallet,
   ShieldCheck,
@@ -121,7 +120,9 @@ export const HeroFiltersModal: React.FC<HeroFiltersModalProps> = ({
             <h2 id="hero-filters-title" className="text-lg font-bold text-slate-900">
               All filters
             </h2>
-            <p className="text-caption text-slate-500">Refine the vetted Kaduna feed</p>
+            <p className="text-caption text-slate-500">
+              Bedrooms, move-in budget, and amenities. Location, type, and rent are on Browse.
+            </p>
           </div>
           <button
             type="button"
@@ -135,77 +136,22 @@ export const HeroFiltersModal: React.FC<HeroFiltersModalProps> = ({
 
         <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-5">
           <div>
-            <p className="text-overline mb-3 text-slate-500">Area &amp; layout</p>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="settlla-panel-muted p-3 focus-within:border-blue-500 focus-within:bg-white">
-                <label className="settlla-label">
-                  <MapPin className="h-3.5 w-3.5 text-blue-600" />
-                  <span>Location</span>
-                </label>
-                <select
-                  value={neighborhood}
-                  onChange={(e) => setNeighborhood(e.target.value)}
-                  className="w-full cursor-pointer bg-transparent text-sm font-semibold text-slate-900 outline-none"
-                >
-                  <option value="all">All Kaduna (Barnawa &amp; Malali)</option>
-                  <option value="Barnawa">Barnawa (GRA &amp; Phase 1)</option>
-                  <option value="Malali">Malali (Low Cost &amp; GRA Ext)</option>
-                </select>
-              </div>
-
-              <div className="settlla-panel-muted p-3 focus-within:border-blue-500 focus-within:bg-white">
-                <label className="settlla-label">
-                  <Home className="h-3.5 w-3.5 text-blue-600" />
-                  <span>Property type</span>
-                </label>
-                <select
-                  value={propertyType}
-                  onChange={(e) => setPropertyType(e.target.value)}
-                  className="w-full cursor-pointer bg-transparent text-sm font-semibold text-slate-900 outline-none"
-                >
-                  <option value="all">All apartment types</option>
-                  <option value="Mini-flat">Studio / Mini-flat</option>
-                  <option value="1-Bedroom Flat">1-Bedroom Flat</option>
-                  <option value="2-Bedroom Flat">2-Bedroom Flat</option>
-                  <option value="3-Bedroom Flat">3-Bedroom Flat</option>
-                </select>
-              </div>
-
-              <div className="settlla-panel-muted p-3 focus-within:border-blue-500 focus-within:bg-white">
-                <label className="settlla-label">
-                  <BedDouble className="h-3.5 w-3.5 text-blue-600" />
-                  <span>Minimum bedrooms</span>
-                </label>
-                <select
-                  value={minBedrooms}
-                  onChange={(e) => setMinBedrooms(e.target.value)}
-                  className="w-full cursor-pointer bg-transparent text-sm font-semibold text-slate-900 outline-none"
-                >
-                  <option value="all">Any bedroom count</option>
-                  <option value="1">1+ bedroom</option>
-                  <option value="2">2+ bedrooms</option>
-                  <option value="3">3+ bedrooms</option>
-                </select>
-              </div>
-
-              <div className="settlla-panel-muted p-3 focus-within:border-blue-500 focus-within:bg-white">
-                <label className="settlla-label">
-                  <CreditCard className="h-3.5 w-3.5 text-blue-600" />
-                  <span>Max annual rent</span>
-                </label>
-                <select
-                  value={maxBudget}
-                  onChange={(e) => setMaxBudget(e.target.value)}
-                  className="w-full cursor-pointer bg-transparent text-sm font-semibold text-slate-900 outline-none"
-                >
-                  <option value="all">Any annual rent</option>
-                  <option value="200000">Up to ₦200,000 / yr</option>
-                  <option value="250000">Up to ₦250,000 / yr</option>
-                  <option value="300000">Up to ₦300,000 / yr</option>
-                  <option value="350000">Up to ₦350,000 / yr</option>
-                  <option value="450000">Up to ₦450,000 / yr</option>
-                </select>
-              </div>
+            <p className="text-overline mb-3 text-slate-500">Bedrooms</p>
+            <div className="settlla-panel-muted p-3 focus-within:border-blue-500 focus-within:bg-white">
+              <label className="settlla-label">
+                <BedDouble className="h-3.5 w-3.5 text-blue-600" />
+                <span>Minimum bedrooms</span>
+              </label>
+              <select
+                value={minBedrooms}
+                onChange={(e) => setMinBedrooms(e.target.value)}
+                className="w-full cursor-pointer bg-transparent text-sm font-semibold text-slate-900 outline-none"
+              >
+                <option value="all">Any bedroom count</option>
+                <option value="1">1+ bedroom</option>
+                <option value="2">2+ bedrooms</option>
+                <option value="3">3+ bedrooms</option>
+              </select>
             </div>
           </div>
 
