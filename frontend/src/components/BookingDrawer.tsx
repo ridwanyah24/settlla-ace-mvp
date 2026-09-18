@@ -9,9 +9,11 @@ import { Listing } from "@/types/listing";
 import { DaySchedule, TimeSlot, InspectionBookingResponse } from "@/types/booking";
 import { fetchListingVisitSlots, createInspectionBooking } from "@/lib/settlla/bookings";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { EmailCodeVerify } from "@/components/EmailCodeVerify";
 import {
   assertPassword,
   formatSupabaseAuthError,
+  isEmailNotConfirmedError,
   MIN_PASSWORD_LENGTH,
 } from "@/lib/settlla/authErrors";
 import {
@@ -93,6 +95,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
   const [authPassword, setAuthPassword] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(false);
+  const [pendingCodeEmail, setPendingCodeEmail] = useState<string | null>(null);
 
   // Helper to persist booking to local storage and bind with current rental state
   const saveBookingToStorage = (booking: InspectionBookingResponse) => {
@@ -351,10 +354,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
         });
 
         if (result.needsEmailConfirmation) {
-          setAuthError(
-            `We sent a confirmation link to ${authEmail.trim()}. Confirm your email, then sign in here.`
-          );
-          setAuthMode("signin");
+          setPendingCodeEmail(authEmail.trim());
           setAuthLoading(false);
           return;
         }
@@ -384,7 +384,12 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
       onClose("complete");
       router.push("/dashboard/tenant");
     } catch (err: unknown) {
-      setAuthError(formatSupabaseAuthError(err));
+      if (isEmailNotConfirmedError(err)) {
+        setPendingCodeEmail(authEmail.trim());
+        setAuthError(null);
+      } else {
+        setAuthError(formatSupabaseAuthError(err));
+      }
     } finally {
       setAuthLoading(false);
     }
@@ -897,7 +902,20 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
               <X className="h-4 w-4" />
             </button>
 
-            {/* Modal Header */}
+            {pendingCodeEmail ? (
+              <EmailCodeVerify
+                email={pendingCodeEmail}
+                onVerified={() => {
+                  if (confirmedBooking) saveBookingToStorage(confirmedBooking);
+                  setPendingCodeEmail(null);
+                  setShowAuthPrompt(false);
+                  onClose("complete");
+                  router.push("/dashboard/tenant");
+                }}
+                onBack={() => setPendingCodeEmail(null)}
+              />
+            ) : (
+            <>
             <div className="text-center mb-5">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 border border-blue-200 text-blue-600 mb-3 shadow-xs">
                 <ShieldCheck className="h-6 w-6 text-blue-600" />
@@ -1064,6 +1082,8 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
             >
               Skip for now &amp; exit as guest
             </button>
+            </>
+            )}
           </div>
         </div>
       )}

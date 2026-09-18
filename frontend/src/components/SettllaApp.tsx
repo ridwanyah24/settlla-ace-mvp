@@ -134,6 +134,22 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
   useEffect(() => {
     refreshPendingCount();
 
+    // Expired confirmation links used to dump users here and break signup.
+    const params = new URLSearchParams(window.location.search);
+    const errorCode = (params.get("error_code") || "").toLowerCase();
+    const description = (params.get("error_description") || "").toLowerCase();
+    if (
+      errorCode === "otp_expired" ||
+      description.includes("email link is invalid") ||
+      description.includes("email link is expired")
+    ) {
+      router.replace(
+        `/login?error=confirm&message=${encodeURIComponent(
+          "That email link is expired. Sign in and enter the verification code from your email instead."
+        )}`
+      );
+    }
+
     // Cross-page or direct hash scrolling handler
     const handleHashScroll = () => {
       if (typeof window !== "undefined" && window.location.hash) {
@@ -150,7 +166,7 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
     handleHashScroll();
     window.addEventListener("hashchange", handleHashScroll);
     return () => window.removeEventListener("hashchange", handleHashScroll);
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     async function loadFiltered() {

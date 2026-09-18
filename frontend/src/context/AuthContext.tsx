@@ -1,16 +1,27 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { UserProfile, UserRole } from "@/types/auth";
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { getEmailRedirectTo, isSupabaseConfigured } from "@/lib/supabase/config";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { profileRowToUser, ProfileRow } from "@/lib/settlla/profiles";
 import { assertPassword, formatSupabaseAuthError } from "@/lib/settlla/authErrors";
 
 export type SignUpResult = {
   needsEmailConfirmation: boolean;
   user: UserProfile | null;
+};
+
+type PendingSignupProfile = {
+  email: string;
+  fullName: string;
+  phoneNumber: string;
+  role: UserRole;
+  ninNumber?: string;
+  relocationContext?: string;
+  agencyName?: string;
+  accreditation?: string;
 };
 
 interface AuthContextType {
@@ -28,6 +39,8 @@ interface AuthContextType {
       password?: string;
     }
   ) => Promise<SignUpResult>;
+  verifyEmailCode: (email: string, token: string) => Promise<UserProfile>;
+  resendEmailCode: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
   switchRole: (role: UserRole) => void;
 }
@@ -59,6 +72,7 @@ function saveLocalUser(user: UserProfile | null) {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [authReady, setAuthReady] = useState(false);
+  const pendingSignupRef = useRef<PendingSignupProfile | null>(null);
 
   const applyUser = useCallback((user: UserProfile | null) => {
     setCurrentUser(user);
@@ -235,7 +249,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: cleanEmail,
           password: safePassword,
           options: {
-            emailRedirectTo: getEmailRedirectTo(),
             data: {
               full_name: data.fullName.trim(),
               role: data.role,
@@ -249,8 +262,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
         if (error) throw error;
 
-        // Email confirmation enabled: no session until user confirms
-        if (!authData.session || !authData.user) {
+        if (
+          authData.user &&
+          !authData.session &&
+          Array.isArray(authData.user.identities) &&
+          authData.user.identities.length === 0
+        ) {
+          throw new Error("An account with this email already exists. Sign in instead.");
+        }
+
+        pendingSignupRef.current = {
+          email: cleanEmail,
+          fullName: data.fullName.trim(),
+          phoneNumber: data.phoneNumber.trim(),
+          role: data.role,
+          ninNumber: data.ninNumber,
+          relocationContext: data.relocationContext,
+          agencyName: data.agencyName,
+          accreditation: data.accreditation,
+        };
+
+        // Email confirmation enabled: no session until the user enters the email code
+        if (!authData.session) {
           return { needsEmailConfirmation: true, user: null };
         }
 
@@ -311,6 +344,75 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { needsEmailConfirmation: false, user: newUser };
   };
 
+  const applyPendingProfile = async (userId: string, email: string) => {
+    const supabase = getSupabaseBrowserClient();
+    const pending = pendingSignupRef.current;
+    if (!supabase || !pending || pending.email.toLowerCase() !== email.toLowerCase()) {
+      return loadProfileFromSupabase(userId, email);
+    }
+
+    await supabase
+      .from("profiles")
+      .update({
+        email: pending.email,
+        full_name: pending.fullName,
+        phone_number: pending.phoneNumber,
+        role: pending.role,
+        nin_number: pending.ninNumber ?? null,
+        relocation_context: pending.relocationContext ?? null,
+        agency_name: pending.agencyName ?? null,
+        accreditation: pending.accreditation ?? null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", userId);
+
+    pendingSignupRef.current = null;
+    return loadProfileFromSupabase(userId, email);
+  };
+
+  const verifyEmailCode = async (email: string, token: string): Promise<UserProfile> => {
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) throw new Error("Settlla is not connected to Supabase.");
+
+    const cleanEmail = email.trim();
+    const cleanToken = token.replace(/\s/g, "");
+
+    let { data, error } = await supabase.auth.verifyOtp({
+      email: cleanEmail,
+      token: cleanToken,
+      type: "signup",
+    });
+
+    if (error) {
+      const retry = await supabase.auth.verifyOtp({
+        email: cleanEmail,
+        token: cleanToken,
+        type: "email",
+      });
+      data = retry.data;
+      error = retry.error;
+    }
+
+    if (error) throw new Error(formatSupabaseAuthError(error));
+    if (!data.user) throw new Error("Verification failed. Please try again.");
+
+    const profile = await applyPendingProfile(data.user.id, data.user.email || cleanEmail);
+    if (!profile) throw new Error("Could not load your Settlla profile. Please try again.");
+    applyUser(profile);
+    return profile;
+  };
+
+  const resendEmailCode = async (email: string): Promise<void> => {
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) throw new Error("Settlla is not connected to Supabase.");
+
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: email.trim(),
+    });
+    if (error) throw new Error(formatSupabaseAuthError(error));
+  };
+
   const signOut = async () => {
     const supabase = getSupabaseBrowserClient();
     if (supabase) await supabase.auth.signOut();
@@ -344,6 +446,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         authReady,
         signIn,
         signUp,
+        verifyEmailCode,
+        resendEmailCode,
         signOut,
         switchRole,
       }}

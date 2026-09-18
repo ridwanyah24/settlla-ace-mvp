@@ -12,6 +12,7 @@ import {
   dashboardPathForRole,
   MIN_PASSWORD_LENGTH,
 } from "@/lib/settlla/authErrors";
+import { EmailCodeVerify } from "@/components/EmailCodeVerify";
 import {
   ShieldCheck,
   Building2,
@@ -23,7 +24,6 @@ import {
   Home,
   Briefcase,
   BadgeCheck,
-  CheckCircle2,
 } from "lucide-react";
 
 export default function SignupPage() {
@@ -109,23 +109,12 @@ export default function SignupPage() {
           </div>
         </header>
         <main className="flex-1 flex items-center justify-center px-4 py-12">
-          <div className="w-full max-w-md bg-white rounded-3xl border border-slate-200 shadow-xl p-8 text-center space-y-4">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-              <CheckCircle2 className="h-7 w-7" />
-            </div>
-            <h1 className="text-xl font-black text-slate-900">Check your email</h1>
-            <p className="text-sm text-slate-600 leading-relaxed">
-              We sent a confirmation link to{" "}
-              <strong className="text-slate-900">{confirmEmailSent}</strong>. Confirm your email,
-              then sign in to open your dashboard.
-            </p>
-            <Link
-              href="/login"
-              className="inline-flex items-center justify-center gap-2 w-full rounded-xl bg-blue-600 hover:bg-blue-700 py-3 text-sm font-bold text-white transition-all"
-            >
-              Go to sign in
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+          <div className="w-full max-w-md bg-white rounded-3xl border border-slate-200 shadow-xl p-8">
+            <EmailCodeVerify
+              email={confirmEmailSent}
+              onVerified={(user) => router.replace(dashboardPathForRole(user.role))}
+              onBack={() => setConfirmEmailSent(null)}
+            />
           </div>
         </main>
         <footer className="border-t border-slate-200 bg-white px-4 py-4 text-center text-xs text-slate-500">

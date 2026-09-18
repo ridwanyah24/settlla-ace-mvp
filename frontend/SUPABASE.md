@@ -24,29 +24,26 @@ Restart `npm run dev` after changing env files.
 | Setting | Notes |
 |---------|--------|
 | Password minimum | **6 characters** |
-| Confirm email | If enabled, signup shows “check your email” before login |
+| Confirm email | If enabled, signup asks for a **6-digit code** from the email — not a link |
 
 Redirect after login uses the **role stored on `profiles`**.
 
-### Confirmation email links
+### Confirmation email code (required)
 
-Signup passes `emailRedirectTo` as `{NEXT_PUBLIC_SITE_URL or current origin}/auth/callback`. If that env var is missing, Supabase falls back to the dashboard **Site URL**, which defaults to `http://localhost:3000`.
+Signup no longer uses `emailRedirectTo`, so confirmation does not depend on the dashboard **Site URL**. Users type the OTP in the app.
 
-In **Supabase → Authentication → URL Configuration**:
+In **Supabase → Authentication → Email Templates → Confirm signup**, the body **must include** `{{ .Token }}`. Example:
 
-1. Set **Site URL** to the live site (`https://www.your-domain.com`), not localhost.
-2. Add these **Redirect URLs**:
-   - `https://www.your-domain.com/auth/callback`
-   - `https://www.your-domain.com/**`
-   - `http://localhost:3000/auth/callback` (local testing)
-
-In **Vercel** (or `frontend/.env`), set:
-
-```env
-NEXT_PUBLIC_SITE_URL=https://www.your-domain.com
+```html
+<h2>Confirm your Settlla account</h2>
+<p>Your verification code is:</p>
+<p style="font-size:24px;letter-spacing:4px;font-weight:700">{{ .Token }}</p>
+<p>Enter this code in Settlla. You can ignore any confirmation link.</p>
 ```
 
-Restart the app after changing env vars. Existing emails already sent still contain the old localhost link; sign up again to get a new one.
+Also keep **Confirm email** turned on under Authentication → Providers → Email.
+
+Leave **Redirect URLs** in place only for old emails that still contain a link. `/auth/callback` still exchanges those. New signups use the in-app code.
 
 ## What connects to Supabase
 

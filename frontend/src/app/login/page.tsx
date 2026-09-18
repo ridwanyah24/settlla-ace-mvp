@@ -6,11 +6,13 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { UserRole } from "@/types/auth";
 import { Button } from "@/components/ui/Button";
+import { EmailCodeVerify } from "@/components/EmailCodeVerify";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import {
   assertPassword,
   formatSupabaseAuthError,
   dashboardPathForRole,
+  isEmailNotConfirmedError,
   MIN_PASSWORD_LENGTH,
 } from "@/lib/settlla/authErrors";
 import {
@@ -34,6 +36,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [roleHint, setRoleHint] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
+  const [pendingCodeEmail, setPendingCodeEmail] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -44,7 +47,7 @@ export default function LoginPage() {
     const confirmError = params.get("error");
     const message = params.get("message");
     if (confirmError === "confirm") {
-      setError(message || "Email confirmation failed. Request a new link or try signing in.");
+      setError(message || "Email confirmation failed. Enter the code from your email, or request a new one.");
     }
   }, []);
 
@@ -81,7 +84,12 @@ export default function LoginPage() {
       }
       router.push(dashboardPathForRole(profile.role));
     } catch (err) {
-      setError(formatSupabaseAuthError(err));
+      if (isEmailNotConfirmedError(err)) {
+        setPendingCodeEmail(email.trim());
+        setError(null);
+      } else {
+        setError(formatSupabaseAuthError(err));
+      }
     } finally {
       setSubmitting(false);
     }
@@ -128,6 +136,14 @@ export default function LoginPage() {
           </div>
 
           <div className="p-6 sm:p-8 space-y-6">
+            {pendingCodeEmail ? (
+              <EmailCodeVerify
+                email={pendingCodeEmail}
+                onVerified={(user) => router.replace(dashboardPathForRole(user.role))}
+                onBack={() => setPendingCodeEmail(null)}
+              />
+            ) : (
+            <>
             <div>
               <label className="settlla-label">Sign in as</label>
               <div className="grid grid-cols-2 gap-3">
@@ -266,6 +282,8 @@ export default function LoginPage() {
                 Sign up here
               </Link>
             </div>
+            </>
+            )}
           </div>
         </div>
       </main>

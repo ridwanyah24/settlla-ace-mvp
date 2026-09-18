@@ -7,6 +7,7 @@ import { TenancyAgreement } from "@/types/agreement";
 import { Listing } from "@/types/listing";
 import { PaymentTransaction } from "@/types/payment";
 import { processMoveInPayment } from "@/lib/settlla/payments";
+import { EmailCodeVerify } from "./EmailCodeVerify";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import {
   assertPassword,
@@ -65,6 +66,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
   const { currentUser, isAuthenticated, signUp } = useAuth();
   const [authPassword, setAuthPassword] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
+  const [pendingCodeEmail, setPendingCodeEmail] = useState<string | null>(null);
 
   // Processing & Success State
   const [processing, setProcessing] = useState(false);
@@ -80,6 +82,26 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
     navigator.clipboard.writeText(virtualAccountNum);
     setCopiedAccount(true);
     setTimeout(() => setCopiedAccount(false), 3000);
+  };
+
+  const completePayment = async () => {
+    setProcessing(true);
+    setErrorMessage(null);
+    try {
+      const data = await processMoveInPayment({
+        agreement,
+        listing,
+        gateway,
+        channel,
+        gateway_ref: `T${Date.now()}_SETT`,
+      });
+      setTransaction(data);
+      if (onPaymentSuccess) onPaymentSuccess(data);
+    } catch {
+      setErrorMessage("Payment could not be completed. Please try again.");
+    } finally {
+      setProcessing(false);
+    }
   };
 
   // Process Payment Execution
@@ -119,9 +141,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
           ninNumber: agreement.tenant.nin_number,
         });
         if (result.needsEmailConfirmation) {
-          setAuthError(
-            `Account created — confirm the email sent to ${emailToUse}, then sign in before paying. For now you can continue payment after confirming.`
-          );
+          setPendingCodeEmail(emailToUse);
           return;
         }
       } catch (err) {
@@ -130,35 +150,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
       }
     }
 
-    setProcessing(true);
-
-    const payload = {
-      agreement_id: agreement.agreement_id,
-      payment_gateway: gateway,
-      payment_channel: channel,
-      gateway_ref: `T${Date.now()}_SETT`,
-      channel_details: {
-        method: channel,
-        card_last4: channel === "card" ? cardNumber.slice(-4) : undefined,
-        account_number: channel === "bank_transfer" ? virtualAccountNum : undefined,
-      },
-    };
-
-    try {
-      const data = await processMoveInPayment({
-        agreement,
-        listing,
-        gateway,
-        channel,
-        gateway_ref: payload.gateway_ref,
-      });
-      setTransaction(data);
-      if (onPaymentSuccess) onPaymentSuccess(data);
-    } catch {
-      setErrorMessage("Payment could not be completed. Please try again.");
-    } finally {
-      setProcessing(false);
-    }
+    await completePayment();
   };
 
   const goToTenantDashboard = () => {
@@ -330,8 +322,21 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                   </p>
                 )}
 
+                {!isAuthenticated && pendingCodeEmail && (
+                  <section className="rounded-2xl border border-slate-200 bg-white p-4">
+                    <EmailCodeVerify
+                      email={pendingCodeEmail}
+                      onVerified={() => {
+                        setPendingCodeEmail(null);
+                        void completePayment();
+                      }}
+                      onBack={() => setPendingCodeEmail(null)}
+                    />
+                  </section>
+                )}
+
                 {/* Account — required for guests */}
-                {!isAuthenticated && (
+                {!isAuthenticated && !pendingCodeEmail && (
                   <section className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
                     <p className="text-xs font-bold text-slate-900">
                       <span className="text-slate-400 font-semibold mr-1">1.</span>
@@ -372,6 +377,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                 )}
 
                 {/* Payment */}
+                {!pendingCodeEmail && (
                 <section className="rounded-2xl border border-slate-200 bg-white p-4 space-y-4">
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-xs font-bold text-slate-900">
@@ -537,6 +543,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                     </div>
                   )}
                 </section>
+                )}
               </div>
           </div>
 
@@ -548,6 +555,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
               >
                 Cancel
               </button>
+              {!pendingCodeEmail && (
               <button
                 type="button"
                 disabled={processing}
@@ -566,6 +574,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                   </>
                 )}
               </button>
+              )}
             </div>
         </div>
       </div>

@@ -7,9 +7,11 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 import {
   assertPassword,
   formatSupabaseAuthError,
+  isEmailNotConfirmedError,
   MIN_PASSWORD_LENGTH,
 } from "@/lib/settlla/authErrors";
-import { X, User, Building2, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { EmailCodeVerify } from "@/components/EmailCodeVerify";
+import { X, User, Building2, AlertTriangle } from "lucide-react";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -68,7 +70,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         if (onSuccess) onSuccess();
         onClose();
       } catch (err) {
-        setError(formatSupabaseAuthError(err));
+        if (isEmailNotConfirmedError(err)) {
+          setConfirmEmailSent(email.trim());
+          setError(null);
+        } else {
+          setError(formatSupabaseAuthError(err));
+        }
       } finally {
         setSubmitting(false);
       }
@@ -114,7 +121,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   return (
-    <div className="settlla-overlay bg-slate-900/60 backdrop-blur-sm animate-fade-in" onClick={onClose}>
+    <div
+      className="settlla-overlay bg-slate-900/60 backdrop-blur-sm animate-fade-in"
+      onClick={() => {
+        if (!confirmEmailSent) onClose();
+      }}
+    >
       <div
         className="settlla-dialog settlla-dialog--md settlla-dialog--scroll"
         onClick={(e) => e.stopPropagation()}
@@ -127,7 +139,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
             <div>
               <h3 className="text-base font-bold text-slate-900 leading-tight">
-                {mode === "signin" ? "Sign In to Settlla" : "Create Settlla Account"}
+                {confirmEmailSent
+                  ? "Verify your email"
+                  : mode === "signin"
+                    ? "Sign In to Settlla"
+                    : "Create Settlla Account"}
               </h3>
             </div>
           </div>
@@ -142,27 +158,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
         <div className="p-4 sm:p-6 space-y-5">
           {confirmEmailSent ? (
-            <div className="space-y-4 text-center py-4">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-                <CheckCircle2 className="h-6 w-6" />
-              </div>
-              <h4 className="text-sm font-bold text-slate-900">Check your email</h4>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                We sent a confirmation link to <strong>{confirmEmailSent}</strong>. Confirm your
-                email, then sign in.
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setConfirmEmailSent(null);
-                  setMode("signin");
-                  setError(null);
-                }}
-                className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 py-3 text-xs font-bold text-white cursor-pointer"
-              >
-                Go to sign in
-              </button>
-            </div>
+            <EmailCodeVerify
+              email={confirmEmailSent}
+              onVerified={() => {
+                if (onSuccess) onSuccess();
+                onClose();
+              }}
+              onBack={() => {
+                setConfirmEmailSent(null);
+                setError(null);
+              }}
+            />
           ) : (
             <>
           {/* Mode Switcher Tabs */}
