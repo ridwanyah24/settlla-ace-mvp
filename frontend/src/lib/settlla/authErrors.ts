@@ -48,6 +48,21 @@ export function isAlreadyRegisteredError(error: unknown): boolean {
   );
 }
 
+export function isAuthRateLimitError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const err = error as { message?: string; code?: string; status?: number };
+  const message = (err.message || "").toLowerCase();
+  const code = (err.code || "").toLowerCase();
+  return (
+    code === "over_email_send_rate_limit" ||
+    code === "over_request_rate_limit" ||
+    err.status === 429 ||
+    message.includes("rate limit") ||
+    message.includes("too many requests") ||
+    message.includes("email rate limit")
+  );
+}
+
 export function formatSupabaseAuthError(error: unknown): string {
   if (error instanceof AuthValidationError) return error.message;
   if (!error || typeof error !== "object") {
@@ -91,15 +106,8 @@ export function formatSupabaseAuthError(error: unknown): string {
     return `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`;
   }
 
-  if (
-    code === "over_email_send_rate_limit" ||
-    code === "over_request_rate_limit" ||
-    err.status === 429 ||
-    message.includes("rate limit") ||
-    message.includes("too many requests") ||
-    message.includes("email rate limit")
-  ) {
-    return "Too many confirmation emails were sent just now. Wait a few minutes, then try again.";
+  if (isAuthRateLimitError(error)) {
+    return "Too many confirmation emails were sent just now. Wait a few minutes, then use Resend — don't tap Pay again.";
   }
 
   if (err.message && err.message.trim()) {

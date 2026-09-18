@@ -1,6 +1,6 @@
 const STORAGE_KEY = "settlla_confirm_emails_sent";
 const TRACK_MS = 24 * 60 * 60 * 1000;
-const MIN_RESEND_MS = 60 * 1000;
+const MIN_RESEND_MS = 120 * 1000;
 
 type SentEntry = { email: string; at: number };
 
@@ -44,4 +44,10 @@ export function markConfirmationEmailSent(email: string) {
   const next = readEntries().filter((entry) => entry.email !== normalized);
   next.push({ email: normalized, at: Date.now() });
   writeEntries(next);
+}
+
+export function clearConfirmationEmailSent(email: string) {
+  const normalized = email.trim().toLowerCase();
+  if (!normalized) return;
+  writeEntries(readEntries().filter((entry) => entry.email !== normalized));
 }

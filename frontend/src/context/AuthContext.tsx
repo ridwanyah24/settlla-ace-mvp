@@ -6,7 +6,7 @@ import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { getEmailRedirectTo, isSupabaseConfigured } from "@/lib/supabase/config";
 import { profileRowToUser, ProfileRow } from "@/lib/settlla/profiles";
-import { assertPassword, formatSupabaseAuthError, isAlreadyRegisteredError } from "@/lib/settlla/authErrors";
+import { assertPassword, formatSupabaseAuthError, isAlreadyRegisteredError, isAuthRateLimitError } from "@/lib/settlla/authErrors";
 import {
   markConfirmationEmailSent,
   secondsUntilConfirmationResend,
@@ -16,6 +16,10 @@ import {
 export type SignUpResult = {
   needsEmailConfirmation: boolean;
   user: UserProfile | null;
+  /** Supabase accepted sending a confirmation email on this request */
+  confirmationEmailSent?: boolean;
+  resendAvailableInSeconds?: number;
+  rateLimited?: boolean;
 };
 
 interface AuthContextType {
@@ -31,7 +35,8 @@ interface AuthContextType {
       email: string;
       phoneNumber: string;
       password?: string;
-    }
+    },
+    options?: { resendIfAwaitingConfirmation?: boolean }
   ) => Promise<SignUpResult>;
   resendConfirmationEmail: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -228,35 +233,56 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       email: string;
       phoneNumber: string;
       password?: string;
-    }
+    },
+    options?: { resendIfAwaitingConfirmation?: boolean }
   ): Promise<SignUpResult> => {
     const cleanEmail = data.email.trim();
     const supabaseMode = isSupabaseConfigured();
     const supabase = getSupabaseBrowserClient();
+
+    const awaitingConfirmResult = (
+      sendResult: "sent" | "rate_limited" | "skipped",
+      waitSec: number
+    ): SignUpResult => ({
+      needsEmailConfirmation: true,
+      user: null,
+      confirmationEmailSent: sendResult === "sent",
+      rateLimited: sendResult === "rate_limited",
+      resendAvailableInSeconds: sendResult === "skipped" ? waitSec : undefined,
+    });
 
     if (supabaseMode && supabase) {
       try {
         const safePassword = assertPassword(data.password, true);
         const redirectTo = getEmailRedirectTo();
 
-        const sendConfirmationLink = async () => {
+        const sendConfirmationLink = async (): Promise<"sent" | "rate_limited" | "skipped"> => {
+          const waitSec = secondsUntilConfirmationResend(cleanEmail);
+          if (waitSec > 0) return "skipped";
+
           const { error: resendError } = await supabase.auth.resend({
             type: "signup",
             email: cleanEmail,
             options: { emailRedirectTo: redirectTo },
           });
-          if (resendError) throw resendError;
+          if (resendError) {
+            if (isAuthRateLimitError(resendError)) return "rate_limited";
+            throw resendError;
+          }
           markConfirmationEmailSent(cleanEmail);
+          return "sent";
         };
 
-        // Same email signing up again: signUp will not send a new mail once the
-        // unconfirmed user already exists. Resend a fresh link instead.
         if (wasConfirmationEmailSent(cleanEmail)) {
-          if (secondsUntilConfirmationResend(cleanEmail) > 0) {
-            return { needsEmailConfirmation: true, user: null };
+          const waitSec = secondsUntilConfirmationResend(cleanEmail);
+          if (options?.resendIfAwaitingConfirmation && waitSec === 0) {
+            const sendResult = await sendConfirmationLink();
+            if (sendResult === "rate_limited") {
+              markConfirmationEmailSent(cleanEmail);
+            }
+            return awaitingConfirmResult(sendResult, waitSec);
           }
-          await sendConfirmationLink();
-          return { needsEmailConfirmation: true, user: null };
+          return awaitingConfirmResult("skipped", waitSec);
         }
 
         const { data: authData, error } = await supabase.auth.signUp({
@@ -278,8 +304,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (error) {
           if (isAlreadyRegisteredError(error)) {
-            await sendConfirmationLink();
-            return { needsEmailConfirmation: true, user: null };
+            const sendResult = await sendConfirmationLink();
+            if (sendResult === "rate_limited") {
+              markConfirmationEmailSent(cleanEmail);
+            }
+            return awaitingConfirmResult(sendResult, secondsUntilConfirmationResend(cleanEmail));
           }
           throw error;
         }
@@ -290,11 +319,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const looksLikeExistingUnconfirmed =
             Array.isArray(identities) && identities.length === 0;
           if (looksLikeExistingUnconfirmed) {
-            await sendConfirmationLink();
-          } else {
-            markConfirmationEmailSent(cleanEmail);
+            const sendResult = await sendConfirmationLink();
+            if (sendResult === "rate_limited") {
+              markConfirmationEmailSent(cleanEmail);
+            }
+            return awaitingConfirmResult(sendResult, secondsUntilConfirmationResend(cleanEmail));
           }
-          return { needsEmailConfirmation: true, user: null };
+          markConfirmationEmailSent(cleanEmail);
+          return {
+            needsEmailConfirmation: true,
+            user: null,
+            confirmationEmailSent: true,
+          };
         }
 
         // Session present — enrich profile (trigger already created the row)
@@ -359,12 +395,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!supabase) throw new Error("Settlla is not connected to Supabase.");
 
     const cleanEmail = email.trim();
+    const waitSec = secondsUntilConfirmationResend(cleanEmail);
+    if (waitSec > 0) {
+      throw new Error(`Please wait ${waitSec}s before requesting another link.`);
+    }
+
+    const redirectTo = getEmailRedirectTo();
     const { error } = await supabase.auth.resend({
       type: "signup",
       email: cleanEmail,
-      options: { emailRedirectTo: getEmailRedirectTo() },
+      options: { emailRedirectTo: redirectTo },
     });
-    if (error) throw new Error(formatSupabaseAuthError(error));
+    if (error) {
+      const message = (error.message || "").toLowerCase();
+      if (
+        message.includes("already confirmed") ||
+        message.includes("email address is already confirmed")
+      ) {
+        throw new Error("This email is already confirmed. Sign in with your password to continue.");
+      }
+      throw new Error(formatSupabaseAuthError(error));
+    }
     markConfirmationEmailSent(cleanEmail);
   };
 

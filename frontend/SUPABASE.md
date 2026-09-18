@@ -42,6 +42,8 @@ In **Supabase → Authentication → URL Configuration**:
 
 Keep **Confirm email** on under Authentication → Providers → Email.
 
+Supabase’s built-in mailer has a **low hourly limit** on free projects. If you see “too many confirmation emails,” wait 15–60 minutes or connect **custom SMTP** under Authentication → Emails → SMTP Settings so resends are reliable.
+
 If someone starts checkout or a tour booking and then confirms from email, Settlla reopens payment (or the tenant dashboard for a tour) so they can finish.
 
 ## What connects to Supabase

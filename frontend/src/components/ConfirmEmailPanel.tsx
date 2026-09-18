@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { formatSupabaseAuthError } from "@/lib/settlla/authErrors";
+import { secondsUntilConfirmationResend } from "@/lib/settlla/confirmationEmailCache";
 import { Mail } from "lucide-react";
 
 interface ConfirmEmailPanelProps {
@@ -20,8 +21,13 @@ export const ConfirmEmailPanel: React.FC<ConfirmEmailPanelProps> = ({
 }) => {
   const { resendConfirmationEmail } = useAuth();
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
-  const [cooldown, setCooldown] = useState(60);
+  const [cooldown, setCooldown] = useState(() => secondsUntilConfirmationResend(email) || 120);
+
+  useEffect(() => {
+    setCooldown(secondsUntilConfirmationResend(email) || 0);
+  }, [email]);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -32,10 +38,12 @@ export const ConfirmEmailPanel: React.FC<ConfirmEmailPanelProps> = ({
   const handleResend = async () => {
     if (cooldown > 0 || resending) return;
     setError(null);
+    setSuccess(null);
     setResending(true);
     try {
       await resendConfirmationEmail(email);
-      setCooldown(60);
+      setSuccess("New confirmation link sent. Check your inbox and spam folder.");
+      setCooldown(secondsUntilConfirmationResend(email) || 120);
     } catch (err) {
       setError(formatSupabaseAuthError(err));
     } finally {
@@ -54,12 +62,18 @@ export const ConfirmEmailPanel: React.FC<ConfirmEmailPanelProps> = ({
           {description || (
             <>
               We sent a confirmation link to{" "}
-              <strong className="text-slate-900 break-all">{email}</strong>. Open it to finish —
-              you can close this tab after you click the link.
+              <strong className="text-slate-900 break-all">{email}</strong>. If it expired, use{" "}
+              <strong>Resend</strong> below (not Pay). Check spam/promotions too.
             </>
           )}
         </p>
       </div>
+
+      {success && (
+        <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-900 font-semibold text-left">
+          {success}
+        </p>
+      )}
 
       {error && (
         <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-800 font-semibold text-left">

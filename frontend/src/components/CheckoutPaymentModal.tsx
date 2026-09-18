@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import type { SignUpResult } from "@/context/AuthContext";
 import { TenancyAgreement } from "@/types/agreement";
 import { Listing } from "@/types/listing";
 import { PaymentTransaction } from "@/types/payment";
@@ -12,9 +13,11 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 import {
   assertPassword,
   formatSupabaseAuthError,
+  isAuthRateLimitError,
+  isEmailNotConfirmedError,
   MIN_PASSWORD_LENGTH,
 } from "@/lib/settlla/authErrors";
-import { savePendingAuthFlow } from "@/lib/settlla/pendingAuthFlow";
+import { loadPendingAuthFlow, savePendingAuthFlow } from "@/lib/settlla/pendingAuthFlow";
 import { MoveInPassViewer } from "./MoveInPassViewer";
 import {
   X,
@@ -64,7 +67,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
   const [cardPin, setCardPin] = useState("4921");
 
   const router = useRouter();
-  const { currentUser, isAuthenticated, signUp } = useAuth();
+  const { currentUser, isAuthenticated, signUp, signIn } = useAuth();
   const [authPassword, setAuthPassword] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
   const [authSuccess, setAuthSuccess] = useState<string | null>(null);
@@ -79,6 +82,14 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
   // Virtual Account Info
   const virtualAccountNum = `99${agreement.agreement_id.split("-").pop() || "1001"}4829`;
   const [copiedAccount, setCopiedAccount] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen || isAuthenticated) return;
+    const pending = loadPendingAuthFlow();
+    if (pending?.type === "checkout" && pending.email) {
+      setPendingConfirmEmail(pending.email);
+    }
+  }, [isOpen, isAuthenticated]);
 
   const handleCopyAccount = () => {
     navigator.clipboard.writeText(virtualAccountNum);
@@ -112,8 +123,73 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
     setAuthError(null);
     setAuthSuccess(null);
 
+    const emailToUse =
+      agreement.tenant.email_address ||
+      `${agreement.tenant.full_name.toLowerCase().replace(/[^a-z0-9]/g, ".")}@example.com`;
+
+    const showAwaitingEmailConfirm = (result: SignUpResult) => {
+      savePendingAuthFlow({
+        type: "checkout",
+        listingId: listing.id,
+        listing,
+        agreement,
+        email: emailToUse,
+        returnPath: "/?resume=checkout&confirmed=1",
+        savedAt: Date.now(),
+      });
+      setPendingConfirmEmail(emailToUse);
+      setAuthError(null);
+
+      if (result.rateLimited) {
+        setAuthSuccess(null);
+        setAuthError(
+          "Too many confirmation emails were sent. Wait 15–60 minutes, then use Resend — not Pay."
+        );
+        return;
+      }
+
+      if (result.confirmationEmailSent) {
+        setAuthSuccess(
+          `We sent a confirmation link to ${emailToUse}. Open it, then return here to finish payment.`
+        );
+        return;
+      }
+
+      if (result.resendAvailableInSeconds && result.resendAvailableInSeconds > 0) {
+        setAuthSuccess(
+          `If your earlier link expired, wait ${result.resendAvailableInSeconds}s and tap Resend for a new link.`
+        );
+        return;
+      }
+
+      setAuthSuccess(
+        `If your earlier link expired, tap Resend below for a fresh confirmation email to ${emailToUse}.`
+      );
+    };
+
     // If guest / unauthenticated, create and link account
     if (!isAuthenticated && !currentUser) {
+      if (pendingConfirmEmail) {
+        try {
+          assertPassword(authPassword, isSupabaseConfigured());
+          await signIn(emailToUse, "tenant", authPassword);
+          setPendingConfirmEmail(null);
+          setAuthError(null);
+          setAuthSuccess(null);
+          await completePayment();
+          return;
+        } catch (err) {
+          if (isEmailNotConfirmedError(err)) {
+            setAuthError(
+              "Email not confirmed yet. Tap Resend below for a new link (check spam too)."
+            );
+          } else {
+            setAuthError(formatSupabaseAuthError(err));
+          }
+          return;
+        }
+      }
+
       const supabaseMode = isSupabaseConfigured();
       try {
         assertPassword(authPassword, supabaseMode);
@@ -131,35 +207,27 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
         );
         return;
       }
-      const emailToUse =
-        agreement.tenant.email_address ||
-        `${agreement.tenant.full_name.toLowerCase().replace(/[^a-z0-9]/g, ".")}@example.com`;
       try {
-        const result = await signUp({
-          fullName: agreement.tenant.full_name,
-          email: emailToUse,
-          password: authPassword,
-          role: "tenant",
-          phoneNumber: agreement.tenant.phone_number || "0803 123 4567",
-          ninNumber: agreement.tenant.nin_number,
-        });
-        if (result.needsEmailConfirmation) {
-          savePendingAuthFlow({
-            type: "checkout",
-            listingId: listing.id,
-            listing,
-            agreement,
+        const result = await signUp(
+          {
+            fullName: agreement.tenant.full_name,
             email: emailToUse,
-            returnPath: "/?resume=checkout&confirmed=1",
-            savedAt: Date.now(),
-          });
-          setPendingConfirmEmail(emailToUse);
-          setAuthSuccess(
-            `Account created — confirm the email sent to ${emailToUse}, then return here to finish payment.`
-          );
+            password: authPassword,
+            role: "tenant",
+            phoneNumber: agreement.tenant.phone_number || "0803 123 4567",
+            ninNumber: agreement.tenant.nin_number,
+          },
+          { resendIfAwaitingConfirmation: true }
+        );
+        if (result.needsEmailConfirmation) {
+          showAwaitingEmailConfirm(result);
           return;
         }
       } catch (err) {
+        if (isAuthRateLimitError(err)) {
+          showAwaitingEmailConfirm({ needsEmailConfirmation: true, user: null, rateLimited: true });
+          return;
+        }
         setAuthError(formatSupabaseAuthError(err));
         return;
       }
@@ -391,6 +459,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                         onBack={() => {
                           setPendingConfirmEmail(null);
                           setAuthSuccess(null);
+                          setAuthError(null);
                         }}
                       />
                     )}
@@ -576,7 +645,6 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
               >
                 Cancel
               </button>
-              {!pendingConfirmEmail && (
               <button
                 type="button"
                 disabled={processing}
@@ -588,6 +656,11 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                     Processing…
                   </>
+                ) : pendingConfirmEmail ? (
+                  <>
+                    <Lock className="w-4 h-4" />
+                    I&apos;ve confirmed — continue
+                  </>
                 ) : (
                   <>
                     <Lock className="w-4 h-4" />
@@ -595,7 +668,6 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                   </>
                 )}
               </button>
-              )}
             </div>
         </div>
       </div>
