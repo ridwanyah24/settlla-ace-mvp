@@ -262,7 +262,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
           if (result.accountMissing) {
             beginFreshSignup();
             setAuthError(
-              "This email is not in Supabase anymore. Tap Pay once to create the account and get a new link."
+              "We could not find an account for this email. Tap Pay once to register and continue."
             );
             return;
           }

@@ -1,81 +1,28 @@
 import { Listing } from "@/types/listing";
 import { SEED_LISTINGS, getSeedListingById } from "@/data/seedListings";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { queryPublishedListings, rowToListing } from "@/lib/settlla/listingsQuery";
+import { loadAgentListings, upsertAgentListing } from "./localStore";
+
+function mergePublishedListings(): Listing[] {
+  const agent = loadAgentListings();
+  const byId = new Map<string, Listing>();
+  for (const item of SEED_LISTINGS) byId.set(item.id, item);
+  for (const item of agent) byId.set(item.id, item);
+  return Array.from(byId.values());
+}
 
 export async function fetchPublishedListingsFromBrowser(): Promise<Listing[]> {
-  const supabase = getSupabaseBrowserClient();
-  if (!supabase) return isSupabaseConfigured() ? [] : SEED_LISTINGS;
-  try {
-    return await queryPublishedListings(supabase);
-  } catch {
-    return [];
-  }
+  return mergePublishedListings();
 }
 
 export async function fetchListingById(id: string): Promise<Listing | null> {
-  const supabase = getSupabaseBrowserClient();
-  if (supabase) {
-    const { data, error } = await supabase
-      .from("listings")
-      .select("body")
-      .eq("id", id)
-      .eq("is_published", true)
-      .maybeSingle();
-
-    if (!error && data?.body) {
-      const listing = rowToListing(data.body);
-      if (listing) return listing;
-    }
-  }
-
-  if (isSupabaseConfigured()) return null;
-  return getSeedListingById(id) ?? null;
+  const merged = mergePublishedListings();
+  return merged.find((l) => l.id === id) ?? getSeedListingById(id) ?? null;
 }
 
-export async function upsertListing(listing: Listing, agentId?: string | null): Promise<void> {
-  const supabase = getSupabaseBrowserClient();
-  if (!supabase) return;
-
-  const { error } = await supabase.from("listings").upsert({
-    id: listing.id,
-    agent_id: agentId ?? null,
-    neighborhood: listing.neighborhood,
-    body: listing,
-    is_published: true,
-    updated_at: new Date().toISOString(),
-  });
-
-  if (error) console.warn("[settlla] listing upsert:", error.message);
+export async function upsertListing(listing: Listing, _agentId?: string | null): Promise<void> {
+  upsertAgentListing(listing);
 }
 
-export async function seedListingsIfEmpty(seed: Listing[] = SEED_LISTINGS): Promise<Listing[]> {
-  const supabase = getSupabaseBrowserClient();
-  if (!supabase) return [];
-
-  const rows = seed.map((l) => ({
-    id: l.id,
-    neighborhood: l.neighborhood,
-    body: l,
-  }));
-
-  const { error } = await supabase.rpc("seed_listings_if_empty", { rows });
-  if (error) {
-    console.warn("[settlla] seed listings:", error.message);
-    const { count } = await supabase.from("listings").select("*", { count: "exact", head: true });
-    if ((count ?? 0) === 0) {
-      const { error: insertError } = await supabase.from("listings").insert(
-        seed.map((l) => ({
-          id: l.id,
-          neighborhood: l.neighborhood,
-          body: l,
-          is_published: true,
-        }))
-      );
-      if (insertError) console.warn("[settlla] seed insert:", insertError.message);
-    }
-  }
-
-  return queryPublishedListings(supabase);
+export async function seedListingsIfEmpty(_seed: Listing[] = SEED_LISTINGS): Promise<Listing[]> {
+  return mergePublishedListings();
 }

@@ -329,7 +329,7 @@ export default function TenantDashboardPage() {
                 </div>
                 <h4 className="text-base font-bold text-slate-900">No active tenancy yet</h4>
                 <p className="text-xs text-slate-500 max-w-md mx-auto">
-                  Browse verified Kaduna listings, book a free walkthrough, or start a lease. Your dashboard will fill in from Supabase once you rent.
+                  Browse verified Kaduna listings, book a free walkthrough, or start a lease. Your dashboard updates here as you move through each step.
                 </p>
                 <Link href="/" className="btn btn-md btn-primary inline-flex">
                   Explore homes

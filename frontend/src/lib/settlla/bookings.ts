@@ -1,28 +1,19 @@
 import { Listing } from "@/types/listing";
 import { DaySchedule, InspectionBookingResponse } from "@/types/booking";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { generateClientSchedule } from "./bookingSchedule";
+import { loadAgentBookings, pushAgentBooking } from "./localStore";
 
 export { generateClientSchedule };
 
 export async function fetchListingVisitSlots(listing: Listing): Promise<DaySchedule[]> {
-  const supabase = getSupabaseBrowserClient();
-  if (supabase) {
-    const { data, error } = await supabase
-      .from("bookings")
-      .select("slot_id")
-      .eq("listing_id", listing.id);
-
-    if (!error && data) {
-      const locked = data
-        .map((r: { slot_id: string | null }) => r.slot_id)
-        .filter(Boolean) as string[];
-      if (typeof window !== "undefined" && locked.length) {
-        localStorage.setItem(`settlla_locked_${listing.id}`, JSON.stringify(locked));
-      }
+  if (typeof window !== "undefined") {
+    try {
+      const stored = localStorage.getItem(`settlla_locked_${listing.id}`);
+      if (stored) JSON.parse(stored);
+    } catch {
+      /* ignore */
     }
   }
-
   return generateClientSchedule(listing);
 }
 
@@ -68,24 +59,9 @@ export async function createInspectionBooking(
     created_at: new Date().toISOString(),
   };
 
-  const supabase = getSupabaseBrowserClient();
-  if (supabase) {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    const { error } = await supabase.from("bookings").insert({
-      booking_id: fakeRef,
-      listing_id: listing.id,
-      tenant_user_id: user?.id ?? null,
-      slot_id: slotId,
-      payload: response,
-    });
-
-    if (error?.code === "23505") {
-      throw new Error("SLOT_TAKEN");
-    }
-    if (error) console.warn("[settlla] booking insert:", error.message);
+  if (typeof window !== "undefined") {
+    localStorage.setItem("settlla_tenant_booking", JSON.stringify(response));
+    pushAgentBooking(response);
   }
 
   return response;
@@ -97,24 +73,6 @@ function payloadToBooking(payload: unknown): InspectionBookingResponse | null {
 }
 
 export async function fetchLatestTenantBooking(): Promise<InspectionBookingResponse | null> {
-  const supabase = getSupabaseBrowserClient();
-  if (supabase) {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user) {
-      const { data, error } = await supabase
-        .from("bookings")
-        .select("payload")
-        .eq("tenant_user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (!error && data?.payload) return payloadToBooking(data.payload);
-      return null;
-    }
-  }
-
   if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem("settlla_tenant_booking");
@@ -125,41 +83,20 @@ export async function fetchLatestTenantBooking(): Promise<InspectionBookingRespo
 }
 
 export async function fetchAgentBookings(): Promise<InspectionBookingResponse[]> {
-  const supabase = getSupabaseBrowserClient();
-  if (!supabase) return [];
-
-  const { data, error } = await supabase
-    .from("bookings")
-    .select("payload")
-    .order("created_at", { ascending: false })
-    .limit(30);
-
-  if (error || !data) {
-    if (error) console.warn("[settlla] agent bookings:", error.message);
-    return [];
-  }
-  return data
-    .map((r: { payload: unknown }) => payloadToBooking(r.payload))
-    .filter(Boolean) as InspectionBookingResponse[];
+  return loadAgentBookings();
 }
 
 export async function cancelInspectionBooking(bookingId: string): Promise<void> {
-  const supabase = getSupabaseBrowserClient();
-  if (supabase) {
-    const { error } = await supabase.from("bookings").delete().eq("booking_id", bookingId);
-    if (error) console.warn("[settlla] cancel booking:", error.message);
-  }
-  if (typeof window !== "undefined") {
-    try {
-      const raw = localStorage.getItem("settlla_tenant_booking");
-      if (raw) {
-        const current = JSON.parse(raw) as InspectionBookingResponse;
-        if (current.booking_id === bookingId) {
-          localStorage.removeItem("settlla_tenant_booking");
-        }
+  if (typeof window === "undefined") return;
+  try {
+    const raw = localStorage.getItem("settlla_tenant_booking");
+    if (raw) {
+      const current = JSON.parse(raw) as InspectionBookingResponse;
+      if (current.booking_id === bookingId) {
+        localStorage.removeItem("settlla_tenant_booking");
       }
-    } catch {
-      /* ignore */
     }
+  } catch {
+    /* ignore */
   }
 }

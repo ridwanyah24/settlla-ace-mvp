@@ -2,13 +2,8 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { UserProfile, UserRole } from "@/types/auth";
-import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { getEmailRedirectTo, isSupabaseConfigured } from "@/lib/supabase/config";
-import { profileRowToUser, ProfileRow } from "@/lib/settlla/profiles";
-import { assertPassword, formatSupabaseAuthError, isAlreadyRegisteredError, isAuthRateLimitError } from "@/lib/settlla/authErrors";
+import { assertPassword, formatSupabaseAuthError } from "@/lib/settlla/authErrors";
 import {
-  clearConfirmationEmailSent,
   markConfirmationEmailSent,
   secondsUntilConfirmationResend,
 } from "@/lib/settlla/confirmationEmailCache";
@@ -16,11 +11,9 @@ import {
 export type SignUpResult = {
   needsEmailConfirmation: boolean;
   user: UserProfile | null;
-  /** Supabase accepted sending a confirmation email on this request */
   confirmationEmailSent?: boolean;
   resendAvailableInSeconds?: number;
   rateLimited?: boolean;
-  /** Auth user missing (e.g. deleted in dashboard) — run signUp again from Pay */
   accountMissing?: boolean;
 };
 
@@ -78,80 +71,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     saveLocalUser(user);
   }, []);
 
-  const loadProfileFromSupabase = useCallback(async (userId: string, email: string) => {
-    const supabase = getSupabaseBrowserClient();
-    if (!supabase) return null;
-
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .maybeSingle();
-
-    if (error || !data) {
-      // Minimal fallback if trigger hasn't written yet
-      if (email) {
-        return {
-          id: userId,
-          fullName: formatNameFromEmail(email),
-          email,
-          phoneNumber: "0803 123 4567",
-          role: "tenant" as UserRole,
-          verifiedStatus: "verified" as const,
-          createdAt: new Date().toISOString(),
-        };
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(AUTH_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed?.email) setCurrentUser(parsed);
       }
-      return null;
+    } catch {
+      setCurrentUser(null);
     }
-    return profileRowToUser(data as ProfileRow);
+    setAuthReady(true);
   }, []);
 
-  useEffect(() => {
-    if (!isSupabaseConfigured()) {
-      try {
-        const stored = localStorage.getItem(AUTH_STORAGE_KEY);
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (parsed?.email) setCurrentUser(parsed);
-        }
-      } catch {
-        setCurrentUser(null);
-      }
-      setAuthReady(true);
-      return;
-    }
-
-    const supabase = getSupabaseBrowserClient();
-    if (!supabase) {
-      setAuthReady(true);
-      return;
-    }
-
-    supabase.auth.getSession().then(async ({ data: { session } }: { data: { session: Session | null } }) => {
-      if (session?.user) {
-        const profile = await loadProfileFromSupabase(session.user.id, session.user.email || "");
-        if (profile) applyUser(profile);
-      }
-      setAuthReady(true);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event: AuthChangeEvent, session: Session | null) => {
-      if (session?.user) {
-        const profile = await loadProfileFromSupabase(session.user.id, session.user.email || "");
-        if (profile) applyUser(profile);
-      } else {
-        applyUser(null);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [applyUser, loadProfileFromSupabase]);
-
-  const signInLocal = (email: string, preferredRole?: UserRole): UserProfile => {
+  const signInLocal = (email: string, preferredRole?: UserRole, password?: string): UserProfile => {
     const cleanEmail = email.trim();
     const effectiveRole = preferredRole || (cleanEmail.toLowerCase().includes("agent") ? "agent" : "tenant");
+    if (password?.trim()) assertPassword(password, false);
 
     let existingProfile: UserProfile | null = null;
     try {
@@ -201,31 +137,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signIn = async (email: string, preferredRole?: UserRole, password?: string): Promise<UserProfile> => {
-    const cleanEmail = email.trim();
-    const supabaseMode = isSupabaseConfigured();
-    const supabase = getSupabaseBrowserClient();
-
-    if (supabaseMode && supabase) {
-      try {
-        const safePassword = assertPassword(password, true);
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: cleanEmail,
-          password: safePassword,
-        });
-        if (error) throw error;
-        if (!data.user) throw new Error("Sign-in failed. Please try again.");
-
-        const profile = await loadProfileFromSupabase(data.user.id, data.user.email || cleanEmail);
-        if (!profile) throw new Error("Could not load your Settlla profile. Please try again.");
-
-        applyUser(profile);
-        return profile;
-      } catch (err) {
-        throw new Error(formatSupabaseAuthError(err));
-      }
+    try {
+      return signInLocal(email.trim(), preferredRole, password);
+    } catch (err) {
+      throw new Error(formatSupabaseAuthError(err));
     }
-
-    return signInLocal(cleanEmail, preferredRole);
   };
 
   const signUp = async (
@@ -236,142 +152,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       phoneNumber: string;
       password?: string;
     },
-    options?: { resendIfAwaitingConfirmation?: boolean }
+    _options?: { resendIfAwaitingConfirmation?: boolean }
   ): Promise<SignUpResult> => {
     const cleanEmail = data.email.trim();
-    const supabaseMode = isSupabaseConfigured();
-    const supabase = getSupabaseBrowserClient();
+    if (data.password?.trim()) assertPassword(data.password, false);
 
-    const awaitingConfirmResult = (
-      sendResult: "sent" | "rate_limited" | "skipped" | "no_user",
-      waitSec: number
-    ): SignUpResult => ({
-      needsEmailConfirmation: true,
-      user: null,
-      confirmationEmailSent: sendResult === "sent",
-      rateLimited: sendResult === "rate_limited",
-      resendAvailableInSeconds: sendResult === "skipped" ? waitSec : undefined,
-    });
-
-    if (supabaseMode && supabase) {
-      try {
-        const safePassword = assertPassword(data.password, true);
-        const redirectTo = getEmailRedirectTo();
-
-        const sendConfirmationLink = async (): Promise<"sent" | "rate_limited" | "skipped" | "no_user"> => {
-          const waitSec = secondsUntilConfirmationResend(cleanEmail);
-          if (waitSec > 0) return "skipped";
-
-          const { error: resendError } = await supabase.auth.resend({
-            type: "signup",
-            email: cleanEmail,
-            options: { emailRedirectTo: redirectTo },
-          });
-          if (resendError) {
-            if (isAuthRateLimitError(resendError)) return "rate_limited";
-            const msg = (resendError.message || "").toLowerCase();
-            if (msg.includes("user not found") || msg.includes("not found")) {
-              clearConfirmationEmailSent(cleanEmail);
-              return "no_user";
-            }
-            throw resendError;
-          }
-          markConfirmationEmailSent(cleanEmail);
-          return "sent";
-        };
-
-        const { data: authData, error } = await supabase.auth.signUp({
-          email: cleanEmail,
-          password: safePassword,
-          options: {
-            emailRedirectTo: redirectTo,
-            data: {
-              full_name: data.fullName.trim(),
-              role: data.role,
-              phone_number: data.phoneNumber.trim(),
-              nin_number: data.ninNumber,
-              relocation_context: data.relocationContext,
-              agency_name: data.agencyName,
-              accreditation: data.accreditation,
-            },
-          },
-        });
-
-        if (error) {
-          if (isAlreadyRegisteredError(error)) {
-            const sendResult = await sendConfirmationLink();
-            if (sendResult === "no_user") {
-              clearConfirmationEmailSent(cleanEmail);
-              return {
-                needsEmailConfirmation: true,
-                user: null,
-                confirmationEmailSent: false,
-                accountMissing: true,
-              };
-            }
-            if (sendResult === "rate_limited") {
-              markConfirmationEmailSent(cleanEmail);
-            }
-            return awaitingConfirmResult(sendResult, secondsUntilConfirmationResend(cleanEmail));
-          }
-          throw error;
-        }
-
-        // Email confirmation enabled: no session until the user clicks the email link
-        if (!authData.session) {
-          const identities = authData.user?.identities;
-          const looksLikeExistingUnconfirmed =
-            Array.isArray(identities) && identities.length === 0;
-          if (looksLikeExistingUnconfirmed) {
-            const sendResult = await sendConfirmationLink();
-            if (sendResult === "no_user") {
-              clearConfirmationEmailSent(cleanEmail);
-              return {
-                needsEmailConfirmation: true,
-                user: null,
-                confirmationEmailSent: false,
-                accountMissing: true,
-              };
-            }
-            if (sendResult === "rate_limited") {
-              markConfirmationEmailSent(cleanEmail);
-            }
-            return awaitingConfirmResult(sendResult, secondsUntilConfirmationResend(cleanEmail));
-          }
-          markConfirmationEmailSent(cleanEmail);
-          return {
-            needsEmailConfirmation: true,
-            user: null,
-            confirmationEmailSent: true,
-          };
-        }
-
-        // Session present — enrich profile (trigger already created the row)
-        await supabase
-          .from("profiles")
-          .update({
-            email: cleanEmail,
-            full_name: data.fullName.trim(),
-            phone_number: data.phoneNumber.trim(),
-            role: data.role,
-            nin_number: data.ninNumber ?? null,
-            relocation_context: data.relocationContext ?? null,
-            agency_name: data.agencyName ?? null,
-            accreditation: data.accreditation ?? null,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", authData.user.id);
-
-        const profile = await loadProfileFromSupabase(authData.user.id, cleanEmail);
-        if (profile) applyUser(profile);
-
-        return { needsEmailConfirmation: false, user: profile };
-      } catch (err) {
-        throw new Error(formatSupabaseAuthError(err));
-      }
-    }
-
-    // Local demo mode (no Supabase)
     const newUser: UserProfile = {
       id: `usr_${data.role}_${Date.now()}`,
       fullName: data.fullName.trim() || formatNameFromEmail(cleanEmail),
@@ -404,43 +189,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const resendConfirmationEmail = async (email: string): Promise<void> => {
-    const supabase = getSupabaseBrowserClient();
-    if (!supabase) throw new Error("Settlla is not connected to Supabase.");
-
     const cleanEmail = email.trim();
     const waitSec = secondsUntilConfirmationResend(cleanEmail);
     if (waitSec > 0) {
       throw new Error(`Please wait ${waitSec}s before requesting another link.`);
     }
-
-    const redirectTo = getEmailRedirectTo();
-    const { error } = await supabase.auth.resend({
-      type: "signup",
-      email: cleanEmail,
-      options: { emailRedirectTo: redirectTo },
-    });
-    if (error) {
-      const message = (error.message || "").toLowerCase();
-      if (
-        message.includes("already confirmed") ||
-        message.includes("email address is already confirmed")
-      ) {
-        throw new Error("This email is already confirmed. Sign in with your password to continue.");
-      }
-      if (message.includes("user not found") || message.includes("not found")) {
-        clearConfirmationEmailSent(cleanEmail);
-        throw new Error(
-          "No account exists for this email in Supabase. Close this step, then tap Pay once to register again."
-        );
-      }
-      throw new Error(formatSupabaseAuthError(error));
-    }
     markConfirmationEmailSent(cleanEmail);
   };
 
   const signOut = async () => {
-    const supabase = getSupabaseBrowserClient();
-    if (supabase) await supabase.auth.signOut();
     applyUser(null);
   };
 
@@ -455,11 +212,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         newRole === "agent" ? currentUser.accreditation || "ESVARBON / NIESV Registered" : undefined,
     };
     applyUser(updated);
-
-    const supabase = getSupabaseBrowserClient();
-    if (supabase && currentUser.id && !currentUser.id.startsWith("usr_")) {
-      supabase.from("profiles").update({ role: newRole }).eq("id", currentUser.id);
-    }
   };
 
   return (

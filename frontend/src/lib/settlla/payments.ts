@@ -5,7 +5,6 @@ import {
   PaymentSplitBreakdown,
   PaymentTransaction,
 } from "@/types/payment";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { saveTenantRental } from "./rentals";
 
 export type ProcessPaymentInput = {
@@ -123,22 +122,6 @@ function buildFallbackTransaction(input: ProcessPaymentInput): PaymentTransactio
 
 export async function processMoveInPayment(input: ProcessPaymentInput): Promise<PaymentTransaction> {
   const tx = buildFallbackTransaction(input);
-
-  const supabase = getSupabaseBrowserClient();
-  if (supabase) {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    const { error } = await supabase.from("payment_transactions").insert({
-      transaction_id: tx.transaction_id,
-      tenant_user_id: user?.id ?? null,
-      agreement_id: input.agreement.agreement_id,
-      payload: tx,
-    });
-
-    if (error) console.warn("[settlla] payment insert:", error.message);
-  }
 
   if (tx.move_in_pass) {
     await saveTenantRental({

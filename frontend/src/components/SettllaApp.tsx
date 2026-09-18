@@ -23,8 +23,7 @@ import { MoveInPass, PaymentTransaction, EscrowHoldRecord } from "@/types/paymen
 import { AIMatchResult } from "@/types/aiSearch";
 import { runAISearch } from "@/utils/aiSearch";
 import { fetchPendingSignatureCount } from "@/lib/settlla/manager";
-import { seedListingsIfEmpty, fetchPublishedListingsFromBrowser } from "@/lib/settlla/listings";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { fetchPublishedListingsFromBrowser } from "@/lib/settlla/listings";
 import { loadPendingAuthFlow, clearPendingAuthFlow } from "@/lib/settlla/pendingAuthFlow";
 import { RestorableModalLayer } from "@/types/modalStack";
 import { useRestorableModalStack } from "@/hooks/useRestorableModalStack";
@@ -206,16 +205,13 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
 
       setAiMatchesMap({});
       let inventory = initialListings ?? [];
-      if (isSupabaseConfigured()) {
-        try {
-          await seedListingsIfEmpty();
-          inventory = await fetchPublishedListingsFromBrowser();
-        } catch {
-          /* use initialListings */
-        }
-      } else if (!inventory.length) {
-        inventory = SEED_LISTINGS;
+      try {
+        const live = await fetchPublishedListingsFromBrowser();
+        if (live.length) inventory = live;
+      } catch {
+        /* use initialListings */
       }
+      if (!inventory.length) inventory = SEED_LISTINGS;
       const clientFiltered = filterSeedListings(
         neighborhood,
         maxBudget,

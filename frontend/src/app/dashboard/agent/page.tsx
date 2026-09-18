@@ -33,11 +33,10 @@ import {
   DashboardCallout,
   type DashboardTabItem,
 } from "@/components/dashboard/DashboardShell";
-import { upsertListing, fetchPublishedListingsFromBrowser, seedListingsIfEmpty } from "@/lib/settlla/listings";
-import { loadCurrentTenantRental, fetchAgentRentals } from "@/lib/settlla/rentals";
+import { upsertListing, fetchPublishedListingsFromBrowser } from "@/lib/settlla/listings";
+import { fetchAgentRentals } from "@/lib/settlla/rentals";
 import { fetchAgentBookings } from "@/lib/settlla/bookings";
 import { fetchPendingAgreements } from "@/lib/settlla/manager";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 const AGENT_TABS: DashboardTabItem[] = [
   { id: "listings", label: "Properties", icon: Home },
@@ -60,26 +59,17 @@ export default function AgentDashboardPage() {
     let cancelled = false;
     (async () => {
       try {
-        if (isSupabaseConfigured()) {
-          await seedListingsIfEmpty();
-          const [liveListings, rentals, agentTours, leases] = await Promise.all([
-            fetchPublishedListingsFromBrowser(),
-            fetchAgentRentals(),
-            fetchAgentBookings(),
-            fetchPendingAgreements(),
-          ]);
-          if (!cancelled) {
-            setListings(liveListings);
-            if (rentals[0]) setActiveRental(rentals[0]);
-            setTours(agentTours);
-            setPendingLeases(leases as TenancyAgreement[]);
-          }
-        } else {
-          const rental = await loadCurrentTenantRental();
-          if (!cancelled) {
-            setListings(SEED_LISTINGS);
-            if (rental) setActiveRental(rental);
-          }
+        const [liveListings, rentals, agentTours, leases] = await Promise.all([
+          fetchPublishedListingsFromBrowser(),
+          fetchAgentRentals(),
+          fetchAgentBookings(),
+          fetchPendingAgreements(),
+        ]);
+        if (!cancelled) {
+          setListings(liveListings.length ? liveListings : SEED_LISTINGS);
+          if (rentals[0]) setActiveRental(rentals[0]);
+          setTours(agentTours);
+          setPendingLeases(leases as TenancyAgreement[]);
         }
       } catch (e) {
         console.error("Failed to load agent dashboard", e);
@@ -243,7 +233,7 @@ export default function AgentDashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {listings.length === 0 ? (
                 <div className="settlla-card p-8 text-center text-sm text-slate-500 md:col-span-2">
-                  No listings in Supabase yet. Use <strong>Add listing</strong> to publish one.
+                  No listings on your desk yet. Use <strong>Add listing</strong> to publish one.
                 </div>
               ) : (
               listings.map((item) => (

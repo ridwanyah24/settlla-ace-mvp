@@ -1,55 +1,19 @@
-export function getSupabaseUrl(): string | undefined {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-  if (!url || url.includes("YOUR_PROJECT") || url.includes("your-project")) {
-    return undefined;
-  }
-  return url;
-}
-
-/** Newer dashboards issue sb_publishable_…; older ones use the JWT anon key. */
-export function getSupabaseAnonKey(): string | undefined {
-  const key = (
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-    ""
-  ).trim();
-  if (!key || key.includes("your_anon") || key.includes("YOUR_")) {
-    return undefined;
-  }
-  return key;
-}
-
+/** Backend integration disabled — app runs as a seamless client-side demo. */
 export function isSupabaseConfigured(): boolean {
-  return Boolean(getSupabaseUrl() && getSupabaseAnonKey());
+  return false;
 }
 
-function stripTrailingSlash(url: string): string {
-  return url.replace(/\/$/, "");
+export function getSupabaseUrl(): string | undefined {
+  return undefined;
 }
 
-/** Canonical public origin for auth emails (not the Supabase dashboard Site URL). */
-export function getAuthSiteUrl(): string {
-  if (typeof window !== "undefined" && window.location?.origin) {
-    return stripTrailingSlash(window.location.origin);
-  }
-
-  const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-  if (explicit) return stripTrailingSlash(explicit);
-
-  const vercelHost = (
-    process.env.NEXT_PUBLIC_VERCEL_URL ||
-    process.env.VERCEL_PROJECT_PRODUCTION_URL ||
-    ""
-  ).trim();
-  if (vercelHost) {
-    const host = vercelHost.replace(/^https?:\/\//, "");
-    return `https://${host}`;
-  }
-
-  return "";
+export function getSupabaseAnonKey(): string | undefined {
+  return undefined;
 }
 
 export function getEmailRedirectTo(): string {
-  const site = getAuthSiteUrl();
-  return site ? `${site}/auth/callback` : "/auth/callback";
+  if (typeof window !== "undefined") {
+    return `${window.location.origin}/auth/callback`;
+  }
+  return "http://localhost:3000/auth/callback";
 }
