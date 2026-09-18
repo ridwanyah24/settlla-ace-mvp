@@ -6,9 +6,10 @@ import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { getEmailRedirectTo, isSupabaseConfigured } from "@/lib/supabase/config";
 import { profileRowToUser, ProfileRow } from "@/lib/settlla/profiles";
-import { assertPassword, formatSupabaseAuthError } from "@/lib/settlla/authErrors";
+import { assertPassword, formatSupabaseAuthError, isAlreadyRegisteredError } from "@/lib/settlla/authErrors";
 import {
   markConfirmationEmailSent,
+  secondsUntilConfirmationResend,
   wasConfirmationEmailSent,
 } from "@/lib/settlla/confirmationEmailCache";
 
@@ -236,10 +237,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (supabaseMode && supabase) {
       try {
         const safePassword = assertPassword(data.password, true);
+        const redirectTo = getEmailRedirectTo();
 
-        // Don't send another confirmation email for the same address — that
-        // rate-limits the whole Supabase project and blocks other signups.
+        const sendConfirmationLink = async () => {
+          const { error: resendError } = await supabase.auth.resend({
+            type: "signup",
+            email: cleanEmail,
+            options: { emailRedirectTo: redirectTo },
+          });
+          if (resendError) throw resendError;
+          markConfirmationEmailSent(cleanEmail);
+        };
+
+        // Same email signing up again: signUp will not send a new mail once the
+        // unconfirmed user already exists. Resend a fresh link instead.
         if (wasConfirmationEmailSent(cleanEmail)) {
+          if (secondsUntilConfirmationResend(cleanEmail) > 0) {
+            return { needsEmailConfirmation: true, user: null };
+          }
+          await sendConfirmationLink();
           return { needsEmailConfirmation: true, user: null };
         }
 
@@ -247,7 +263,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: cleanEmail,
           password: safePassword,
           options: {
-            emailRedirectTo: getEmailRedirectTo(),
+            emailRedirectTo: redirectTo,
             data: {
               full_name: data.fullName.trim(),
               role: data.role,
@@ -259,11 +275,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             },
           },
         });
-        if (error) throw error;
+
+        if (error) {
+          if (isAlreadyRegisteredError(error)) {
+            await sendConfirmationLink();
+            return { needsEmailConfirmation: true, user: null };
+          }
+          throw error;
+        }
 
         // Email confirmation enabled: no session until the user clicks the email link
         if (!authData.session) {
-          markConfirmationEmailSent(cleanEmail);
+          const identities = authData.user?.identities;
+          const looksLikeExistingUnconfirmed =
+            Array.isArray(identities) && identities.length === 0;
+          if (looksLikeExistingUnconfirmed) {
+            await sendConfirmationLink();
+          } else {
+            markConfirmationEmailSent(cleanEmail);
+          }
           return { needsEmailConfirmation: true, user: null };
         }
 

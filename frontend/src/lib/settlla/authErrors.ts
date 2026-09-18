@@ -38,6 +38,16 @@ export function isEmailNotConfirmedError(error: unknown): boolean {
   );
 }
 
+export function isAlreadyRegisteredError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const err = error as { message?: string; code?: string };
+  const message = (err.message || "").toLowerCase();
+  return (
+    message.includes("user already registered") ||
+    message.includes("already been registered")
+  );
+}
+
 export function formatSupabaseAuthError(error: unknown): string {
   if (error instanceof AuthValidationError) return error.message;
   if (!error || typeof error !== "object") {
