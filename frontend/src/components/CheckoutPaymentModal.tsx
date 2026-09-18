@@ -172,13 +172,10 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
     return (
       <>
         <div className="settlla-overlay">
-          <div
-            className="fixed inset-0 bg-slate-950/55 backdrop-blur-xs"
-            onClick={onClose}
-            aria-hidden
-          />
+          <div className="fixed inset-0 bg-slate-950/55 backdrop-blur-xs" aria-hidden />
           <div
             role="dialog"
+            aria-modal="true"
             aria-labelledby="payment-success-title"
             className="settlla-dialog settlla-dialog--sm p-6"
           >
@@ -196,31 +193,38 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
             </div>
 
             <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50/90 p-3.5 flex gap-2.5 text-left">
-              <span
-                className="relative shrink-0 mt-0.5 group cursor-help"
-                title="Confirm key handover in your tenant dashboard before escrow releases rent to the landlord."
-              >
-                <Info className="h-4 w-4 text-amber-700" aria-hidden />
-                <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 w-56 -translate-x-1/2 rounded-lg border border-slate-200 bg-slate-900 px-3 py-2 text-[11px] font-medium leading-snug text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-                  Go to your dashboard on move-in day and tap <strong className="font-bold">Confirm key</strong>.
-                  Rent stays in escrow until then — the landlord is not paid until you confirm.
-                </span>
-              </span>
+              <Info className="h-4 w-4 text-amber-700 shrink-0 mt-0.5" aria-hidden />
               <p className="text-xs text-amber-950 leading-relaxed">
-                <strong className="font-bold">Next step:</strong> In your tenant dashboard, confirm key handover when
-                you receive working keys. Escrow rent is only released to the landlord after you confirm.
+                <strong className="font-bold">Next step:</strong> Confirm key handover in your
+                dashboard when you receive working keys. Escrow rent is only released to the
+                landlord after you confirm.
               </p>
             </div>
 
             <div className="mt-5 flex flex-col gap-2">
-              <button
-                type="button"
-                onClick={goToTenantDashboard}
-                className="w-full rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white hover:bg-emerald-700 flex items-center justify-center gap-2"
-              >
-                Proceed to dashboard
-                <ArrowRight className="h-4 w-4" />
-              </button>
+              <div className="relative">
+                <div
+                  role="tooltip"
+                  id="keys-dashboard-tooltip"
+                  className="relative mb-2 rounded-xl bg-slate-900 px-3.5 py-2.5 text-[12px] font-medium leading-snug text-white shadow-lg"
+                >
+                  Confirm keys in your Dashboard after you move in — then continue. Rent stays in
+                  escrow until you tap <span className="font-bold">Confirm key</span>.
+                  <span
+                    className="absolute left-1/2 top-full -translate-x-1/2 border-8 border-transparent border-t-slate-900"
+                    aria-hidden
+                  />
+                </div>
+                <button
+                  type="button"
+                  aria-describedby="keys-dashboard-tooltip"
+                  onClick={goToTenantDashboard}
+                  className="w-full rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white hover:bg-emerald-700 flex items-center justify-center gap-2"
+                >
+                  Continue to dashboard
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
               <button
                 type="button"
                 onClick={() => setShowPassModal(true)}

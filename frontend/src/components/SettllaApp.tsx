@@ -571,17 +571,13 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
           agreement={checkoutAgreement}
           listing={checkoutListing}
           onPaymentSuccess={(tx) => {
-            clearModalStack();
             setRecentTransaction(tx);
             if (tx.escrow_hold) {
               setActiveEscrow(tx.escrow_hold);
             }
-            setCheckoutAgreement(null);
-            setCheckoutListing(null);
             setListings((prev) =>
               prev.map((l) => (l.id === checkoutListing.id ? { ...l, status: "occupied" } : l))
             );
-            router.push(TENANT_ESCROW_DASHBOARD_PATH);
           }}
         />
       )}
