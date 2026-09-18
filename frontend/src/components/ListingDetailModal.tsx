@@ -59,11 +59,11 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-slate-900/60 backdrop-blur-sm animate-fade-in"
+      className="settlla-overlay bg-slate-900/60 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-3xl border border-slate-200 bg-white shadow-2xl text-slate-900"
+        className="settlla-dialog settlla-dialog--xl settlla-dialog--scroll"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Sticky Modal Header */}
@@ -71,7 +71,10 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
           <div className="flex items-center gap-2.5">
             <span className="flex h-3 w-3 rounded-full bg-blue-600"></span>
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-blue-700">
+              <span className="text-xs font-bold uppercase tracking-wider text-blue-700 sm:hidden">
+                Verified apartment
+              </span>
+              <span className="hidden sm:inline text-xs font-bold uppercase tracking-wider text-blue-700">
                 Verified Kaduna Apartment Detail View
               </span>
               <span className="hidden sm:inline text-xs text-slate-400 ml-2">
@@ -201,7 +204,7 @@ export const ListingDetailModal: React.FC<ListingDetailModalProps> = ({
               </span>
             </div>
 
-            <div className="overflow-x-auto no-scrollbar rounded-2xl border border-slate-200 bg-white shadow-xs">
+          <div className="settlla-table-wrap overflow-x-auto no-scrollbar rounded-2xl border border-slate-200 bg-white shadow-xs">
               <table className="w-full min-w-[480px] sm:min-w-0 text-left text-xs sm:text-sm">
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50 text-slate-600 uppercase text-[11px] font-bold">

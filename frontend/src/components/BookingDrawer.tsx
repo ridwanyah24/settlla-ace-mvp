@@ -401,7 +401,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
   const totalOpenSlots = selectedDay ? selectedDay.slots.filter((s) => s.is_available).length : 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
+    <div className="settlla-overlay settlla-overlay--drawer">
       {/* Soft Backdrop matching landing theme */}
       <div
         className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs transition-opacity animate-fade-in"
@@ -409,11 +409,11 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
       />
 
       {/* Drawer Container — Crisp Landing Page Palette (White / Slate / Royal Blue) */}
-      <div className="relative z-10 w-full max-w-xl bg-white border-l border-slate-200 shadow-2xl flex flex-col h-full overflow-hidden text-slate-900 transition-transform duration-300 ease-out">
+      <div className="settlla-drawer text-slate-900">
         {/* Top Header */}
         <div className="flex items-center justify-between border-b border-slate-100 px-4 sm:px-6 py-3.5 sm:py-4 bg-white/95 backdrop-blur-md sticky top-0 z-20">
-          <div>
-            <div className="flex items-center gap-2">
+          <div className="min-w-0 pr-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200/80">
                 <Check className="h-3 w-3 text-emerald-600" /> Mandate Verified
               </span>
@@ -479,7 +479,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
         </div>
 
         {/* Scrollable Drawer Body */}
-        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5 space-y-6">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-5 space-y-6">
           {/* STEP 1: DATE SELECTION & 30-MINUTE SLOTS */}
           {step === 1 && (
             <div>
@@ -883,9 +883,9 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
 
       {/* Post-Booking Auth Prompt Modal */}
       {showAuthPrompt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
+        <div className="settlla-overlay z-[70] bg-slate-950/70 backdrop-blur-sm animate-fade-in">
           <div
-            className="relative w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 sm:p-7 shadow-2xl overflow-hidden text-slate-900"
+            className="settlla-dialog settlla-dialog--sm p-6 sm:p-7"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close / Dismiss button */}

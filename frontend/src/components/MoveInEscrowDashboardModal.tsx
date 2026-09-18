@@ -360,12 +360,12 @@ export const MoveInEscrowDashboardModal: React.FC<MoveInEscrowDashboardModalProp
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+    <div className="settlla-overlay">
       {/* Backdrop */}
       <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs transition-opacity animate-fade-in" onClick={onClose} />
 
       {/* Main Dialog */}
-      <div className="relative z-10 w-full max-w-4xl max-h-[92vh] bg-white rounded-3xl border border-slate-200 shadow-2xl flex flex-col overflow-hidden text-slate-900 animate-scale-up">
+      <div className="settlla-dialog settlla-dialog--xl">
         {/* Header Bar */}
         <div className="bg-gradient-to-r from-[#0B1528] via-slate-900 to-emerald-950 px-4 sm:px-8 py-4 sm:py-5 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 border-b border-slate-800">
           <div className="w-full sm:w-auto">
@@ -436,7 +436,7 @@ export const MoveInEscrowDashboardModal: React.FC<MoveInEscrowDashboardModalProp
         </div>
 
         {/* Modal Body Content */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-8 bg-[#F8FAFC] space-y-6">
+        <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-8 bg-[#F8FAFC] space-y-6">
           {errorMessage && (
             <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-xs font-semibold text-rose-800 flex items-center gap-2 animate-shake">
               <AlertCircle className="w-4 h-4 text-rose-600 flex-shrink-0" />

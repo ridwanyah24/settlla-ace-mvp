@@ -114,13 +114,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+    <div className="settlla-overlay bg-slate-900/60 backdrop-blur-sm animate-fade-in" onClick={onClose}>
       <div
-        className="relative w-full max-w-lg rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden text-slate-900"
+        className="settlla-dialog settlla-dialog--md settlla-dialog--scroll"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/70 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/70 px-4 py-4 sm:px-6">
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white font-black text-base shadow-sm">
               S
@@ -140,7 +140,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </button>
         </div>
 
-        <div className="p-6 space-y-5">
+        <div className="p-4 sm:p-6 space-y-5">
           {confirmEmailSent ? (
             <div className="space-y-4 text-center py-4">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">

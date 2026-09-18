@@ -34,7 +34,7 @@ export const MoveInPassViewer: React.FC<MoveInPassViewerProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+    <div className="settlla-overlay">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity animate-fade-in"
@@ -42,7 +42,7 @@ export const MoveInPassViewer: React.FC<MoveInPassViewerProps> = ({
       />
 
       {/* Modal Dialog Container */}
-      <div className="relative z-10 w-full max-w-2xl bg-white rounded-3xl border border-slate-200 shadow-2xl flex flex-col overflow-hidden text-slate-900 animate-scale-up">
+      <div className="settlla-dialog settlla-dialog--lg">
         {/* Header Bar */}
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-900 text-white">
           <div className="flex items-center gap-2">
@@ -63,7 +63,7 @@ export const MoveInPassViewer: React.FC<MoveInPassViewerProps> = ({
         </div>
 
         {/* Printable Pass Body */}
-        <div className="p-6 sm:p-8 bg-[#F8FAFC] space-y-6 overflow-y-auto max-h-[80vh]">
+        <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-8 bg-[#F8FAFC] space-y-6">
           {/* Official Pass Card (Boarding Pass / Digital Voucher Aesthetic) */}
           <div className="rounded-3xl border-2 border-slate-200 bg-white shadow-md overflow-hidden relative print:border-none print:shadow-none">
             {/* Top Pass Header */}

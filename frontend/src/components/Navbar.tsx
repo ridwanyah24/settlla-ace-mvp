@@ -109,17 +109,16 @@ export const Navbar: React.FC<NavbarProps> = ({
     <>
       <header className="sticky top-0 z-40 w-full shadow-xs bg-white">
         {/* 1. Top Announcement Strip */}
-        <div className="border-b border-slate-800 bg-[var(--settlla-navy)] px-3 py-2 text-xs text-slate-300 sm:px-6 lg:px-8">
-          <div className="settlla-container flex items-center justify-between gap-2 !px-0">
-            {/* Left Contact & Location */}
-            <div className="flex items-center gap-2 sm:gap-3 text-[11px] sm:text-xs">
+        <div className="border-b border-slate-800 bg-[var(--settlla-navy)] px-3 py-2 text-[11px] text-slate-300 sm:px-6 lg:px-8">
+          <div className="settlla-container flex items-center justify-between gap-2 !px-0 min-w-0">
+            <div className="flex min-w-0 items-center gap-2 sm:gap-3">
               <a
                 href="tel:08007388552"
-                className="flex items-center gap-1.5 text-slate-300 hover:text-white transition-colors"
+                className="flex min-w-0 items-center gap-1.5 text-slate-300 hover:text-white transition-colors"
                 title="Call Settlla Kaduna Toll Free"
               >
                 <Phone className="h-3.5 w-3.5 text-blue-400 shrink-0" />
-                <span className="font-semibold text-white whitespace-nowrap">+234 800 SETTLLA</span>
+                <span className="font-semibold text-white truncate">0800 SETTLLA</span>
                 <span className="text-slate-600 hidden md:inline">|</span>
                 <span className="hidden md:inline text-slate-400">0800 738 8552</span>
               </a>
@@ -129,11 +128,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               </span>
             </div>
 
-            {/* Right Trust Indicators (Responsive, non-overflowing) */}
             <div className="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs font-medium shrink-0">
               <span className="flex items-center gap-1 text-emerald-400 whitespace-nowrap font-bold">
                 <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
-                <span>₦0 Inspection</span>
+                <span>₦0 tour</span>
               </span>
               <span className="text-slate-600 hidden sm:inline">•</span>
               <span className="hidden sm:flex items-center gap-1 text-blue-300 whitespace-nowrap">
@@ -151,21 +149,21 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* 2. Main Navigation Bar */}
         <nav className="border-b border-slate-200/80 bg-white">
-          <div className="settlla-container flex items-center justify-between py-3 !px-3 sm:!px-6 lg:!px-8">
+          <div className="settlla-container flex min-w-0 items-center justify-between gap-2 py-2 sm:py-3 !px-3 sm:!px-6 lg:!px-8">
             {/* Brand Logo */}
             <Link
               href="/"
-              className="flex items-center gap-2 sm:gap-2.5 select-none group shrink-0"
+              className="flex min-w-0 items-center gap-1.5 sm:gap-2.5 select-none group shrink-0"
             >
               <Image
                 src="/settlla-4x.png"
                 alt="Settlla"
                 width={512}
                 height={512}
-                className="h-8 w-auto object-contain sm:h-9 transition-opacity group-hover:opacity-90"
+                className="h-7 w-auto max-w-[7.5rem] object-contain sm:h-9 sm:max-w-none transition-opacity group-hover:opacity-90"
                 priority
               />
-              <span className="rounded-md bg-blue-50 px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-bold text-blue-700 border border-blue-200">
+              <span className="hidden rounded-md bg-blue-50 px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-bold text-blue-700 border border-blue-200 lg:inline">
                 Kaduna
               </span>
             </Link>
@@ -210,17 +208,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
 
             {/* Right Action & Auth Navigation */}
-            <div className="flex items-center gap-1.5 sm:gap-2.5">
+            <div className="flex min-w-0 items-center gap-1 sm:gap-2.5">
               {/* Settlla AI Search Trigger */}
               <button
                 type="button"
                 onClick={() => onOpenAISearch && onOpenAISearch()}
-                className="btn btn-soft btn-sm group"
+                className="btn btn-soft btn-sm group h-9 w-9 shrink-0 px-0 sm:h-10 sm:w-10 lg:h-auto lg:w-auto lg:px-3"
                 title="Search with Settlla AI (Ctrl+K)"
               >
                 <Sparkles className="h-3.5 w-3.5 text-blue-600 group-hover:rotate-12 transition-transform" />
-                <span className="hidden sm:inline">AI Search</span>
-                <span className="hidden md:inline-block rounded-md bg-white px-1.5 py-0.2 text-[10px] font-bold text-slate-500 border border-slate-200">
+                <span className="hidden lg:inline">AI Search</span>
+                <span className="hidden lg:inline-block rounded-md bg-white px-1.5 py-0.2 text-[10px] font-bold text-slate-500 border border-slate-200">
                   Ctrl+K
                 </span>
               </button>
@@ -259,7 +257,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       ) : (
                         <User className="h-4 w-4 text-blue-700 shrink-0" />
                       )}
-                      <div className="text-left hidden sm:block">
+                      <div className="text-left hidden lg:block">
                         <div className="text-[11px] font-bold leading-tight truncate max-w-[110px]">
                           {currentUser.fullName}
                         </div>
@@ -271,13 +269,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                           {role === "agent" ? "Agent Desk" : "Tenant Hub"}
                         </div>
                       </div>
-                      <span className="sm:hidden text-xs font-bold">Dashboard</span>
+                      <span className="sm:hidden sr-only">Dashboard</span>
                     </Link>
 
                     <button
                       type="button"
                       onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                      className="hidden sm:flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
+                      className="hidden lg:flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
                       title="User Settings & Role Switcher"
                     >
                       <Settings className="h-4 w-4" />
@@ -337,17 +335,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                   )}
                 </div>
               ) : (
-                <div className="flex items-center gap-1 sm:gap-2">
+                <div className="hidden lg:flex items-center gap-2">
                   <Link
                     href="/login"
-                    className="btn btn-secondary btn-sm"
+                    className="btn btn-secondary btn-sm px-2 sm:px-3"
                   >
                     <LogIn className="h-3.5 w-3.5 text-slate-600 shrink-0" />
                     <span>Sign In</span>
                   </Link>
                   <Link
                     href="/signup"
-                    className="btn btn-primary btn-sm hidden sm:inline-flex"
+                    className="btn btn-primary btn-sm"
                   >
                     <UserPlus className="h-3.5 w-3.5 text-white shrink-0" />
                     <span>Sign Up</span>
@@ -374,7 +372,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* 3. Slide-Over Mobile Navigation Drawer (Overlay & Sheet) */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
+        <div className="fixed inset-0 z-[70] lg:hidden">
           {/* Backdrop Blur Overlay */}
           <div
             className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity animate-fade-in"
@@ -382,7 +380,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           />
 
           {/* Drawer Container */}
-          <div className="fixed top-0 right-0 bottom-0 w-[86%] max-w-sm bg-white shadow-2xl z-50 flex flex-col justify-between overflow-y-auto transform transition-transform animate-slide-in-right">
+          <div className="fixed top-0 right-0 bottom-0 w-[min(86%,22rem)] max-w-sm bg-white shadow-2xl z-[70] flex flex-col justify-between overflow-y-auto transform transition-transform animate-slide-in-right pb-[env(safe-area-inset-bottom,0px)]">
             {/* Drawer Header */}
             <div>
               <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50">
@@ -674,7 +672,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* 4. Sticky Bottom Mobile Navigation Bar (Always reachable by thumb on phones) */}
       <nav
         aria-label="Mobile Bottom Navigation"
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-lg px-2 py-1.5 pb-safe"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-lg px-2 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
       >
         <div className="grid grid-cols-4 items-center justify-around gap-1 max-w-md mx-auto">
           {/* Tab 1: Feed / Home */}

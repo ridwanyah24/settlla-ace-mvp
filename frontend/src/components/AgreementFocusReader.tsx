@@ -31,7 +31,7 @@ export const AgreementFocusReader: React.FC<AgreementFocusReaderProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-100 flex flex-col bg-slate-800/95 backdrop-blur-sm animate-fade-in agreement-focus-reader"
+      className="fixed inset-0 z-[80] flex flex-col overflow-x-hidden bg-slate-800/95 backdrop-blur-sm animate-fade-in agreement-focus-reader"
       role="dialog"
       aria-modal="true"
       aria-label="Tenancy agreement document reader"

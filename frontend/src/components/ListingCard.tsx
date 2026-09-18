@@ -150,18 +150,21 @@ export const ListingCard: React.FC<ListingCardProps> = ({
             </span>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <Button variant="primary" size="md" fullWidth onClick={() => onSelect(listing)}>
+            <Button variant="primary" size="md" fullWidth onClick={() => onSelect(listing)} className="px-2 text-xs sm:text-sm">
               <Eye className="h-4 w-4" />
-              View Details
+              <span className="sm:hidden">View</span>
+              <span className="hidden sm:inline">View Details</span>
             </Button>
             <Button
               variant="secondary"
               size="md"
               fullWidth
+              className="px-2 text-xs sm:text-sm"
               onClick={() => (onBookInspection ? onBookInspection(listing) : onSelect(listing))}
             >
               <Calendar className="h-4 w-4 text-slate-500" />
-              Book Tour
+              <span className="sm:hidden">Tour</span>
+              <span className="hidden sm:inline">Book Tour</span>
             </Button>
           </div>
         </div>

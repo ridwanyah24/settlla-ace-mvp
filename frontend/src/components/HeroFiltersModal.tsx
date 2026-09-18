@@ -104,7 +104,7 @@ export const HeroFiltersModal: React.FC<HeroFiltersModalProps> = ({
   }) > 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4">
+    <div className="settlla-overlay">
       <div
         className="fixed inset-0 bg-slate-950/50 backdrop-blur-xs animate-fade-in"
         onClick={onClose}
@@ -114,7 +114,7 @@ export const HeroFiltersModal: React.FC<HeroFiltersModalProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="hero-filters-title"
-        className="relative z-10 flex max-h-[min(92vh,720px)] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-slate-200 bg-white shadow-2xl animate-scale-up sm:rounded-3xl"
+        className="settlla-dialog settlla-dialog--md"
       >
         <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-5 py-4">
           <div>

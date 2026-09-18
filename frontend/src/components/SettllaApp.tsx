@@ -351,7 +351,7 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
   };
 
   return (
-    <div className="min-h-screen bg-[var(--background)] text-slate-900 font-sans selection:bg-blue-600 selection:text-white pb-16 lg:pb-0">
+    <div className="min-h-screen bg-[var(--background)] text-slate-900 font-sans selection:bg-blue-600 selection:text-white has-mobile-nav">
       {/* 1. Header Navigation */}
       <Navbar
         verifiedCount={listings.length}

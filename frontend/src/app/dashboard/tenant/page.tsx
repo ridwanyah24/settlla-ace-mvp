@@ -775,7 +775,7 @@ export default function TenantDashboardPage() {
               </p>
             </div>
 
-            <div className="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-xs">
+            <div className="settlla-table-wrap rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-xs">
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-[10px] font-bold">
                   <tr>

@@ -62,11 +62,11 @@ export function DashboardShell({
 
   return (
     <div
-      className="dashboard-shell min-h-screen flex flex-col pb-20 lg:pb-0 bg-[var(--background)]"
+      className="dashboard-shell min-h-screen flex flex-col has-mobile-nav bg-[var(--background)]"
       data-accent={accent}
     >
       <header className="dashboard-header sticky top-0 z-40 border-b border-[var(--settlla-border)] bg-white/95 backdrop-blur-sm">
-        <div className="settlla-container flex items-center justify-between gap-4 py-3">
+        <div className="settlla-container flex min-w-0 items-center justify-between gap-2 py-2.5 sm:gap-4 sm:py-3">
           <div className="flex items-center gap-5 min-w-0">
             <Link href="/" className="flex items-center gap-2.5 shrink-0 group min-w-0">
               <Image
@@ -112,7 +112,7 @@ export function DashboardShell({
             <button
               type="button"
               onClick={onSwitchRole}
-              className="btn btn-sm btn-secondary hidden lg:inline-flex"
+              className="hidden lg:inline-flex btn btn-sm btn-secondary"
               title={switchRoleLabel}
             >
               {isAgent ? <User className="h-3.5 w-3.5" /> : <Building2 className="h-3.5 w-3.5" />}
@@ -169,7 +169,7 @@ export function DashboardShell({
 
       <nav
         aria-label="Mobile dashboard navigation"
-        className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-[var(--settlla-border)] bg-white/95 backdrop-blur-md pb-safe"
+        className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-[var(--settlla-border)] bg-white/95 backdrop-blur-md pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
       >
         <div className="flex items-center justify-around max-w-md mx-auto px-2 py-2">
           <Link href="/" className="dashboard-mobile-nav-item">

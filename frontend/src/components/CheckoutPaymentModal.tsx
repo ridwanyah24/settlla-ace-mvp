@@ -171,7 +171,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
   if (transaction) {
     return (
       <>
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="settlla-overlay">
           <div
             className="fixed inset-0 bg-slate-950/55 backdrop-blur-xs"
             onClick={onClose}
@@ -180,7 +180,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
           <div
             role="dialog"
             aria-labelledby="payment-success-title"
-            className="relative z-10 w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl animate-scale-up"
+            className="settlla-dialog settlla-dialog--sm p-6"
           >
             <div className="text-center">
               <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100">
@@ -251,7 +251,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 overflow-y-auto">
+      <div className="settlla-overlay">
         {/* Backdrop */}
         <div
           className="fixed inset-0 bg-slate-950/50 backdrop-blur-xs transition-opacity animate-fade-in"
@@ -259,7 +259,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
         />
 
         {/* Modal Dialog Container */}
-        <div className="relative z-10 w-full max-w-lg max-h-[92vh] bg-white rounded-3xl border border-slate-200 shadow-2xl flex flex-col overflow-hidden text-slate-900 animate-scale-up">
+        <div className="settlla-dialog settlla-dialog--md">
           {/* Header Bar */}
           <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-4 bg-white sticky top-0 z-20">
             <div className="min-w-0">

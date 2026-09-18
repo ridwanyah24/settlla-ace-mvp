@@ -134,7 +134,7 @@ export const LandingSections: React.FC<LandingSectionsProps> = ({ onExploreFeed 
             </div>
 
             {/* Floating Trust Badge */}
-            <div className="absolute -bottom-5 right-2 sm:-bottom-6 sm:right-6 rounded-2xl bg-white p-3.5 sm:p-4 shadow-xl border border-slate-150 flex items-center gap-2.5 sm:gap-3 max-w-[90%]">
+            <div className="absolute bottom-3 left-3 right-3 sm:-bottom-6 sm:left-auto sm:right-6 rounded-2xl bg-white p-3.5 sm:p-4 shadow-xl border border-slate-150 flex items-center gap-2.5 sm:gap-3 max-w-full sm:max-w-[90%]">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
                 <Check className="h-6 w-6 text-white" />
               </div>

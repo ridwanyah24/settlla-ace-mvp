@@ -234,7 +234,7 @@ export const TenancyAgreementViewer: React.FC<TenancyAgreementViewerProps> = ({
         onClose={() => setFocusReaderOpen(false)}
       />
     )}
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6">
+    <div className="settlla-overlay">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs transition-opacity animate-fade-in"
@@ -242,7 +242,7 @@ export const TenancyAgreementViewer: React.FC<TenancyAgreementViewerProps> = ({
       />
 
       {/* Modal Dialog Container — Light Theme matching Landing Page */}
-      <div className="relative z-10 flex h-[min(88vh,720px)] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white text-slate-900 shadow-2xl animate-scale-up">
+      <div className="settlla-dialog settlla-dialog--lg h-[min(88dvh,720px)] max-h-[100dvh] sm:h-[min(88vh,720px)]">
         <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-4 sm:px-6">
           <div>
             <h2 className="text-lg font-black text-slate-900 tracking-tight">

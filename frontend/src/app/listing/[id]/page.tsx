@@ -109,21 +109,21 @@ export default function ListingDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans pb-16 lg:pb-0">
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans has-mobile-nav">
       <Navbar verifiedCount={5} />
 
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Navigation Breadcrumb */}
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Link
             href="/"
             className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Back to All Verified Listings</span>
+            <span>Back to listings</span>
           </Link>
-          <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-400 border border-emerald-500/20">
-            Verified Listing &amp; ₦0 Inspection
+          <span className="w-fit rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-400 border border-emerald-500/20">
+            Verified · ₦0 Inspection
           </span>
         </div>
 
@@ -140,12 +140,12 @@ export default function ListingDetailPage() {
               ₦0 Inspection
             </span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white">
+          <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-white break-words">
             {listing.title}
           </h1>
-          <p className="mt-2 text-sm text-slate-400 flex items-center gap-1.5">
-            <MapPin className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>{listing.full_address} ({listing.commute_context})</span>
+          <p className="mt-2 text-sm text-slate-400 flex items-start gap-1.5">
+            <MapPin className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+            <span className="min-w-0 break-words">{listing.full_address} ({listing.commute_context})</span>
           </p>
         </div>
 
@@ -213,8 +213,8 @@ export default function ListingDetailPage() {
             <CreditCard className="w-5 h-5 text-emerald-400" />
             <span>All-In Upfront Pricing Breakdown (Zero Hidden Fees)</span>
           </h2>
-          <div className="overflow-x-auto rounded-3xl border border-slate-800 bg-slate-900/60 shadow-xl no-scrollbar">
-            <table className="w-full text-left text-xs sm:text-sm">
+          <div className="settlla-table-wrap overflow-x-auto rounded-3xl border border-slate-800 bg-slate-900/60 shadow-xl no-scrollbar">
+            <table className="w-full min-w-[32rem] text-left text-xs sm:text-sm">
               <thead>
                 <tr className="border-b border-slate-800 bg-slate-900/90 text-slate-400 uppercase text-[11px] font-bold">
                   <th className="py-3.5 px-5">Cost Component</th>

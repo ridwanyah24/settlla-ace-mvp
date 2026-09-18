@@ -172,25 +172,25 @@ export const AgentDashboardModal: React.FC<AgentDashboardModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+    <div className="settlla-overlay bg-slate-900/60 backdrop-blur-sm animate-fade-in" onClick={onClose}>
       <div
-        className="relative w-full max-w-5xl max-h-[92vh] overflow-y-auto rounded-3xl border border-slate-200 bg-white shadow-2xl text-slate-900 flex flex-col"
+        className="settlla-dialog settlla-dialog--2xl settlla-dialog--scroll"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Sticky Header */}
-        <div className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200 bg-white/95 px-6 py-4 backdrop-blur-md">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-md shadow-emerald-600/25">
-              <Building2 className="w-6 h-6" />
+        <div className="sticky top-0 z-20 flex min-w-0 items-center justify-between gap-2 border-b border-slate-200 bg-white/95 px-4 sm:px-6 py-3.5 sm:py-4 backdrop-blur-md">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-md shadow-emerald-600/25">
+              <Building2 className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-black text-slate-900">Agent &amp; Property Manager Desk</h2>
-                <span className="rounded-full bg-emerald-50 text-emerald-800 text-[10px] font-bold px-2 py-0.5 border border-emerald-200">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-base sm:text-lg font-black text-slate-900">Agent Desk</h2>
+                <span className="hidden sm:inline rounded-full bg-emerald-50 text-emerald-800 text-[10px] font-bold px-2 py-0.5 border border-emerald-200">
                   ESVARBON Accredited
                 </span>
               </div>
-              <p className="text-xs text-slate-500 font-medium">
+              <p className="text-xs text-slate-500 font-medium truncate">
                 {currentUser?.agencyName || "HB&A Partners & Co."} • Authorized Kaduna Mandate Partner
               </p>
             </div>
@@ -203,7 +203,7 @@ export const AgentDashboardModal: React.FC<AgentDashboardModalProps> = ({
                 signOut();
                 onClose();
               }}
-              className="rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer"
+              className="hidden sm:inline-flex rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer"
             >
               Sign Out
             </button>
@@ -761,7 +761,7 @@ export const AgentDashboardModal: React.FC<AgentDashboardModalProps> = ({
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs">
+              <div className="settlla-table-wrap rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-[10px] font-bold">
                     <tr>

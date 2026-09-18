@@ -161,13 +161,13 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
 
   if (isTenantSigningFlow) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6">
+      <div className="settlla-overlay">
         <div
           className="fixed inset-0 bg-slate-950/50 backdrop-blur-xs"
           onClick={onClose}
           aria-hidden
         />
-        <div className="relative z-10 flex w-full max-w-md max-h-[min(92vh,640px)] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl animate-scale-up">
+        <div className="settlla-dialog settlla-dialog--sm">
           <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
             <div>
               <h2 className="text-lg font-black text-slate-900">Electronic signature</h2>
@@ -276,7 +276,7 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+    <div className="settlla-overlay">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-slate-950/50 backdrop-blur-xs transition-opacity animate-fade-in"
@@ -284,7 +284,7 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
       />
 
       {/* Modal Dialog Container */}
-      <div className="relative z-10 w-full max-w-5xl max-h-[94vh] bg-white rounded-3xl border border-slate-200 shadow-2xl flex flex-col overflow-hidden text-slate-900 animate-scale-up">
+      <div className="settlla-dialog settlla-dialog--2xl">
         {/* Top Workflow Navigation Bar */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 border-b border-slate-100 px-4 sm:px-8 py-3.5 sm:py-4 bg-white sticky top-0 z-20">
           <div>
@@ -425,7 +425,7 @@ export const SignatureWorkflowModal: React.FC<SignatureWorkflowModalProps> = ({
         )}
 
         {/* Main Scrollable Body */}
-        <div className="flex-1 overflow-y-auto p-6 sm:p-8 bg-[#F8FAFC]">
+        <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-8 bg-[#F8FAFC]">
           {/* =================================================================== */}
           {/* TAB 1: ACTIVE SIGNING WORKFLOW (TENANT VS MANAGER) */}
           {/* =================================================================== */}

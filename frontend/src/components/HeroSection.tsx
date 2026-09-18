@@ -193,7 +193,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   );
 
   return (
-    <section id="hero" className="relative w-full overflow-hidden scroll-mt-24 py-16 sm:py-20 lg:py-24">
+    <section id="hero" className="relative w-full overflow-hidden scroll-mt-24 py-10 sm:py-20 lg:py-24">
       <div className="absolute inset-0 z-0">
         <Image
           src="/images/hero.jpg"
@@ -214,7 +214,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           <span className="hidden font-medium text-blue-600 sm:inline">Barnawa &amp; Malali Wedge</span>
         </div>
 
-        <h1 className="mx-auto max-w-4xl text-3xl font-black leading-[1.15] tracking-tight text-slate-900 sm:text-5xl sm:leading-[1.1] md:text-6xl lg:text-7xl">
+        <h1 className="mx-auto max-w-4xl px-1 text-[1.75rem] font-black leading-[1.15] tracking-tight text-slate-900 sm:text-5xl sm:leading-[1.1] md:text-6xl lg:text-7xl">
           Rent <span className="text-blue-600">Smarter.</span> Pay{" "}
           <span className="text-blue-600">Safer.</span> <br className="hidden sm:block" />
           Live{" "}
@@ -223,19 +223,19 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </span>
         </h1>
 
-        <p className="mx-auto mb-8 mt-4 max-w-2xl px-4 py-2 text-base font-medium leading-relaxed text-slate-600 sm:mb-10 sm:mt-5 sm:px-6 sm:text-lg">
+        <p className="mx-auto mb-8 mt-4 max-w-2xl px-1 text-base font-medium leading-relaxed text-slate-600 sm:mb-10 sm:mt-5 sm:px-6 sm:text-lg">
           Find vetted apartments in Kaduna with transparent pricing, zero hidden fees, and verified
           landlords.
         </p>
 
-        <div className="settlla-card mx-auto max-w-5xl p-5 text-left shadow-[var(--shadow-lg)] sm:p-6 lg:p-8">
+        <div className="settlla-card mx-auto max-w-5xl p-4 text-left shadow-[var(--shadow-lg)] sm:p-6 lg:p-8">
           <div className="mb-5 flex flex-col justify-between gap-4 border-b border-slate-100 pb-4 sm:flex-row sm:items-center">
-            <div className="inline-flex max-w-fit items-center rounded-xl border border-slate-200 bg-slate-100 p-1">
+            <div className="inline-flex max-w-full flex-wrap items-center rounded-xl border border-slate-200 bg-slate-100 p-1">
               <button
                 type="button"
                 onClick={() => setSearchMode("ai")}
                 className={cn(
-                  "relative flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors",
+                  "relative flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-colors sm:gap-2 sm:px-4 sm:text-sm",
                   searchMode === "ai"
                     ? "bg-blue-600 text-white shadow-sm"
                     : "text-slate-600 hover:text-slate-900"
@@ -248,7 +248,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 type="button"
                 onClick={() => setSearchMode("manual")}
                 className={cn(
-                  "relative flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors",
+                  "relative flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-colors sm:gap-2 sm:px-4 sm:text-sm",
                   searchMode === "manual"
                     ? "bg-white text-slate-900 shadow-sm"
                     : "text-slate-600 hover:text-slate-900"
@@ -279,7 +279,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                     type="text"
                     value={aiPromptInput}
                     onChange={(e) => setAiPromptInput(e.target.value)}
-                    placeholder="Ask Settlla AI: e.g. 'Student 2-bed in Barnawa under 300k'..."
+                    placeholder="Ask Settlla AI: e.g. '2-bed in Barnawa under 300k'"
                     className="settlla-input !pl-11"
                   />
                 </div>
@@ -294,7 +294,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
               <div className="flex flex-wrap items-center gap-2">{surfaceQuickChips}</div>
 
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs">
+              <div className="flex flex-wrap items-center gap-2 text-xs">
                 <span className="text-overline shrink-0 text-slate-500">
                   <Zap className="mr-1 inline h-3 w-3" />
                   Try
@@ -328,7 +328,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                       setAiPromptInput(item.query);
                       onOpenAISearch?.(buildEnrichedAIQuery(item.query));
                     }}
-                    className="settlla-chip shrink-0 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-800"
+                    className="settlla-chip hover:border-blue-300 hover:bg-blue-50 hover:text-blue-800"
                   >
                     <span>{item.emoji}</span>
                     <span>{item.label}</span>

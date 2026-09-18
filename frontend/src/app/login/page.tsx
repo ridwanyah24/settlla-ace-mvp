@@ -77,15 +77,15 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-between">
       <header className="border-b border-slate-200 bg-white px-4 sm:px-8 py-4">
-        <div className="mx-auto max-w-7xl flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5 group">
+        <div className="mx-auto max-w-7xl flex min-w-0 items-center justify-between gap-3">
+          <Link href="/" className="flex min-w-0 items-center gap-2.5 group">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/25 group-hover:bg-blue-700 transition-colors">
               <Home className="h-5 w-5" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="text-xl font-black tracking-tight text-slate-900">Settlla</span>
-                <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 border border-blue-200">
+                <span className="hidden sm:inline rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 border border-blue-200">
                   Kaduna
                 </span>
               </div>

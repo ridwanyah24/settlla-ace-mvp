@@ -652,7 +652,7 @@ export default function AgentDashboardPage() {
               title="Commission & payouts"
               description="Disbursed after tenant confirms key handover."
             />
-            <div className="settlla-card overflow-hidden">
+            <div className="settlla-card settlla-table-wrap overflow-hidden">
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-[10px] font-bold">
                   <tr>

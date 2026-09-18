@@ -121,7 +121,7 @@ export const AISearchModal: React.FC<AISearchModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 lg:p-6">
+    <div className="settlla-overlay">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-slate-950/70 backdrop-blur-md transition-opacity"
@@ -129,15 +129,15 @@ export const AISearchModal: React.FC<AISearchModalProps> = ({
       />
 
       {/* Modal Card */}
-      <div className="relative z-10 flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-[var(--radius-surface)] border border-slate-200 bg-white shadow-[var(--shadow-lg)] animate-fade-in sm:max-h-[88vh]">
-        <div className="flex items-center justify-between border-b border-slate-200 bg-[var(--settlla-navy)] px-5 py-4 text-white sm:px-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white">
+      <div className="settlla-dialog settlla-dialog--xl">
+        <div className="flex min-w-0 items-center justify-between gap-2 border-b border-slate-200 bg-[var(--settlla-navy)] px-4 py-3.5 text-white sm:px-6 sm:py-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white">
               <Sparkles className="h-5 w-5" />
             </div>
-            <div className="text-left">
-              <h2 className="text-h3 !text-white">Settlla AI search</h2>
-              <p className="text-caption text-slate-300">
+            <div className="min-w-0 text-left">
+              <h2 className="text-h3 !text-white truncate">Settlla AI search</h2>
+              <p className="text-caption text-slate-300 hidden sm:block">
                 Describe budget, area, or amenities in plain English.
               </p>
             </div>
@@ -257,7 +257,7 @@ export const AISearchModal: React.FC<AISearchModalProps> = ({
         </div>
 
         {/* Results Body */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+        <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
           <div className="flex items-center justify-between text-xs font-bold text-slate-500 px-1">
             <span>
               {results.length} Verified Home{results.length !== 1 ? "s" : ""} Found
