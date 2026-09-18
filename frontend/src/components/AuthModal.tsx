@@ -10,7 +10,7 @@ import {
   isEmailNotConfirmedError,
   MIN_PASSWORD_LENGTH,
 } from "@/lib/settlla/authErrors";
-import { EmailCodeVerify } from "@/components/EmailCodeVerify";
+import { ConfirmEmailPanel } from "@/components/ConfirmEmailPanel";
 import { X, User, Building2, AlertTriangle } from "lucide-react";
 
 interface AuthModalProps {
@@ -140,7 +140,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <div>
               <h3 className="text-base font-bold text-slate-900 leading-tight">
                 {confirmEmailSent
-                  ? "Verify your email"
+                  ? "Check your email"
                   : mode === "signin"
                     ? "Sign In to Settlla"
                     : "Create Settlla Account"}
@@ -158,12 +158,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
         <div className="p-4 sm:p-6 space-y-5">
           {confirmEmailSent ? (
-            <EmailCodeVerify
+            <ConfirmEmailPanel
               email={confirmEmailSent}
-              onVerified={() => {
-                if (onSuccess) onSuccess();
-                onClose();
-              }}
               onBack={() => {
                 setConfirmEmailSent(null);
                 setError(null);

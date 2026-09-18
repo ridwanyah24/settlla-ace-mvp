@@ -7,13 +7,14 @@ import { TenancyAgreement } from "@/types/agreement";
 import { Listing } from "@/types/listing";
 import { PaymentTransaction } from "@/types/payment";
 import { processMoveInPayment } from "@/lib/settlla/payments";
-import { EmailCodeVerify } from "./EmailCodeVerify";
+import { ConfirmEmailPanel } from "./ConfirmEmailPanel";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import {
   assertPassword,
   formatSupabaseAuthError,
   MIN_PASSWORD_LENGTH,
 } from "@/lib/settlla/authErrors";
+import { savePendingAuthFlow } from "@/lib/settlla/pendingAuthFlow";
 import { MoveInPassViewer } from "./MoveInPassViewer";
 import {
   X,
@@ -66,7 +67,8 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
   const { currentUser, isAuthenticated, signUp } = useAuth();
   const [authPassword, setAuthPassword] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
-  const [pendingCodeEmail, setPendingCodeEmail] = useState<string | null>(null);
+  const [authSuccess, setAuthSuccess] = useState<string | null>(null);
+  const [pendingConfirmEmail, setPendingConfirmEmail] = useState<string | null>(null);
 
   // Processing & Success State
   const [processing, setProcessing] = useState(false);
@@ -108,6 +110,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
   const handleAuthorizePayment = async () => {
     setErrorMessage(null);
     setAuthError(null);
+    setAuthSuccess(null);
 
     // If guest / unauthenticated, create and link account
     if (!isAuthenticated && !currentUser) {
@@ -141,7 +144,19 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
           ninNumber: agreement.tenant.nin_number,
         });
         if (result.needsEmailConfirmation) {
-          setPendingCodeEmail(emailToUse);
+          savePendingAuthFlow({
+            type: "checkout",
+            listingId: listing.id,
+            listing,
+            agreement,
+            email: emailToUse,
+            returnPath: "/?resume=checkout&confirmed=1",
+            savedAt: Date.now(),
+          });
+          setPendingConfirmEmail(emailToUse);
+          setAuthSuccess(
+            `Account created — confirm the email sent to ${emailToUse}, then return here to finish payment.`
+          );
           return;
         }
       } catch (err) {
@@ -322,21 +337,8 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                   </p>
                 )}
 
-                {!isAuthenticated && pendingCodeEmail && (
-                  <section className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <EmailCodeVerify
-                      email={pendingCodeEmail}
-                      onVerified={() => {
-                        setPendingCodeEmail(null);
-                        void completePayment();
-                      }}
-                      onBack={() => setPendingCodeEmail(null)}
-                    />
-                  </section>
-                )}
-
                 {/* Account — required for guests */}
-                {!isAuthenticated && !pendingCodeEmail && (
+                {!isAuthenticated && (
                   <section className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
                     <p className="text-xs font-bold text-slate-900">
                       <span className="text-slate-400 font-semibold mr-1">1.</span>
@@ -370,14 +372,33 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                         className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                       />
                     </div>
+                    {authSuccess && (
+                      <p className="text-xs font-semibold text-emerald-600">{authSuccess}</p>
+                    )}
                     {authError && (
                       <p className="text-xs text-rose-600">{authError}</p>
+                    )}
+                    {pendingConfirmEmail && (
+                      <ConfirmEmailPanel
+                        email={pendingConfirmEmail}
+                        description={
+                          <>
+                            We sent a confirmation link to{" "}
+                            <strong className="text-slate-900 break-all">{pendingConfirmEmail}</strong>.
+                            Open it to come back and finish this payment — your lease is saved.
+                          </>
+                        }
+                        onBack={() => {
+                          setPendingConfirmEmail(null);
+                          setAuthSuccess(null);
+                        }}
+                      />
                     )}
                   </section>
                 )}
 
                 {/* Payment */}
-                {!pendingCodeEmail && (
+                {!pendingConfirmEmail && (
                 <section className="rounded-2xl border border-slate-200 bg-white p-4 space-y-4">
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-xs font-bold text-slate-900">
@@ -555,7 +576,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
               >
                 Cancel
               </button>
-              {!pendingCodeEmail && (
+              {!pendingConfirmEmail && (
               <button
                 type="button"
                 disabled={processing}

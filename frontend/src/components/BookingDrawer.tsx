@@ -9,13 +9,14 @@ import { Listing } from "@/types/listing";
 import { DaySchedule, TimeSlot, InspectionBookingResponse } from "@/types/booking";
 import { fetchListingVisitSlots, createInspectionBooking } from "@/lib/settlla/bookings";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { EmailCodeVerify } from "@/components/EmailCodeVerify";
+import { ConfirmEmailPanel } from "@/components/ConfirmEmailPanel";
 import {
   assertPassword,
   formatSupabaseAuthError,
   isEmailNotConfirmedError,
   MIN_PASSWORD_LENGTH,
 } from "@/lib/settlla/authErrors";
+import { savePendingAuthFlow } from "@/lib/settlla/pendingAuthFlow";
 import {
   Check,
   CheckCircle2,
@@ -95,7 +96,7 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
   const [authPassword, setAuthPassword] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(false);
-  const [pendingCodeEmail, setPendingCodeEmail] = useState<string | null>(null);
+  const [pendingConfirmEmail, setPendingConfirmEmail] = useState<string | null>(null);
 
   // Helper to persist booking to local storage and bind with current rental state
   const saveBookingToStorage = (booking: InspectionBookingResponse) => {
@@ -354,7 +355,17 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
         });
 
         if (result.needsEmailConfirmation) {
-          setPendingCodeEmail(authEmail.trim());
+          if (confirmedBooking) saveBookingToStorage(confirmedBooking);
+          savePendingAuthFlow({
+            type: "booking",
+            listingId: listing.id,
+            listing,
+            booking: confirmedBooking,
+            email: authEmail.trim(),
+            returnPath: "/dashboard/tenant",
+            savedAt: Date.now(),
+          });
+          setPendingConfirmEmail(authEmail.trim());
           setAuthLoading(false);
           return;
         }
@@ -385,7 +396,17 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
       router.push("/dashboard/tenant");
     } catch (err: unknown) {
       if (isEmailNotConfirmedError(err)) {
-        setPendingCodeEmail(authEmail.trim());
+        if (confirmedBooking) saveBookingToStorage(confirmedBooking);
+        savePendingAuthFlow({
+          type: "booking",
+          listingId: listing.id,
+          listing,
+          booking: confirmedBooking,
+          email: authEmail.trim(),
+          returnPath: "/dashboard/tenant",
+          savedAt: Date.now(),
+        });
+        setPendingConfirmEmail(authEmail.trim());
         setAuthError(null);
       } else {
         setAuthError(formatSupabaseAuthError(err));
@@ -902,17 +923,17 @@ export const BookingDrawer: React.FC<BookingDrawerProps> = ({
               <X className="h-4 w-4" />
             </button>
 
-            {pendingCodeEmail ? (
-              <EmailCodeVerify
-                email={pendingCodeEmail}
-                onVerified={() => {
-                  if (confirmedBooking) saveBookingToStorage(confirmedBooking);
-                  setPendingCodeEmail(null);
-                  setShowAuthPrompt(false);
-                  onClose("complete");
-                  router.push("/dashboard/tenant");
-                }}
-                onBack={() => setPendingCodeEmail(null)}
+            {pendingConfirmEmail ? (
+              <ConfirmEmailPanel
+                email={pendingConfirmEmail}
+                description={
+                  <>
+                    We sent a confirmation link to{" "}
+                    <strong className="text-slate-900 break-all">{pendingConfirmEmail}</strong>.
+                    Open it to save your inspection pass and continue your rental.
+                  </>
+                }
+                onBack={() => setPendingConfirmEmail(null)}
               />
             ) : (
             <>

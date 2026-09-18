@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { UserRole } from "@/types/auth";
 import { Button } from "@/components/ui/Button";
-import { EmailCodeVerify } from "@/components/EmailCodeVerify";
+import { ConfirmEmailPanel } from "@/components/ConfirmEmailPanel";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import {
   assertPassword,
@@ -15,6 +15,7 @@ import {
   isEmailNotConfirmedError,
   MIN_PASSWORD_LENGTH,
 } from "@/lib/settlla/authErrors";
+import { loadPendingAuthFlow, resumeHref } from "@/lib/settlla/pendingAuthFlow";
 import {
   ShieldCheck,
   Building2,
@@ -36,7 +37,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [roleHint, setRoleHint] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
-  const [pendingCodeEmail, setPendingCodeEmail] = useState<string | null>(null);
+  const [pendingConfirmEmail, setPendingConfirmEmail] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -47,14 +48,14 @@ export default function LoginPage() {
     const confirmError = params.get("error");
     const message = params.get("message");
     if (confirmError === "confirm") {
-      setError(message || "Email confirmation failed. Enter the code from your email, or request a new one.");
+      setError(message || "Email confirmation failed. Request a new link from sign in.");
     }
   }, []);
 
   useEffect(() => {
-    if (authReady && currentUser) {
-      router.replace(dashboardPathForRole(currentUser.role));
-    }
+    if (!authReady || !currentUser) return;
+    const pending = loadPendingAuthFlow();
+    router.replace(pending ? resumeHref(pending) : dashboardPathForRole(currentUser.role));
   }, [authReady, currentUser, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -82,10 +83,11 @@ export default function LoginPage() {
           `This account is registered as a ${profile.role}. Opening your ${profile.role} dashboard.`
         );
       }
-      router.push(dashboardPathForRole(profile.role));
+      const pending = loadPendingAuthFlow();
+      router.push(pending ? resumeHref(pending) : dashboardPathForRole(profile.role));
     } catch (err) {
       if (isEmailNotConfirmedError(err)) {
-        setPendingCodeEmail(email.trim());
+        setPendingConfirmEmail(email.trim());
         setError(null);
       } else {
         setError(formatSupabaseAuthError(err));
@@ -136,11 +138,10 @@ export default function LoginPage() {
           </div>
 
           <div className="p-6 sm:p-8 space-y-6">
-            {pendingCodeEmail ? (
-              <EmailCodeVerify
-                email={pendingCodeEmail}
-                onVerified={(user) => router.replace(dashboardPathForRole(user.role))}
-                onBack={() => setPendingCodeEmail(null)}
+            {pendingConfirmEmail ? (
+              <ConfirmEmailPanel
+                email={pendingConfirmEmail}
+                onBack={() => setPendingConfirmEmail(null)}
               />
             ) : (
             <>

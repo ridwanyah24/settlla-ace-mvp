@@ -29,6 +29,10 @@ function stripTrailingSlash(url: string): string {
 
 /** Canonical public origin for auth emails (not the Supabase dashboard Site URL). */
 export function getAuthSiteUrl(): string {
+  if (typeof window !== "undefined" && window.location?.origin) {
+    return stripTrailingSlash(window.location.origin);
+  }
+
   const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
   if (explicit) return stripTrailingSlash(explicit);
 
@@ -40,10 +44,6 @@ export function getAuthSiteUrl(): string {
   if (vercelHost) {
     const host = vercelHost.replace(/^https?:\/\//, "");
     return `https://${host}`;
-  }
-
-  if (typeof window !== "undefined" && window.location?.origin) {
-    return window.location.origin;
   }
 
   return "";

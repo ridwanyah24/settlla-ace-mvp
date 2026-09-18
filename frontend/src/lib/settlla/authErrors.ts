@@ -1,9 +1,6 @@
 /** Supabase Auth default min password length */
 export const MIN_PASSWORD_LENGTH = 6;
 
-export const EMAIL_OTP_MIN_LENGTH = 6;
-export const EMAIL_OTP_MAX_LENGTH = 8;
-
 export class AuthValidationError extends Error {
   constructor(message: string) {
     super(message);
@@ -25,22 +22,6 @@ export function assertPassword(password: string | undefined | null, supabaseMode
     throw new AuthValidationError(
       `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`
     );
-  }
-  return trimmed;
-}
-
-export function assertEmailOtp(code: string | undefined | null): string {
-  const trimmed = (code ?? "").replace(/\s/g, "");
-  if (!trimmed) {
-    throw new AuthValidationError("Enter the verification code from your email.");
-  }
-  if (trimmed.length < EMAIL_OTP_MIN_LENGTH || trimmed.length > EMAIL_OTP_MAX_LENGTH) {
-    throw new AuthValidationError(
-      `Enter the ${EMAIL_OTP_MIN_LENGTH}-digit code from your email.`
-    );
-  }
-  if (!/^\d+$/.test(trimmed)) {
-    throw new AuthValidationError("The verification code should be numbers only.");
   }
   return trimmed;
 }
@@ -68,25 +49,17 @@ export function formatSupabaseAuthError(error: unknown): string {
   const code = (err.code || "").toLowerCase();
 
   if (isEmailNotConfirmedError(error)) {
-    return "Enter the verification code we sent to your email, then try again.";
+    return "Confirm the link we sent to your email, then sign in.";
   }
 
   if (
     code === "otp_expired" ||
     message.includes("otp_expired") ||
+    message.includes("email link is invalid") ||
     ((message.includes("expired") || message.includes("token has expired")) &&
-      (message.includes("otp") || message.includes("token") || message.includes("code")))
+      (message.includes("otp") || message.includes("token") || message.includes("link")))
   ) {
-    return "That code has expired. Request a new one.";
-  }
-
-  if (
-    code === "otp_disabled" ||
-    message.includes("invalid otp") ||
-    message.includes("token is invalid") ||
-    message.includes("invalid token")
-  ) {
-    return "That code is incorrect or expired. Check the email and try again.";
+    return "That confirmation link has expired. Request a new one from sign in.";
   }
 
   if (

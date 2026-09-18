@@ -12,7 +12,8 @@ import {
   dashboardPathForRole,
   MIN_PASSWORD_LENGTH,
 } from "@/lib/settlla/authErrors";
-import { EmailCodeVerify } from "@/components/EmailCodeVerify";
+import { ConfirmEmailPanel } from "@/components/ConfirmEmailPanel";
+import { loadPendingAuthFlow, resumeHref } from "@/lib/settlla/pendingAuthFlow";
 import {
   ShieldCheck,
   Building2,
@@ -45,9 +46,9 @@ export default function SignupPage() {
   const [confirmEmailSent, setConfirmEmailSent] = useState<string | null>(null);
 
   useEffect(() => {
-    if (authReady && currentUser && !confirmEmailSent) {
-      router.replace(dashboardPathForRole(currentUser.role));
-    }
+    if (!authReady || !currentUser || confirmEmailSent) return;
+    const pending = loadPendingAuthFlow();
+    router.replace(pending ? resumeHref(pending) : dashboardPathForRole(currentUser.role));
   }, [authReady, currentUser, router, confirmEmailSent]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -110,9 +111,8 @@ export default function SignupPage() {
         </header>
         <main className="flex-1 flex items-center justify-center px-4 py-12">
           <div className="w-full max-w-md bg-white rounded-3xl border border-slate-200 shadow-xl p-8">
-            <EmailCodeVerify
+            <ConfirmEmailPanel
               email={confirmEmailSent}
-              onVerified={(user) => router.replace(dashboardPathForRole(user.role))}
               onBack={() => setConfirmEmailSent(null)}
             />
           </div>

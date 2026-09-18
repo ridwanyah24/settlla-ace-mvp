@@ -24,26 +24,25 @@ Restart `npm run dev` after changing env files.
 | Setting | Notes |
 |---------|--------|
 | Password minimum | **6 characters** |
-| Confirm email | If enabled, signup asks for a **6-digit code** from the email — not a link |
+| Confirm email | If enabled, signup sends a **confirmation link**. After they click it, in-progress checkout/booking is restored. |
 
-Redirect after login uses the **role stored on `profiles`**.
+Redirect after login uses the **role stored on `profiles`**, unless a saved checkout/booking is waiting.
 
-### Confirmation email code (required)
+### Confirmation email links
 
-Signup no longer uses `emailRedirectTo`, so confirmation does not depend on the dashboard **Site URL**. Users type the OTP in the app.
+Signup sets `emailRedirectTo` to `{current site origin}/auth/callback`, so the link matches the site the user signed up on (not the dashboard Site URL).
 
-In **Supabase → Authentication → Email Templates → Confirm signup**, the body **must include** `{{ .Token }}`. Example:
+In **Supabase → Authentication → URL Configuration**:
 
-```html
-<h2>Confirm your Settlla account</h2>
-<p>Your verification code is:</p>
-<p style="font-size:24px;letter-spacing:4px;font-weight:700">{{ .Token }}</p>
-<p>Enter this code in Settlla. You can ignore any confirmation link.</p>
-```
+1. Set **Site URL** to the live site (`https://www.your-domain.com`), not localhost.
+2. Add these **Redirect URLs**:
+   - `https://www.your-domain.com/auth/callback`
+   - `https://www.your-domain.com/**`
+   - `http://localhost:3000/auth/callback` (local testing)
 
-Also keep **Confirm email** turned on under Authentication → Providers → Email.
+Keep **Confirm email** on under Authentication → Providers → Email.
 
-Leave **Redirect URLs** in place only for old emails that still contain a link. `/auth/callback` still exchanges those. New signups use the in-app code.
+If someone starts checkout or a tour booking and then confirms from email, Settlla reopens payment (or the tenant dashboard for a tour) so they can finish.
 
 ## What connects to Supabase
 

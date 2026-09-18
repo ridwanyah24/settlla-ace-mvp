@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { Navbar } from "./Navbar";
@@ -25,6 +25,7 @@ import { runAISearch } from "@/utils/aiSearch";
 import { fetchPendingSignatureCount } from "@/lib/settlla/manager";
 import { seedListingsIfEmpty, fetchPublishedListingsFromBrowser } from "@/lib/settlla/listings";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { loadPendingAuthFlow, clearPendingAuthFlow } from "@/lib/settlla/pendingAuthFlow";
 import { RestorableModalLayer } from "@/types/modalStack";
 import { useRestorableModalStack } from "@/hooks/useRestorableModalStack";
 import { AlertCircle, Search, ShieldCheck, Ticket, Sparkles } from "lucide-react";
@@ -36,7 +37,7 @@ interface SettllaAppProps {
 const TENANT_ESCROW_DASHBOARD_PATH = "/dashboard/tenant?tab=escrow";
 
 const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LISTINGS }) => {
-  const { currentUser, role } = useAuth();
+  const { currentUser, role, authReady } = useAuth();
   const router = useRouter();
 
   const [listings, setListings] = useState<Listing[]>(initialListings ?? []);
@@ -145,7 +146,7 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
     ) {
       router.replace(
         `/login?error=confirm&message=${encodeURIComponent(
-          "That email link is expired. Sign in and enter the verification code from your email instead."
+          "That confirmation link has expired. Sign in and request a new email link."
         )}`
       );
     }
@@ -167,6 +168,26 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
     window.addEventListener("hashchange", handleHashScroll);
     return () => window.removeEventListener("hashchange", handleHashScroll);
   }, [router]);
+
+  const restoredCheckoutRef = useRef(false);
+
+  useEffect(() => {
+    if (!authReady || !currentUser || restoredCheckoutRef.current) return;
+    const params = new URLSearchParams(window.location.search);
+    const resume = params.get("resume");
+    const confirmed = params.get("confirmed") === "1";
+    if (resume !== "checkout" && !confirmed) return;
+
+    const pending = loadPendingAuthFlow();
+    if (pending?.type !== "checkout") return;
+
+    const match =
+      listings.find((item) => item.id === pending.listingId) || pending.listing;
+    restoredCheckoutRef.current = true;
+    setCheckoutAgreement(pending.agreement);
+    setCheckoutListing(match);
+    window.history.replaceState({}, "", "/");
+  }, [authReady, currentUser, listings]);
 
   useEffect(() => {
     async function loadFiltered() {
@@ -587,6 +608,7 @@ const SettllaAppInner: React.FC<SettllaAppProps> = ({ initialListings = SEED_LIS
           agreement={checkoutAgreement}
           listing={checkoutListing}
           onPaymentSuccess={(tx) => {
+            clearPendingAuthFlow();
             setRecentTransaction(tx);
             if (tx.escrow_hold) {
               setActiveEscrow(tx.escrow_hold);
