@@ -17,7 +17,7 @@ import {
   isEmailNotConfirmedError,
   MIN_PASSWORD_LENGTH,
 } from "@/lib/settlla/authErrors";
-import { loadPendingAuthFlow, savePendingAuthFlow } from "@/lib/settlla/pendingAuthFlow";
+import { clearPendingAuthFlow, loadPendingAuthFlow, savePendingAuthFlow } from "@/lib/settlla/pendingAuthFlow";
 import { MoveInPassViewer } from "./MoveInPassViewer";
 import {
   X,
@@ -71,7 +71,11 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
   const [authPassword, setAuthPassword] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
   const [authSuccess, setAuthSuccess] = useState<string | null>(null);
-  const [pendingConfirmEmail, setPendingConfirmEmail] = useState<string | null>(null);
+  const [emailConfirmPending, setEmailConfirmPending] = useState(false);
+
+  const accountEmail =
+    agreement.tenant.email_address?.trim() ||
+    `${agreement.tenant.full_name.toLowerCase().replace(/[^a-z0-9]/g, ".")}@example.com`;
 
   // Processing & Success State
   const [processing, setProcessing] = useState(false);
@@ -84,12 +88,35 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
   const [copiedAccount, setCopiedAccount] = useState(false);
 
   useEffect(() => {
-    if (!isOpen || isAuthenticated) return;
-    const pending = loadPendingAuthFlow();
-    if (pending?.type === "checkout" && pending.email) {
-      setPendingConfirmEmail(pending.email);
+    if (!isOpen) {
+      setEmailConfirmPending(false);
+      setAuthError(null);
+      setAuthSuccess(null);
+      return;
     }
-  }, [isOpen, isAuthenticated]);
+
+    if (isAuthenticated) {
+      setEmailConfirmPending(false);
+      return;
+    }
+
+    const pending = loadPendingAuthFlow();
+    const emailNorm = accountEmail.toLowerCase();
+    const matchesCheckout =
+      pending?.type === "checkout" &&
+      pending.listingId === listing.id &&
+      pending.agreement.agreement_id === agreement.agreement_id &&
+      pending.email.toLowerCase() === emailNorm;
+
+    if (matchesCheckout) {
+      setEmailConfirmPending(true);
+    } else {
+      if (pending?.type === "checkout") {
+        clearPendingAuthFlow();
+      }
+      setEmailConfirmPending(false);
+    }
+  }, [isOpen, isAuthenticated, listing.id, agreement.agreement_id, accountEmail]);
 
   const handleCopyAccount = () => {
     navigator.clipboard.writeText(virtualAccountNum);
@@ -123,21 +150,17 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
     setAuthError(null);
     setAuthSuccess(null);
 
-    const emailToUse =
-      agreement.tenant.email_address ||
-      `${agreement.tenant.full_name.toLowerCase().replace(/[^a-z0-9]/g, ".")}@example.com`;
-
     const showAwaitingEmailConfirm = (result: SignUpResult) => {
       savePendingAuthFlow({
         type: "checkout",
         listingId: listing.id,
         listing,
         agreement,
-        email: emailToUse,
+        email: accountEmail,
         returnPath: "/?resume=checkout&confirmed=1",
         savedAt: Date.now(),
       });
-      setPendingConfirmEmail(emailToUse);
+      setEmailConfirmPending(true);
       setAuthError(null);
 
       if (result.rateLimited) {
@@ -150,7 +173,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
 
       if (result.confirmationEmailSent) {
         setAuthSuccess(
-          `We sent a confirmation link to ${emailToUse}. Open it, then return here to finish payment.`
+          `We sent a confirmation link to ${accountEmail}. Open it, then tap I've confirmed — continue.`
         );
         return;
       }
@@ -163,17 +186,18 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
       }
 
       setAuthSuccess(
-        `If your earlier link expired, tap Resend below for a fresh confirmation email to ${emailToUse}.`
+        `If your earlier link expired, tap Resend below for a fresh confirmation email.`
       );
     };
 
     // If guest / unauthenticated, create and link account
     if (!isAuthenticated && !currentUser) {
-      if (pendingConfirmEmail) {
+      if (emailConfirmPending) {
         try {
           assertPassword(authPassword, isSupabaseConfigured());
-          await signIn(emailToUse, "tenant", authPassword);
-          setPendingConfirmEmail(null);
+          await signIn(accountEmail, "tenant", authPassword);
+          setEmailConfirmPending(false);
+          clearPendingAuthFlow();
           setAuthError(null);
           setAuthSuccess(null);
           await completePayment();
@@ -184,7 +208,9 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
               "Email not confirmed yet. Tap Resend below for a new link (check spam too)."
             );
           } else {
-            setAuthError(formatSupabaseAuthError(err));
+            setAuthError(
+              `${formatSupabaseAuthError(err)} Use the password for ${accountEmail}.`
+            );
           }
           return;
         }
@@ -211,7 +237,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
         const result = await signUp(
           {
             fullName: agreement.tenant.full_name,
-            email: emailToUse,
+            email: accountEmail,
             password: authPassword,
             role: "tenant",
             phoneNumber: agreement.tenant.phone_number || "0803 123 4567",
@@ -417,10 +443,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                       <input
                         type="email"
                         readOnly
-                        value={
-                          agreement.tenant.email_address ||
-                          `${agreement.tenant.full_name.toLowerCase().replace(/[^a-z0-9]/g, ".")}@example.com`
-                        }
+                        value={accountEmail}
                         className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs text-slate-700"
                       />
                     </div>
@@ -435,39 +458,52 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                           setAuthPassword(e.target.value);
                           setAuthError(null);
                         }}
-                        placeholder={`Min. ${MIN_PASSWORD_LENGTH} characters`}
+                        placeholder={
+                          emailConfirmPending
+                            ? "Same password you used to sign up"
+                            : `Min. ${MIN_PASSWORD_LENGTH} characters`
+                        }
                         minLength={MIN_PASSWORD_LENGTH}
                         className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                       />
                     </div>
-                    {authSuccess && (
+                    {authSuccess && !emailConfirmPending && (
                       <p className="text-xs font-semibold text-emerald-600">{authSuccess}</p>
                     )}
-                    {authError && (
+                    {authError && !emailConfirmPending && (
                       <p className="text-xs text-rose-600">{authError}</p>
                     )}
-                    {pendingConfirmEmail && (
-                      <ConfirmEmailPanel
-                        email={pendingConfirmEmail}
-                        description={
-                          <>
-                            We sent a confirmation link to{" "}
-                            <strong className="text-slate-900 break-all">{pendingConfirmEmail}</strong>.
-                            Open it to come back and finish this payment — your lease is saved.
-                          </>
-                        }
-                        onBack={() => {
-                          setPendingConfirmEmail(null);
-                          setAuthSuccess(null);
-                          setAuthError(null);
-                        }}
-                      />
+                    {emailConfirmPending && (
+                      <>
+                        {authSuccess && (
+                          <p className="text-xs font-semibold text-emerald-600">{authSuccess}</p>
+                        )}
+                        {authError && (
+                          <p className="text-xs text-rose-600">{authError}</p>
+                        )}
+                        <ConfirmEmailPanel
+                          email={accountEmail}
+                          description={
+                            <>
+                              We sent a confirmation link to{" "}
+                              <strong className="text-slate-900 break-all">{accountEmail}</strong>.
+                              Open it, then tap <strong>I&apos;ve confirmed — continue</strong> below.
+                            </>
+                          }
+                          onBack={() => {
+                            setEmailConfirmPending(false);
+                            clearPendingAuthFlow();
+                            setAuthSuccess(null);
+                            setAuthError(null);
+                          }}
+                        />
+                      </>
                     )}
                   </section>
                 )}
 
                 {/* Payment */}
-                {!pendingConfirmEmail && (
+                {!emailConfirmPending && (
                 <section className="rounded-2xl border border-slate-200 bg-white p-4 space-y-4">
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-xs font-bold text-slate-900">
@@ -656,7 +692,7 @@ export const CheckoutPaymentModal: React.FC<CheckoutPaymentModalProps> = ({
                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                     Processing…
                   </>
-                ) : pendingConfirmEmail ? (
+                ) : emailConfirmPending ? (
                   <>
                     <Lock className="w-4 h-4" />
                     I&apos;ve confirmed — continue
